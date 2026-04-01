@@ -44,7 +44,16 @@ Customize only where the project genuinely needs different wording or checks.
 
 Create the standard labels used by the delivery system:
 
-### Issue labels
+### Issue type labels
+- `feature`
+- `bug`
+- `change`
+- `chore`
+- `docs`
+- `investigation`
+- `spike`
+
+### Workflow/state labels
 - `spec-needed`
 - `architecture-needed`
 - `ready-for-build`

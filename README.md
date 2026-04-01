@@ -28,6 +28,7 @@ Included here intentionally:
 - delivery agent role definitions
 - reusable skills and templates
 - delivery architecture and operating-model docs
+- repo-management policy and operating model
 - project bootstrap assets for downstream repos
 - deployment manifests and sync tooling for this framework
 
@@ -47,6 +48,9 @@ Excluded intentionally:
 - `schemas/` shared JSON schemas
 - `tests/` light validation fixtures and examples
 - `docs/` design notes and repo conventions
+- `repo-templates/` downstream project GitHub templates
+- `scripts/bootstrap-project-repo.sh` bootstrap helper for downstream repos
+- repo-level governance for `SPEC.md` and semantic commit conventions
 
 ## Initial scope
 

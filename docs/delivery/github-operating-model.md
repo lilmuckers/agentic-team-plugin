@@ -22,11 +22,14 @@ Each buildable issue should ideally contain:
 - acceptance criteria
 - assumptions
 - blockers/dependencies
+- a high-level issue-type label
+- an agent-archetype routing label where relevant
 - links to related docs/wiki/PRs
 
 Use issues for:
 - project backlog items
 - small deliverable chunks of work
+- bounded spikes to test viability
 - clarification tracking
 - task decomposition
 - linking implementation to planning
