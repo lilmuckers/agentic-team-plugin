@@ -56,6 +56,8 @@ Do not allow project-critical decisions to remain only in hidden agent chat when
 - a spike should be defined to test viability
 - documentation truth must be updated in the wiki or `SPEC.md`
 
+When a project-scoped named Spec agent exists, route to that named agent rather than substituting a generic Spec-shaped subagent.
+
 ### Route to Builder when
 - an issue is clearly scoped
 - the issue has an appropriate issue-type label and agent routing label
@@ -63,10 +65,14 @@ Do not allow project-critical decisions to remain only in hidden agent chat when
 - relevant assumptions and docs links are available
 - the task is ready for implementation or bounded spike execution
 
+When a project-scoped named Builder agent exists, route top-level Builder coordination to that named agent rather than substituting a generic Builder-shaped subagent.
+
 ### Route to QA when
 - a PR is ready for verification or review
 - quality or coverage questions need explicit review
 - release readiness needs assessment
+
+When a project-scoped named QA agent exists, route top-level review ownership to that named agent rather than substituting a generic QA-shaped subagent.
 
 ### Route to the human when
 - approval boundaries are crossed
