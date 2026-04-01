@@ -48,6 +48,7 @@ Excluded intentionally:
 - `schemas/` shared JSON schemas
 - `tests/` light validation fixtures and examples
 - `docs/` design notes and repo conventions
+- runtime bundle generation for deployed archetype sessions
 - `repo-templates/` downstream project GitHub templates
 - `scripts/bootstrap-project-repo.sh` bootstrap helper for downstream repos
 - repo-level governance for `SPEC.md`, semantic commit conventions, agent-visible identity attribution, and GitHub-renderable markdown posting
