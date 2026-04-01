@@ -36,9 +36,12 @@ Rules:
 
 1. update local `main` from GitHub
 2. validate that the working copy is on `main`
-3. sync managed framework files into the active copy
-4. exclude local Rowan/OpenClaw state and downstream project templates
-5. record deployed SHA and timestamp
+3. validate required framework files and helper scripts
+4. sync managed framework files into the active copy
+5. exclude local Rowan/OpenClaw state and downstream project templates
+6. validate the active copy
+7. generate runtime bundles for the live archetypes
+8. record deployed SHA and timestamp
 
 ## Exclusions
 
@@ -49,6 +52,16 @@ The following are intentionally excluded from active deployment promotion:
 - `repo-templates/` project bootstrap assets
 - ad hoc local helper scripts not part of the framework runtime
 
+## Runtime generation
+
+Deployment now also generates runtime bundles in the active copy for:
+- orchestrator
+- spec
+- builder
+- qa
+
+These bundles are intended to be the live source material for archetype sessions.
+
 ## Why this split exists
 
 This separation gives us:
@@ -56,3 +69,4 @@ This separation gives us:
 - safer rollback and provenance
 - less risk of local assistant state leaking into the framework
 - clearer boundaries between control-plane framework assets and downstream project assets
+- a stable runtime source that is distinct from the mutable development working copy
