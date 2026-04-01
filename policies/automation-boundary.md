@@ -1,7 +1,7 @@
 # Automation Boundary Policy
 
 ## Core rule
-Orchestrator should not run in full autonomous delivery mode until the designated spec-approval issue has been explicitly completed/closed by the human operator.
+Orchestrator should not run in full autonomous delivery mode until the designated spec-related approval-gate issue (identified by labels, not title alone) has been explicitly completed/closed by the human operator.
 
 ## Pre-approval mode
 While the designated spec-approval issue remains open:

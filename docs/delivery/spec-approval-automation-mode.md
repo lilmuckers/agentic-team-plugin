@@ -16,7 +16,7 @@ Orchestrator should:
 - seek human approval on project definition, MVP scope, major assumptions, and key architecture direction
 
 ## Spec approval event
-The practical activation boundary is completion/closure of the designated spec-approval issue.
+The practical activation boundary is completion/closure of the designated spec-approval issue, identified by labels rather than title alone.
 
 That issue completion means the human accepts the current:
 - product intent

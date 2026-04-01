@@ -16,9 +16,13 @@ Using a visible GitHub issue state as the trigger provides:
 
 ## Recommended issue characteristics
 - owned by Spec
-- clearly identified as the project spec approval gate
+- identified by labels rather than title alone
+- carries a dedicated approval-gate label such as `spec-approval`
 - contains the approved project definition / acceptance summary
 - linked to `SPEC.md` and relevant wiki pages
+
+See also:
+- `docs/delivery/spec-approval-labels.md`
 
 ## Runtime meaning
 
