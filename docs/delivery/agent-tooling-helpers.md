@@ -41,15 +41,50 @@ scripts/post-agent-comment.sh owner/repo issue 12 Orchestrator comment.md
 scripts/post-agent-comment.sh owner/repo pr 55 QA review.md
 ```
 
+### `scripts/create-agent-issue.sh`
+Create an issue with standardized markdown body rendering and the required high-level type + routing labels.
+
+Examples:
+```bash
+scripts/create-agent-issue.sh owner/repo "Add login flow" Spec feature spec-needed issue.md
+scripts/create-agent-issue.sh owner/repo "Try library X" Spec spike spec-needed spike.md architecture-needed
+```
+
+### `scripts/render-agent-pr-body.py`
+Render a GitHub-ready PR body that begins with the required archetype header.
+
+Example:
+```bash
+scripts/render-agent-pr-body.py --archetype Builder --input pr.md
+```
+
+### `scripts/create-agent-pr.sh`
+Create a PR with standardized markdown rendering and the required archetype header.
+
+Examples:
+```bash
+scripts/create-agent-pr.sh owner/repo main feat/login "feat(auth): add login flow" Builder pr.md draft
+scripts/create-agent-pr.sh owner/repo main feat/docs "docs(spec): clarify setup" Spec pr.md ready
+```
+
+### `scripts/update-agent-pr-body.sh`
+Update a PR body while keeping the archetype header and GitHub-renderable markdown structure intact.
+
+Example:
+```bash
+scripts/update-agent-pr-body.sh owner/repo 42 Builder pr-update.md
+```
+
 ## Expectations
 
-- comment/post bodies should still be written as GitHub-flavored markdown
+- issue bodies, PR bodies, and comments should still be written as GitHub-flavored markdown
 - these helpers support the policy; they do not excuse low-quality content
 - use repo-local Git identity configuration so different project repos can be authored by different agent archetypes cleanly
+- use the issue/PR creation helpers to reduce formatting and labeling drift across agents
 
 ## Likely future helpers
 
-- PR body generation helpers
+- wiki update helpers
 - archetype bootstrap helpers
 - markdown lint/render validation for GitHub-visible text
-- issue creation helpers that apply taxonomy labels consistently
+- label validation helpers for existing issues and PRs

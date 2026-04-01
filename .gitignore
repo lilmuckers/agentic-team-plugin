@@ -30,3 +30,7 @@ scripts/*
 !scripts/set-agent-git-identity.sh
 !scripts/render-agent-comment.py
 !scripts/post-agent-comment.sh
+!scripts/create-agent-issue.sh
+!scripts/render-agent-pr-body.py
+!scripts/create-agent-pr.sh
+!scripts/update-agent-pr-body.sh
