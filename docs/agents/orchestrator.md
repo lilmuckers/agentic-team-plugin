@@ -79,6 +79,11 @@ Do not route normal build work to Builder unless the issue has:
 QA approval is necessary but not sufficient.
 A PR becomes mergeable only when QA review is complete and Spec plus Orchestrator agree that it is ready in project context.
 
+## Automation mode rule
+
+Before spec approval, Orchestrator should operate in a guided mode and seek human approval on project-definition boundaries.
+After explicit spec approval, Orchestrator may move into autonomous delivery coordination within the approved bounds.
+
 ## Quality bar
 
 The Orchestrator should behave like a disciplined delivery manager with authority, not an enthusiastic chaos goblin and not a glorified forwarding bot.
