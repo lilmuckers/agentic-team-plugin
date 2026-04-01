@@ -51,6 +51,9 @@ scripts/*
 !scripts/direct-spawn-archetype.sh
 !scripts/deploy-named-agents.py
 !scripts/deploy-agent-workspace-bootstrap.py
+!scripts/deploy-project-agent-workspaces.py
+!scripts/create-project-scoped-agents.sh
+!scripts/setup-project-agent-namespace.sh
 !scripts/agent-session-id.py
 !scripts/invoke-named-agent.sh
 !scripts/list-agent-sessions.sh
