@@ -45,9 +45,12 @@ This is the first concrete step from:
 to:
 - archetype sessions being launched from deployed framework state
 
-## Current limitation
+## OpenClaw integration layer
 
-This layer prepares the direct spawn payload, but the final session-spawn call still needs to be wired through the runtime/tooling surface used by Rowan.
+See also:
+- `docs/delivery/openclaw-spawn-integration.md`
+
+This layer can now prepare a `sessions_spawn`-ready payload using the active runtime bundle and the hybrid session topology.
 
 ## Session-lifecycle default
 
