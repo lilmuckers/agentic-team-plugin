@@ -38,11 +38,9 @@ scripts/*
 !scripts/update-agent-wiki-page.sh
 !scripts/validate-agent-artifacts.py
 !scripts/lint-agent-markdown.py
-<<<<<<< feat/runtime-deployment-bridge
 !scripts/validate-framework.sh
 !scripts/generate-runtime-bundles.py
+!scripts/sync-tree.py
 !scripts/get-runtime-bundle-path.sh
 !scripts/preview-runtime-bundle.sh
 !scripts/spawn-archetype-session.sh
-=======
->>>>>>> main
