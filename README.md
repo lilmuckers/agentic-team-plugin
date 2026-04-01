@@ -16,8 +16,25 @@ It is intended to:
 ## Operating model
 
 - `main` is the approved framework baseline.
-- Future changes should use feature branches + pull requests.
-- A separate active deployment copy can be synced from reviewed commits on `main`.
+- All ongoing changes should use feature branches + pull requests.
+- A separate active deployment copy should be synced from reviewed commits on `main`.
+- Rowan's own OpenClaw identity and memory files are intentionally out of scope for this repository.
+
+## Repo boundary
+
+This repository is for the delivery-agent framework only.
+
+Included here intentionally:
+- delivery agent role definitions
+- reusable skills and templates
+- delivery architecture and operating-model docs
+- project bootstrap assets for downstream repos
+- deployment manifests and sync tooling for this framework
+
+Excluded intentionally:
+- Rowan's local `SOUL.md`, `IDENTITY.md`, `USER.md`, `MEMORY.md`, `AGENTS.md`, `TOOLS.md`, and heartbeat state
+- local OpenClaw runtime metadata
+- private memory and chat continuity files
 
 ## Layout
 
