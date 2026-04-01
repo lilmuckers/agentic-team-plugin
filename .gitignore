@@ -27,3 +27,6 @@ memory/
 # Local helper areas not part of the framework repo unless added intentionally later
 scripts/*
 !scripts/bootstrap-project-repo.sh
+!scripts/set-agent-git-identity.sh
+!scripts/render-agent-comment.py
+!scripts/post-agent-comment.sh
