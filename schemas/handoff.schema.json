@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent handoff",
+  "type": "object",
+  "required": ["from", "to", "task", "expected_output"],
+  "properties": {
+    "from": { "type": "string" },
+    "to": { "type": "string" },
+    "task": { "type": "string" },
+    "inputs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "expected_output": { "type": "string" },
+    "done_criteria": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

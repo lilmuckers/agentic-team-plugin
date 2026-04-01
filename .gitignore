@@ -1,0 +1,12 @@
+.DS_Store
+.env
+.env.*
+*.log
+node_modules/
+.active/
+.state/
+.cache/
+dist/
+coverage/
+__pycache__/
+*.pyc

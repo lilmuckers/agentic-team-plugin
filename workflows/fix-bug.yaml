@@ -1,0 +1,20 @@
+name: fix-bug
+description: Route a bugfix through impact analysis, scoped implementation, and QA verification.
+steps:
+  - id: analyze
+    agent: analyst
+    output: defect framing and impact
+  - id: plan
+    agent: orchestrator
+    output: remediation plan
+  - id: build
+    agent: builder
+    output: fix change set
+  - id: qa
+    agent: qa
+    output: verification outcome
+completion:
+  requires:
+    - remediation plan
+    - fix summary
+    - verification outcome

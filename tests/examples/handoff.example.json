@@ -1,0 +1,17 @@
+{
+  "from": "orchestrator",
+  "to": "builder",
+  "task": "Implement the approved feature plan for the settings page",
+  "inputs": [
+    "feature brief",
+    "acceptance criteria",
+    "repository context"
+  ],
+  "expected_output": "implementation summary and changed files",
+  "done_criteria": [
+    "acceptance criteria satisfied",
+    "validation reported",
+    "known risks called out"
+  ],
+  "notes": "Keep scope limited to the settings page changes described in the plan."
+}

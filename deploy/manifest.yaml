@@ -1,0 +1,24 @@
+managed:
+  - README.md
+  - agents/**
+  - skills/**
+  - workflows/**
+  - policies/**
+  - templates/**
+  - schemas/**
+  - docs/**
+  - deploy/**
+
+local:
+  - SOUL.md
+  - IDENTITY.md
+  - USER.md
+  - MEMORY.md
+  - memory/**
+  - TOOLS.md
+  - HEARTBEAT.md
+  - AGENTS.md
+
+state:
+  - .state/**
+  - .active/**

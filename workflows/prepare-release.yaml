@@ -1,0 +1,17 @@
+name: prepare-release
+description: Assess merged changes for release readiness and produce release notes.
+steps:
+  - id: scope
+    agent: analyst
+    output: release scope summary
+  - id: readiness
+    agent: qa
+    output: release risk assessment
+  - id: coordinate
+    agent: orchestrator
+    output: release recommendation
+completion:
+  requires:
+    - release scope summary
+    - release risk assessment
+    - release recommendation
