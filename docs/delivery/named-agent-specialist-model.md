@@ -6,13 +6,13 @@ Define how named OpenClaw agents and ephemeral specialist subagents should work 
 
 ## Top-level named agents
 
-The top-level delivery archetypes should be represented as named agents:
-- Orchestrator
-- Spec
-- Builder
-- QA
+The top-level delivery archetypes should be represented as project-scoped named agents:
+- `orchestrator-<project-slug>`
+- `spec-<project-slug>`
+- `builder-<project-slug>`
+- `qa-<project-slug>`
 
-These are the durable roles humans reason about and direct.
+These are the durable roles humans reason about and direct within one project namespace.
 
 ## Specialist subagents
 
@@ -44,6 +44,9 @@ Spec remains the owner of project truth, assumptions, and readiness decisions.
 
 ### Builder
 Builder is the primary consumer of specialist subagents.
+
+The top-level project-scoped Builder agent should not do the actual implementation work directly by default.
+Instead, it should supervise and integrate specialist Builder subagents.
 
 Typical specialist types:
 - frontend-ui
