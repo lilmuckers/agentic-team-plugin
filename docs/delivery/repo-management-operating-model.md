@@ -19,7 +19,7 @@ Use the wiki for:
 Use issues for:
 - tasks to be done
 - target agent archetype labels
-- high-level issue-type labels such as `feature`, `bug`, `change`, or `chore`
+- high-level issue-type labels such as `feature`, `bug`, `change`, `chore`, or `spike`
 - acceptance criteria
 - discrete scope boundaries
 - visible clarification threads
@@ -42,6 +42,7 @@ Do not use ACP as the only durable home of project-level decisions when an issue
 
 ## Branch and PR lifecycle
 
+### Normal delivery work
 1. Builder starts a feature branch.
 2. Builder pushes the branch as soon as there is a meaningful commit.
 3. Builder opens a draft PR immediately.
@@ -50,6 +51,14 @@ Do not use ACP as the only durable home of project-level decisions when an issue
 6. QA reviews the PR.
 7. If there is disagreement, Orchestrator decides.
 8. QA approval allows mergeability review, but Spec and Orchestrator decide whether the PR is ready to merge in project context.
+
+### Spike work
+1. Spec creates a `spike` issue with a bounded question.
+2. Spec defines explicit success and failure criteria.
+3. Builder uses a spike branch rather than a normal feature branch.
+4. Builder performs the bounded experiment and reports results visibly.
+5. Spec and Orchestrator decide the next step based on the spike outcome.
+6. Spike output should not be treated as merge-ready feature delivery by default.
 
 ## Assumption model
 

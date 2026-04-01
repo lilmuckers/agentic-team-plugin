@@ -29,6 +29,7 @@ Each buildable issue should ideally contain:
 Use issues for:
 - project backlog items
 - small deliverable chunks of work
+- bounded spikes to test viability
 - clarification tracking
 - task decomposition
 - linking implementation to planning

@@ -51,6 +51,7 @@ create_label "change" "1D76DB" "High-level issue type: non-trivial change that i
 create_label "chore" "6E7781" "High-level issue type: maintenance or operational work"
 create_label "docs" "5319E7" "High-level issue type: documentation-focused work"
 create_label "investigation" "FBCA04" "High-level issue type: discovery, diagnosis, or exploration"
+create_label "spike" "C5DEF5" "High-level issue type: bounded feasibility experiment to inform next steps"
 create_label "spec-needed" "8B5CF6" "Issue requires specification or refinement before build"
 create_label "architecture-needed" "1D76DB" "Architecture exploration or decision required"
 create_label "ready-for-build" "0E8A16" "Issue is sufficiently specified and ready for Builder"

@@ -17,6 +17,7 @@ Every issue should carry both:
 - `chore`
 - `docs`
 - `investigation`
+- `spike`
 
 ## Why it matters
 Issue type labels help:

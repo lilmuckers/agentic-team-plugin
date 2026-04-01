@@ -3,10 +3,11 @@
 ## Core operating rules
 
 1. Product definition, solution design, architecture, and other project-level design material belong in the GitHub wiki.
-2. Tasks are created as GitHub issues and tagged with both the appropriate target agent archetype and a high-level issue-type label such as feature, bug, change, or chore.
+2. Tasks are created as GitHub issues and tagged with both the appropriate target agent archetype and a high-level issue-type label such as feature, bug, change, chore, or spike.
 3. Agents ask visible project questions through issue comments or PR comments, then use ACP to trigger the relevant agent to inspect and respond there.
 4. ACP is the delivery coordination channel between agents and sub-agents, but durable project decisions should live in issues, PRs, and the wiki unless the request explicitly falls outside that space.
 5. All implementation work is done on feature branches. Push branches as soon as meaningful commits exist. Raise draft PRs as soon as the branch exists remotely, then convert to ready for review once the scoped work is complete.
+5a. A `spike` issue is different: Spec may define a bounded viability experiment for Builder to execute on a spike branch rather than a normal feature branch. Spec must define success and failure criteria. Spike results should inform the next step rather than be treated as merge-ready delivery by default.
 6. Spec owns project-level assumptions. Builder may make only narrow task-local assumptions. All meaningful assumptions must be listed in the PR and documented in the wiki when they affect project understanding or architecture.
 7. If agents disagree, Orchestrator decides and all agents respect that decision.
 8. QA approval does not automatically mean mergeable. Spec and Orchestrator decide whether the PR is mergeable in project context.

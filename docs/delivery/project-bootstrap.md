@@ -51,6 +51,7 @@ Create the standard labels used by the delivery system:
 - `chore`
 - `docs`
 - `investigation`
+- `spike`
 
 ### Workflow/state labels
 - `spec-needed`
