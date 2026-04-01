@@ -31,6 +31,7 @@ Use PRs for:
 - validation status
 - QA feedback
 - visible discussion about delivery decisions
+- agent-attributed posts and updates with explicit archetype headers
 
 ### ACP
 Use ACP for:
@@ -98,6 +99,16 @@ It should:
 
 Use semantic commits with concise high-level subjects.
 Keep richer explanation, assumptions, and reviewer detail in the pull request.
+
+When agents commit, use a per-agent Git identity in this format:
+`<Name> (<Archetype>) <bot-<archetype-slug>@patrick-mckinley.com>`
+
+## Comment and post attribution baseline
+
+When agents post substantive updates on issues or pull requests, begin with:
+`> _posted by **<Archetype>**_`
+
+This keeps authorship visible to human reviewers even when multiple agents operate through shared automation.
 
 ## Quality baseline
 

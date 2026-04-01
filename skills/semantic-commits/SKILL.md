@@ -10,6 +10,7 @@ description: Write semantic commit messages with concise, informative high-level
 - Keep commit subjects concise and informative
 - Prefer high-level intent over low-level diff narration
 - Put fuller reasoning and implementation detail in the PR
+- Configure Git author identity per agent in the format `<Name> (<Archetype>) <bot-<archetype-slug>@patrick-mckinley.com>`
 
 ## Preferred format
 `type(scope): summary`
