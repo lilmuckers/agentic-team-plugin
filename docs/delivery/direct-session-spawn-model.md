@@ -10,6 +10,10 @@ An independent archetype session should be spawned using:
 1. the active runtime bundle for the archetype
 2. a task file that describes the current work item
 3. an agent-turn payload that combines both
+4. the session-lifecycle mode appropriate to the archetype
+
+See also:
+- `docs/delivery/hybrid-session-topology.md`
 
 ## Bundle source
 
@@ -45,6 +49,14 @@ to:
 
 This layer prepares the direct spawn payload, but the final session-spawn call still needs to be wired through the runtime/tooling surface used by Rowan.
 
+## Session-lifecycle default
+
+Default model:
+- Orchestrator -> persistent per-project session
+- Spec -> persistent per-project session
+- Builder -> fresh task-scoped session
+- QA -> fresh task-scoped session
+
 ## Next evolution
 
-A later step may directly wrap `sessions_spawn` or another orchestration surface so the helper itself launches the independent archetype session end-to-end.
+A later step may directly wrap `sessions_spawn` or another orchestration surface so the helper itself launches the independent archetype session end-to-end using the correct persistent or ephemeral mode by default.
