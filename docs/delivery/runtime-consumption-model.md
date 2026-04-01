@@ -67,5 +67,6 @@ See:
 A direct archetype-session spawn layer can now prepare independent-session payloads from the active runtime bundles.
 See:
 - `docs/delivery/direct-session-spawn-model.md`
+- `docs/delivery/hybrid-session-topology.md`
 
 For now, this document defines the contract: active runtime bundles are the live source of archetype guidance.

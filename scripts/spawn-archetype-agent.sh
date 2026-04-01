@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ $# -lt 2 ]; then
+if [ $# -lt 2 ] || [ $# -gt 4 ]; then
   cat >&2 <<'EOF'
 Usage:
-  scripts/spawn-archetype-agent.sh <archetype> <task-file> [label]
+  scripts/spawn-archetype-agent.sh <archetype> <task-file> [label] [mode]
 
 Examples:
   scripts/spawn-archetype-agent.sh orchestrator task.md
-  scripts/spawn-archetype-agent.sh builder task.md builder-bootstrap
+  scripts/spawn-archetype-agent.sh builder task.md builder-bootstrap ephemeral
 EOF
   exit 1
 fi
@@ -16,6 +16,7 @@ fi
 ARCHETYPE="$1"
 TASK_FILE="$2"
 LABEL="${3:-$ARCHETYPE}"
+MODE="${4:-default}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUNDLE_PATH="$($ROOT_DIR/scripts/get-runtime-bundle-path.sh "$ARCHETYPE")"
 
@@ -32,9 +33,26 @@ message = f"""Use the following deployed runtime bundle as the governing archety
 Path('/tmp/openclaw-archetype-message.txt').write_text(message)
 PY
 
+case "$ARCHETYPE" in
+  orchestrator|spec)
+    DEFAULT_MODE="persistent-project"
+    ;;
+  builder|qa)
+    DEFAULT_MODE="ephemeral-task"
+    ;;
+  *)
+    DEFAULT_MODE="unspecified"
+    ;;
+esac
+
+if [ "$MODE" = "default" ]; then
+  MODE="$DEFAULT_MODE"
+fi
+
 echo "Spawn request prepared for archetype: $ARCHETYPE"
 echo "Label: $LABEL"
+echo "Mode: $MODE"
 echo "Bundle: $BUNDLE_PATH"
 echo
 echo "Use this file as the agent-turn message payload: /tmp/openclaw-archetype-message.txt"
-echo "Recommended OpenClaw integration: sessions_spawn with the generated payload."
+echo "Recommended OpenClaw integration: sessions_spawn with the generated payload and the matching session lifecycle mode."
