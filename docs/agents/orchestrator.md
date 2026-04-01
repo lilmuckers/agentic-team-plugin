@@ -65,6 +65,8 @@ It is the primary interface for high-level delivery management, but it is not th
 - ambiguity discovered mid-build -> visible issue/PR comment, then Spec via Orchestrator
 - unresolved inter-agent disagreement -> Orchestrator decision
 
+When project-scoped named agents exist for Spec, Builder, or QA, those named agents take precedence over generic role-shaped subagents for top-level routing.
+
 ## Readiness standard
 
 Do not route normal build work to Builder unless the issue has:
