@@ -31,10 +31,14 @@ Thin shell wrapper around the payload generator.
 
 ## Integration contract
 
-The next runtime layer should take the generated JSON and pass it into the appropriate OpenClaw spawn surface, with:
-- the generated `label`
-- the generated `sessionTarget`
-- the generated `message` as the agent-turn body
+Two runtime paths now exist conceptually:
+
+1. assistant-side session/spawn helpers
+2. direct named-agent invocation through `openclaw agent --agent <id>`
+
+The named-agent invocation path is currently the first verified route that directly targets configured named agents on this machine.
+See also:
+- `docs/delivery/named-agent-invocation.md`
 
 ## Why this matters
 

@@ -50,3 +50,6 @@ scripts/*
 !scripts/prepare-archetype-spawn.py
 !scripts/direct-spawn-archetype.sh
 !scripts/deploy-named-agents.py
+!scripts/agent-session-id.py
+!scripts/invoke-named-agent.sh
+!scripts/list-agent-sessions.sh
