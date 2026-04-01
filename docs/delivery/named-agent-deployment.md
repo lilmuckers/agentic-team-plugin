@@ -13,10 +13,17 @@ Define how reviewed framework state is deployed into the configured named OpenCl
 
 ## Named agents covered
 
+The base archetype names are:
 - `orchestrator`
 - `spec`
 - `builder`
 - `qa`
+
+Preferred operational model for real projects:
+- `orchestrator-<project-slug>`
+- `spec-<project-slug>`
+- `builder-<project-slug>`
+- `qa-<project-slug>`
 
 ## Deployment contract
 

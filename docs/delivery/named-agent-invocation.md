@@ -11,15 +11,17 @@ Use:
 
 This is the first verified runtime path we have found that directly targets the configured named agents.
 
+## Preferred named-agent id model
+
+Prefer project-scoped named agent ids:
+- `orchestrator-<project-slug>`
+- `spec-<project-slug>`
+- `builder-<project-slug>`
+- `qa-<project-slug>`
+
 ## Canonical session-id model
 
-### Persistent project sessions
-- Orchestrator -> `<project>-orchestrator`
-- Spec -> `<project>-spec`
-
-### Ephemeral task/review sessions
-- Builder -> `<project>-builder-<task>`
-- QA -> `<project>-qa-<task>`
+Within a project-scoped named agent, continuity may still be useful, but the primary isolation should come from the project-scoped agent id itself rather than assuming one global named agent can safely span multiple projects.
 
 ## Helpers
 
