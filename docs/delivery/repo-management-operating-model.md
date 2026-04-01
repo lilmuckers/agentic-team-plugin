@@ -76,6 +76,19 @@ If those assumptions affect broader project truth, Builder should escalate throu
 ### Project README
 The root `README.md` must always provide enough setup and run guidance for a new operator or contributor to get moving quickly.
 
+### Project SPEC.md
+The root `SPEC.md` should be maintained by Spec as the concise in-repo entrypoint for project intent and definition.
+
+It should:
+- summarize the project purpose and scope
+- point to the authoritative wiki pages for deeper definition and architecture
+- stay aligned with current project direction and merged code
+
+## Commit baseline
+
+Use semantic commits with concise high-level subjects.
+Keep richer explanation, assumptions, and reviewer detail in the pull request.
+
 ## Quality baseline
 
 Expected baseline:

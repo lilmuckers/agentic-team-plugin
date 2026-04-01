@@ -15,6 +15,8 @@
 11. Test coverage and code quality should be high. Integration tests should be part of the baseline. Bugs, edge cases, and race cases found during delivery should gain regression automation where practical.
 12. GitHub Actions workflows should run sensible test harnesses at the appropriate points.
 13. Backend test/build execution should use appropriate Docker containers where practical so local and CI environments align.
+14. Spec should create and maintain a project-root `SPEC.md` that captures the main project intent and definition while linking to authoritative wiki pages.
+15. All commits should use semantic commit style with concise, informative high-level messages; fuller implementation detail belongs in the PR.
 
 ## Role implications
 

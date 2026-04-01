@@ -50,6 +50,7 @@ Excluded intentionally:
 - `docs/` design notes and repo conventions
 - `repo-templates/` downstream project GitHub templates
 - `scripts/bootstrap-project-repo.sh` bootstrap helper for downstream repos
+- repo-level governance for `SPEC.md` and semantic commit conventions
 
 ## Initial scope
 

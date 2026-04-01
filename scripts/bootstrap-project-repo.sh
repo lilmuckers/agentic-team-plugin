@@ -33,8 +33,9 @@ cp "$TEMPLATE_ROOT/ISSUE_TEMPLATE/spec-task.md" "$REPO_PATH/.github/ISSUE_TEMPLA
 cp "$TEMPLATE_ROOT/ISSUE_TEMPLATE/architecture-decision.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/architecture-decision.md"
 cp "$TEMPLATE_ROOT/ISSUE_TEMPLATE/bugfix-task.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/bugfix-task.md"
 cp "$TEMPLATE_ROOT/pull_request_template.md" "$REPO_PATH/.github/pull_request_template.md"
+cp "$WORKSPACE_ROOT/repo-templates/SPEC.md" "$REPO_PATH/SPEC.md"
 
-echo "Installed GitHub templates into $REPO_PATH/.github"
+echo "Installed GitHub templates into $REPO_PATH/.github and SPEC.md into $REPO_PATH"
 
 create_label() {
   local name="$1"
