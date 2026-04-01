@@ -64,13 +64,15 @@ These bundles are intended to be the live source material for archetype sessions
 
 ## Named-agent deployment
 
-Deployment also writes deterministic payloads into the configured OpenClaw named-agent directories under:
-- `/data/.openclaw/agents/orchestrator/`
-- `/data/.openclaw/agents/spec/`
-- `/data/.openclaw/agents/builder/`
-- `/data/.openclaw/agents/qa/`
+Named-agent deployment now needs to distinguish between:
+- on-disk inspection payloads written into configured `agentDir` directories
+- actual workspace bootstrap/context files that are likely loaded at named-agent session startup
 
-This gives the configured named agents concrete on-disk runtime payloads sourced from the reviewed active framework.
+See also:
+- `docs/delivery/named-agent-deployment.md`
+- `docs/delivery/workspace-bootstrap-deployment.md`
+
+The revised preferred model is to deploy the files that affect workspace startup behavior, then roll to a fresh named-agent session so the runtime reloads them.
 
 ## Why this split exists
 
