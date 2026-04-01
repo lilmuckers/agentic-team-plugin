@@ -45,7 +45,13 @@ create_label() {
     || gh label edit "$name" --repo "$REPO" --color "$color" --description "$description" >/dev/null
 }
 
-create_label "spec-needed" "5319E7" "Issue requires specification or refinement before build"
+create_label "feature" "0E8A16" "High-level issue type: new capability or user-facing functionality"
+create_label "bug" "B60205" "High-level issue type: defect or broken behavior"
+create_label "change" "1D76DB" "High-level issue type: non-trivial change that is not best described as a feature or bug"
+create_label "chore" "6E7781" "High-level issue type: maintenance or operational work"
+create_label "docs" "5319E7" "High-level issue type: documentation-focused work"
+create_label "investigation" "FBCA04" "High-level issue type: discovery, diagnosis, or exploration"
+create_label "spec-needed" "8B5CF6" "Issue requires specification or refinement before build"
 create_label "architecture-needed" "1D76DB" "Architecture exploration or decision required"
 create_label "ready-for-build" "0E8A16" "Issue is sufficiently specified and ready for Builder"
 create_label "in-build" "FBCA04" "Implementation in progress"

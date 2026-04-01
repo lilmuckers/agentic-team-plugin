@@ -10,6 +10,7 @@ Use issues as the visible task contract.
 ## Rules
 - Create tasks as GitHub issues
 - Tag each issue with the appropriate target agent archetype
+- Tag each issue with a high-level issue-type label such as `feature`, `bug`, `change`, or `chore`
 - Keep issue scope discrete and buildable
 - Put acceptance criteria and key assumptions on the issue
 - Use issue comments for questions that should remain visible to human operators

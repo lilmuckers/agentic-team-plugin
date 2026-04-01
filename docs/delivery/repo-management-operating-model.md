@@ -19,6 +19,7 @@ Use the wiki for:
 Use issues for:
 - tasks to be done
 - target agent archetype labels
+- high-level issue-type labels such as `feature`, `bug`, `change`, or `chore`
 - acceptance criteria
 - discrete scope boundaries
 - visible clarification threads

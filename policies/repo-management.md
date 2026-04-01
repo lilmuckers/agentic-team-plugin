@@ -3,7 +3,7 @@
 ## Core operating rules
 
 1. Product definition, solution design, architecture, and other project-level design material belong in the GitHub wiki.
-2. Tasks are created as GitHub issues and tagged with the appropriate target agent archetype.
+2. Tasks are created as GitHub issues and tagged with both the appropriate target agent archetype and a high-level issue-type label such as feature, bug, change, or chore.
 3. Agents ask visible project questions through issue comments or PR comments, then use ACP to trigger the relevant agent to inspect and respond there.
 4. ACP is the delivery coordination channel between agents and sub-agents, but durable project decisions should live in issues, PRs, and the wiki unless the request explicitly falls outside that space.
 5. All implementation work is done on feature branches. Push branches as soon as meaningful commits exist. Raise draft PRs as soon as the branch exists remotely, then convert to ready for review once the scoped work is complete.

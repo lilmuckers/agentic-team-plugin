@@ -22,6 +22,8 @@ Each buildable issue should ideally contain:
 - acceptance criteria
 - assumptions
 - blockers/dependencies
+- a high-level issue-type label
+- an agent-archetype routing label where relevant
 - links to related docs/wiki/PRs
 
 Use issues for:
