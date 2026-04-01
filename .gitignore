@@ -44,3 +44,5 @@ scripts/*
 !scripts/get-runtime-bundle-path.sh
 !scripts/preview-runtime-bundle.sh
 !scripts/spawn-archetype-session.sh
+!scripts/spawn-archetype-agent.sh
+!scripts/run-archetype-agent.py
