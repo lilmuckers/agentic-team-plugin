@@ -45,6 +45,9 @@ For example:
 - `SOUL.md`
 - additional referenced workspace files where appropriate
 
+See also:
+- `docs/delivery/managed-workspace-files.md`
+
 ## Session rollover rule
 
 After deployment updates the managed workspace bootstrap files, a fresh named-agent session should be started to pick up the new behavior.

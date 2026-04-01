@@ -19,6 +19,7 @@ META_FILE="$STATE_DIR/deploy-meta.txt"
 VALIDATOR="$ROOT_DIR/scripts/validate-framework.sh"
 BUNDLE_GEN="$ROOT_DIR/scripts/generate-runtime-bundles.py"
 NAMED_AGENT_DEPLOY="$ROOT_DIR/scripts/deploy-named-agents.py"
+WORKSPACE_BOOTSTRAP_DEPLOY="$ROOT_DIR/scripts/deploy-agent-workspace-bootstrap.py"
 
 mkdir -p "$ACTIVE_DIR" "$STATE_DIR"
 
@@ -56,6 +57,11 @@ fi
 
 if [ ! -x "$NAMED_AGENT_DEPLOY" ]; then
   echo "Named-agent deploy helper is missing or not executable: $NAMED_AGENT_DEPLOY" >&2
+  exit 1
+fi
+
+if [ ! -x "$WORKSPACE_BOOTSTRAP_DEPLOY" ]; then
+  echo "Workspace-bootstrap deploy helper is missing or not executable: $WORKSPACE_BOOTSTRAP_DEPLOY" >&2
   exit 1
 fi
 
@@ -98,6 +104,7 @@ fi
   "$BUNDLE_GEN"
 )
 "$NAMED_AGENT_DEPLOY"
+"$WORKSPACE_BOOTSTRAP_DEPLOY"
 
 printf '%s %s\n' "$SHA" "$TS" > "$STAMP_FILE"
 cat > "$META_FILE" <<EOF
@@ -107,8 +114,11 @@ timestamp=$TS
 active_dir=$ACTIVE_DIR
 runtime_dir=$ACTIVE_DIR/.runtime
 named_agents_root=/data/.openclaw/agents
+managed_workspaces=/data/.openclaw/workspace-orchestrator,/data/.openclaw/workspace-spec,/data/.openclaw/workspace-builder,/data/.openclaw/workspace-qa
+reload_boundary=fresh-session
 EOF
 
 echo "Promoted framework commit $SHA from $BRANCH at $TS to $ACTIVE_DIR"
 echo "Runtime bundles generated in $ACTIVE_DIR/.runtime"
 echo "Named agents deployed under /data/.openclaw/agents"
+echo "Managed workspace bootstrap files deployed for named agents"
