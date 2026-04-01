@@ -1,9 +1,9 @@
 name: fix-bug
 description: Route a bugfix through impact analysis, scoped implementation, and QA verification.
 steps:
-  - id: analyze
-    agent: analyst
-    output: defect framing and impact
+  - id: specify
+    agent: spec
+    output: defect framing, scope, and acceptance criteria
   - id: plan
     agent: orchestrator
     output: remediation plan

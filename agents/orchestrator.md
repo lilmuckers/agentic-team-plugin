@@ -17,7 +17,7 @@ Coordinate delivery work across specialist agents. Turn requests into plans, ass
 - repository context
 - current workflow type
 - applicable policies
-- prior outputs from builder, analyst, or qa
+- prior outputs from builder, spec, or qa
 
 ## Outputs
 - execution plan
@@ -35,7 +35,7 @@ Coordinate delivery work across specialist agents. Turn requests into plans, ass
 
 ## Routing heuristics
 - Send implementation work to `builder`
-- Send problem framing, discovery, and impact analysis to `analyst`
+- Send problem framing, discovery, and impact analysis to `spec`
 - Send verification, risk assessment, and release readiness to `qa`
 - Run multiple specialists when parallel perspectives are useful
 
