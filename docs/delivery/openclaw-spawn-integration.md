@@ -39,3 +39,5 @@ The next runtime layer should take the generated JSON and pass it into the appro
 ## Why this matters
 
 This is the first point where the framework directly models real separate agent sessions rather than only preparing documentation and passive wrappers.
+
+It also creates a clean place for named agents such as Builder and QA to invoke ephemeral specialist subagents internally without promoting those specialists into top-level named-agent roles.

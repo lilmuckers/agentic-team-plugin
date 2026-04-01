@@ -66,6 +66,10 @@ The human operator may explicitly direct a different session shape when needed.
 ## Runtime contract
 
 When independent archetype sessions are spawned:
-- Orchestrator and Spec should target persistent project sessions by default
+- Orchestrator and Spec should target persistent project sessions by default where the surface/runtime supports it
 - Builder and QA should spawn fresh sessions by default
 - all of them should consume the active deployed runtime bundles
+- Builder and QA may use ephemeral specialist subagents internally for narrow task slices
+
+See also:
+- `docs/delivery/named-agent-specialist-model.md`
