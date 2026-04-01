@@ -41,5 +41,8 @@ scripts/*
 <<<<<<< feat/runtime-deployment-bridge
 !scripts/validate-framework.sh
 !scripts/generate-runtime-bundles.py
+!scripts/get-runtime-bundle-path.sh
+!scripts/preview-runtime-bundle.sh
+!scripts/spawn-archetype-session.sh
 =======
 >>>>>>> main
