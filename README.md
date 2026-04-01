@@ -48,7 +48,7 @@ Excluded intentionally:
 - `schemas/` shared JSON schemas
 - `tests/` light validation fixtures and examples
 - `docs/` design notes and repo conventions
-- runtime bundle generation, wrapper helpers, direct session-spawn payload preparation, hybrid persistent/ephemeral topology, OpenClaw spawn integration helpers, and named-agent/specialist-subagent operating model for deployed archetype sessions
+- runtime bundle generation, wrapper helpers, direct session-spawn payload preparation, hybrid persistent/ephemeral topology, OpenClaw spawn integration helpers, named-agent/specialist-subagent operating model, and named-agent deployment layer for deployed archetype sessions
 - `repo-templates/` downstream project GitHub templates
 - `scripts/` helper scripts for repo bootstrap, agent git identity, standardized issue/PR/wiki creation or updates, and validation/linting
 - repo-level governance for `SPEC.md`, semantic commit conventions, agent-visible identity attribution, and GitHub-renderable markdown posting

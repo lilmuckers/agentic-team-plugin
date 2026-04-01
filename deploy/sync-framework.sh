@@ -18,6 +18,7 @@ STAMP_FILE="$STATE_DIR/deployed-sha.txt"
 META_FILE="$STATE_DIR/deploy-meta.txt"
 VALIDATOR="$ROOT_DIR/scripts/validate-framework.sh"
 BUNDLE_GEN="$ROOT_DIR/scripts/generate-runtime-bundles.py"
+NAMED_AGENT_DEPLOY="$ROOT_DIR/scripts/deploy-named-agents.py"
 
 mkdir -p "$ACTIVE_DIR" "$STATE_DIR"
 
@@ -50,6 +51,11 @@ fi
 
 if [ ! -x "$BUNDLE_GEN" ]; then
   echo "Runtime bundle generator is missing or not executable: $BUNDLE_GEN" >&2
+  exit 1
+fi
+
+if [ ! -x "$NAMED_AGENT_DEPLOY" ]; then
+  echo "Named-agent deploy helper is missing or not executable: $NAMED_AGENT_DEPLOY" >&2
   exit 1
 fi
 
@@ -91,6 +97,7 @@ fi
   cd "$ACTIVE_DIR"
   "$BUNDLE_GEN"
 )
+"$NAMED_AGENT_DEPLOY"
 
 printf '%s %s\n' "$SHA" "$TS" > "$STAMP_FILE"
 cat > "$META_FILE" <<EOF
@@ -99,7 +106,9 @@ branch=$BRANCH
 timestamp=$TS
 active_dir=$ACTIVE_DIR
 runtime_dir=$ACTIVE_DIR/.runtime
+named_agents_root=/data/.openclaw/agents
 EOF
 
 echo "Promoted framework commit $SHA from $BRANCH at $TS to $ACTIVE_DIR"
 echo "Runtime bundles generated in $ACTIVE_DIR/.runtime"
+echo "Named agents deployed under /data/.openclaw/agents"

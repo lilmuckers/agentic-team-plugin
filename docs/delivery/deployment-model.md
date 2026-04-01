@@ -62,6 +62,16 @@ Deployment now also generates runtime bundles in the active copy for:
 
 These bundles are intended to be the live source material for archetype sessions.
 
+## Named-agent deployment
+
+Deployment also writes deterministic payloads into the configured OpenClaw named-agent directories under:
+- `/data/.openclaw/agents/orchestrator/`
+- `/data/.openclaw/agents/spec/`
+- `/data/.openclaw/agents/builder/`
+- `/data/.openclaw/agents/qa/`
+
+This gives the configured named agents concrete on-disk runtime payloads sourced from the reviewed active framework.
+
 ## Why this split exists
 
 This separation gives us:
