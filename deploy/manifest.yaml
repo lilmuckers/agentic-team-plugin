@@ -9,7 +9,11 @@ managed:
   - docs/**
   - deploy/**
 
+project-template:
+  - repo-templates/**
+
 local:
+  - .openclaw/**
   - SOUL.md
   - IDENTITY.md
   - USER.md
@@ -18,6 +22,8 @@ local:
   - TOOLS.md
   - HEARTBEAT.md
   - AGENTS.md
+  - BOOT.md
+  - BOOTSTRAP.md
 
 state:
   - .state/**
