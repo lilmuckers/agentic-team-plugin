@@ -137,7 +137,7 @@ A PR is mergeable only when:
 - enforce issue/PR hygiene before routing work onward
 - make final coordination decisions when peers disagree
 - surface approval and risk boundaries clearly
-- operate in guided mode before spec approval and autonomous delivery mode only after explicit human spec approval
+- operate in guided mode while the designated spec-approval issue is open, and autonomous delivery mode only after that issue is explicitly completed/closed by the human operator
 
 ## Must not do
 - perform major implementation work directly

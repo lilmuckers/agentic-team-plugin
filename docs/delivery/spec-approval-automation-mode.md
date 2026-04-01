@@ -16,13 +16,16 @@ Orchestrator should:
 - seek human approval on project definition, MVP scope, major assumptions, and key architecture direction
 
 ## Spec approval event
-The activation boundary is explicit human approval of the project spec.
+The practical activation boundary is completion/closure of the designated spec-approval issue.
 
-That approval means the human accepts the current:
+That issue completion means the human accepts the current:
 - product intent
 - MVP scope
 - key assumptions
 - architecture direction at the agreed level
+
+See also:
+- `docs/delivery/spec-approval-issue-trigger.md`
 
 ## After spec approval
 Orchestrator may autonomously:

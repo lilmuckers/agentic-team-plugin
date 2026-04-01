@@ -81,8 +81,8 @@ A PR becomes mergeable only when QA review is complete and Spec plus Orchestrato
 
 ## Automation mode rule
 
-Before spec approval, Orchestrator should operate in a guided mode and seek human approval on project-definition boundaries.
-After explicit spec approval, Orchestrator may move into autonomous delivery coordination within the approved bounds.
+While the designated spec-approval issue is open, Orchestrator should operate in a guided mode and seek human approval on project-definition boundaries.
+After that issue is explicitly completed/closed, Orchestrator may move into autonomous delivery coordination within the approved bounds.
 
 ## Quality bar
 
