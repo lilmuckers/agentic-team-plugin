@@ -62,7 +62,10 @@ Runtime wrapper helpers may resolve and preview the active runtime bundles and p
 See:
 - `docs/delivery/runtime-wrapper-helpers.md`
 
-## Next evolution
+## Direct spawn evolution
 
-A later step may build direct OpenClaw/ACP integration that automatically spawns the correct archetype session from the resolved active bundle.
+A direct archetype-session spawn layer can now prepare independent-session payloads from the active runtime bundles.
+See:
+- `docs/delivery/direct-session-spawn-model.md`
+
 For now, this document defines the contract: active runtime bundles are the live source of archetype guidance.

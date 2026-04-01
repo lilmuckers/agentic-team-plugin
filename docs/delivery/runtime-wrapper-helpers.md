@@ -4,7 +4,7 @@
 
 Provide small runtime-oriented helpers that make active deployed framework bundles easier to consume consistently.
 
-These helpers do not yet directly call OpenClaw session-spawn APIs on their own, but they establish a standard wrapper layer around the active runtime contract.
+These helpers establish a standard wrapper layer around the active runtime contract. A direct archetype-session spawn helper layer can now prepare payloads for independent sessions from the deployed bundles.
 
 ## Included helpers
 
@@ -48,6 +48,9 @@ This gives us:
 - easier debugging of what bundle is active
 - a clean handoff point for later direct OpenClaw/ACP integration
 
-## Next likely step
+## Direct spawn layer
 
-A later wrapper layer can directly invoke the appropriate session-spawn tool or OpenClaw orchestration surface using the resolved active bundle.
+See also:
+- `docs/delivery/direct-session-spawn-model.md`
+
+This next layer prepares direct independent-session payloads from the deployed active bundles.
