@@ -56,7 +56,13 @@ Deployment metadata is recorded in:
 
 This should be used to inspect what framework version is currently active.
 
+## Wrapper layer
+
+Runtime wrapper helpers may resolve and preview the active runtime bundles and provide a standard handoff shape for archetype session startup.
+See:
+- `docs/delivery/runtime-wrapper-helpers.md`
+
 ## Next evolution
 
-A later step may build direct runtime wrappers that automatically load the correct bundle for each archetype session.
+A later step may build direct OpenClaw/ACP integration that automatically spawns the correct archetype session from the resolved active bundle.
 For now, this document defines the contract: active runtime bundles are the live source of archetype guidance.
