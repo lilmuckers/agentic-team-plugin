@@ -26,9 +26,12 @@ if ! command -v git >/dev/null 2>&1; then
   exit 1
 fi
 
+SYNC_TREE="$ROOT_DIR/scripts/sync-tree.py"
 if ! command -v rsync >/dev/null 2>&1; then
-  echo "rsync is required" >&2
-  exit 1
+  if [ ! -x "$SYNC_TREE" ]; then
+    echo "Neither rsync nor sync fallback is available" >&2
+    exit 1
+  fi
 fi
 
 SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)"
@@ -52,25 +55,36 @@ fi
 
 "$VALIDATOR" "$ROOT_DIR"
 
-rsync -a \
-  --delete \
-  --exclude '.git/' \
-  --exclude '.active/' \
-  --exclude '.state/' \
-  --exclude '.runtime/' \
-  --exclude '.openclaw/' \
-  --exclude 'SOUL.md' \
-  --exclude 'IDENTITY.md' \
-  --exclude 'USER.md' \
-  --exclude 'MEMORY.md' \
-  --exclude 'memory/' \
-  --exclude 'TOOLS.md' \
-  --exclude 'HEARTBEAT.md' \
-  --exclude 'AGENTS.md' \
-  --exclude 'BOOT.md' \
-  --exclude 'BOOTSTRAP.md' \
-  --exclude 'repo-templates/' \
-  "$ROOT_DIR/" "$ACTIVE_DIR/"
+EXCLUDES=(
+  '.git/'
+  '.active/'
+  '.state/'
+  '.runtime/'
+  '.openclaw/'
+  'SOUL.md'
+  'IDENTITY.md'
+  'USER.md'
+  'MEMORY.md'
+  'memory/'
+  'TOOLS.md'
+  'HEARTBEAT.md'
+  'AGENTS.md'
+  'BOOT.md'
+  'BOOTSTRAP.md'
+  'repo-templates/'
+)
+
+if command -v rsync >/dev/null 2>&1; then
+  rsync -a --delete \
+    $(printf -- " --exclude %q" "${EXCLUDES[@]}") \
+    "$ROOT_DIR/" "$ACTIVE_DIR/"
+else
+  PY_ARGS=()
+  for pattern in "${EXCLUDES[@]}"; do
+    PY_ARGS+=(--exclude "$pattern")
+  done
+  "$SYNC_TREE" "$ROOT_DIR" "$ACTIVE_DIR" "${PY_ARGS[@]}"
+fi
 
 "$VALIDATOR" "$ACTIVE_DIR"
 (
