@@ -49,3 +49,4 @@ scripts/*
 !scripts/archetype-session-target.py
 !scripts/prepare-archetype-spawn.py
 !scripts/direct-spawn-archetype.sh
+!scripts/deploy-named-agents.py
