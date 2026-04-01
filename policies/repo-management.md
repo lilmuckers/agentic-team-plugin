@@ -18,6 +18,9 @@
 13. Backend test/build execution should use appropriate Docker containers where practical so local and CI environments align.
 14. Spec should create and maintain a project-root `SPEC.md` that captures the main project intent and definition while linking to authoritative wiki pages.
 15. All commits should use semantic commit style with concise, informative high-level messages; fuller implementation detail belongs in the PR.
+16. All git commits made by agents should use an identity in the form `<Name> (<Archetype>) <bot-<archetype-slug>@patrick-mckinley.com>`.
+17. All issue comments, PR comments, and substantive PR body updates posted by agents should begin with a visible identity header in the form `> _posted by **<Archetype>**_`.
+18. All issue comments, PR comments, PR bodies, and wiki posts should be written as GitHub-flavored markdown that renders appropriately in the GitHub interface.
 
 ## Role implications
 

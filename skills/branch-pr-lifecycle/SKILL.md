@@ -19,6 +19,7 @@ description: Use feature branches, immediate push, and early draft pull requests
 
 ## PR hygiene
 Always include:
+- visible archetype header: `> _posted by **<Archetype>**_`
 - summary
 - changed scope
 - validation performed
