@@ -15,6 +15,8 @@ Use the wiki for:
 - decision records
 - project goals and non-goals
 
+Write wiki content as GitHub-flavored markdown that renders cleanly in the GitHub interface.
+
 ### GitHub issues
 Use issues for:
 - tasks to be done
@@ -24,6 +26,8 @@ Use issues for:
 - discrete scope boundaries
 - visible clarification threads
 
+Write issue content and comments as GitHub-flavored markdown that renders cleanly in the GitHub interface.
+
 ### Pull requests
 Use PRs for:
 - implementation progress
@@ -32,6 +36,8 @@ Use PRs for:
 - QA feedback
 - visible discussion about delivery decisions
 - agent-attributed posts and updates with explicit archetype headers
+
+Write PR bodies, comments, and updates as GitHub-flavored markdown that renders cleanly in the GitHub interface.
 
 ### ACP
 Use ACP for:
