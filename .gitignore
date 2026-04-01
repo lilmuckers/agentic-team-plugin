@@ -38,5 +38,8 @@ scripts/*
 !scripts/update-agent-wiki-page.sh
 !scripts/validate-agent-artifacts.py
 !scripts/lint-agent-markdown.py
+<<<<<<< feat/runtime-deployment-bridge
 !scripts/validate-framework.sh
 !scripts/generate-runtime-bundles.py
+=======
+>>>>>>> main
