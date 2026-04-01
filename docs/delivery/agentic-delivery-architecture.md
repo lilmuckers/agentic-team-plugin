@@ -30,7 +30,7 @@ The goal is to create a delivery system that is:
 3. **Specialists are spawned only when justified**
    The Builder may spawn focused, task-specific specialist sub-agents when a task benefits from narrower domain expertise or parallel exploration.
 
-4. **Specification owns assumptions**
+4. **Spec owns assumptions**
    Project-level assumptions and scope-level clarifications are owned by the Spec agent.
    They must be written into documentation and/or GitHub artifacts.
 

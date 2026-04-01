@@ -1,6 +1,6 @@
 # agentic-team-plugin
 
-Versioned framework for a reusable agentic delivery team: orchestrator, builder, analyst, QA, shared skills, workflows, policies, and deployment sync mechanics.
+Versioned framework for a reusable agentic delivery team: orchestrator, builder, spec, QA, shared skills, workflows, policies, and deployment sync mechanics.
 
 ## Purpose
 
@@ -34,7 +34,7 @@ It is intended to:
 ## Initial scope
 
 This first version establishes:
-- core roles: orchestrator, builder, analyst, qa
+- core roles: orchestrator, builder, spec, qa
 - three starter reusable skills: github-prs, commit-messages, releases
 - baseline workflows for feature, bugfix, and release
 - a deploy manifest to distinguish managed vs local files

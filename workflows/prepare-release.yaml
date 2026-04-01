@@ -2,7 +2,7 @@ name: prepare-release
 description: Assess merged changes for release readiness and produce release notes.
 steps:
   - id: scope
-    agent: analyst
+    agent: spec
     output: release scope summary
   - id: readiness
     agent: qa

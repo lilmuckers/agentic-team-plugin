@@ -1,9 +1,9 @@
 name: implement-feature
 description: Route a feature request through analysis, implementation, and QA.
 steps:
-  - id: analyze
-    agent: analyst
-    output: feature brief
+  - id: specify
+    agent: spec
+    output: feature brief and acceptance criteria
   - id: plan
     agent: orchestrator
     output: execution plan
