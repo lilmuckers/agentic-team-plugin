@@ -2,45 +2,28 @@
 
 ## Purpose
 
-Define how reviewed framework state is deployed into the configured named OpenClaw agents on disk.
+Describe the deployment bridge for named agents and point to the revised model based on actual runtime findings.
 
-## Source chain
+## Important update
 
-1. GitHub framework repo (`main` after review)
-2. active framework deployment in `.active/framework/`
-3. generated runtime bundles in `.active/framework/.runtime/`
-4. deployed named-agent payloads in `/data/.openclaw/agents/<agent>/`
+The framework originally deployed deterministic payloads into the configured named-agent `agentDir` directories.
+That remains useful for inspection and metadata, but runtime testing did **not** prove that arbitrary `agentDir` files are automatically consumed by named-agent invocation.
 
-## Named agents covered
+## Revised model
 
-The base archetype names are:
-- `orchestrator`
-- `spec`
-- `builder`
-- `qa`
+See:
+- `docs/delivery/workspace-bootstrap-deployment.md`
 
-Preferred operational model for real projects:
-- `orchestrator-<project-slug>`
-- `spec-<project-slug>`
-- `builder-<project-slug>`
-- `qa-<project-slug>`
+The revised preferred model is:
+1. deploy reviewed framework state into the named-agent workspace bootstrap/context files
+2. start a fresh named-agent session
+3. treat that new session as the activation boundary for the updated behavior
 
-## Deployment contract
+## Legacy payloads
 
-For each named agent, deployment writes:
-- `RUNTIME_BUNDLE.md`
-- `README.md`
-- `DEPLOYMENT.json`
+The on-disk payloads in `/data/.openclaw/agents/<agent>/` remain useful as:
+- deployment metadata
+- inspection artefacts
+- deterministic snapshots of the active framework bundle
 
-These files are generated from the reviewed active framework state.
-They should not drift through manual edits.
-
-## Why this matters
-
-The configured named agents currently exist in OpenClaw config, but their agent directories start empty.
-This deployment layer gives them concrete, inspectable runtime payloads sourced from the framework.
-
-## Runtime implication
-
-This does not by itself prove how the OpenClaw runtime loads those directories internally.
-However, it creates the correct deterministic bridge from reviewed framework state into the named-agent directories the runtime is configured to use.
+But they should not be assumed to be the direct runtime prompt-loading path unless proven otherwise.

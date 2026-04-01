@@ -39,6 +39,8 @@ Inspect sessions for a specific named agent or across all configured agents.
 This avoids relying on the assistant-side `sessions_spawn` path for named-agent activation.
 Instead, it uses the OpenClaw-native agent/Gateway route that already supports `--agent <id>`.
 
+It also aligns with the revised deployment model: named-agent behavior should be treated as loading from managed workspace bootstrap/context files when a fresh named-agent session starts.
+
 ## Hybrid topology mapping
 
 - Orchestrator -> persistent per-project session id
