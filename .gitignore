@@ -34,3 +34,7 @@ scripts/*
 !scripts/render-agent-pr-body.py
 !scripts/create-agent-pr.sh
 !scripts/update-agent-pr-body.sh
+!scripts/render-agent-wiki-page.py
+!scripts/update-agent-wiki-page.sh
+!scripts/validate-agent-artifacts.py
+!scripts/lint-agent-markdown.py
