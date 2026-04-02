@@ -59,7 +59,7 @@ Patrick
 
 ### 1. Orchestrator
 
-The Orchestrator is the front door and delivery coordinator.
+The Orchestrator is the front door, delivery coordinator, and active foreman.
 
 Responsibilities:
 - intake of new work
@@ -67,13 +67,16 @@ Responsibilities:
 - ensuring backlog items are small and deliverable
 - ensuring issues meet the definition of ready before implementation begins
 - assigning ready work to Builder
+- maintaining a ledger of in-flight delegated tasks
+- requiring completion/blocker callbacks from delegated workers
 - summarizing status, risks, and blockers
 - preventing uncontrolled scope drift
 
 The Orchestrator is the default agent that talks to Patrick.
-Specialists report to the Orchestrator, not directly to Patrick, unless explicitly requested.
+Specialists and named agents report to the Orchestrator, not directly to Patrick, unless explicitly requested.
 
 The Orchestrator should **not** perform major implementation work directly.
+It should behave like a Ralph-style coordinator: active, callback-driven, and responsible for deciding the next action whenever a worker returns state.
 
 ### 2. Spec Agent
 
@@ -262,6 +265,9 @@ Human review is required for:
 This means the system should not autonomously create a project backlog and begin implementation without review of the spec and task list.
 
 ## Delivery workflow
+
+The delivery workflow is callback-driven.
+Named agents and subordinate specialists do not merely act on artifacts and go quiet; they must return their outcome to the Orchestrator so coordination can continue without waiting for periodic nudges.
 
 ### Phase 1: project definition and backlog formation
 

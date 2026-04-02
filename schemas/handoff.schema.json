@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Agent handoff",
   "type": "object",
-  "required": ["from", "to", "task", "expected_output"],
+  "required": ["from", "to", "task", "expected_output", "callback_to", "allowed_outcomes"],
   "properties": {
     "from": { "type": "string" },
     "to": { "type": "string" },
@@ -15,6 +15,17 @@
     "done_criteria": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "callback_to": { "type": "string" },
+    "task_id": { "type": "string" },
+    "allowed_outcomes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["DONE", "BLOCKED", "FAILED", "NEEDS_REVIEW"]
+      },
+      "minItems": 1,
+      "uniqueItems": true
     },
     "notes": { "type": "string" }
   },

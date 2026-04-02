@@ -7,6 +7,7 @@ Use this when Orchestrator hands a task to Builder.
 - Issue: 
 - Title: 
 - Priority: 
+- Task ID: 
 
 ## Why This Task Is Ready
 
@@ -28,6 +29,18 @@ Use this when Orchestrator hands a task to Builder.
 - PR expected: yes / no
 - Docs update expected: yes / no
 - Tests expected: yes / no
+
+## Callback Contract
+
+Worker must report back to the Orchestrator with:
+- Task ID / issue handled
+- Worker identity
+- Outcome: `DONE`, `BLOCKED`, `FAILED`, or `NEEDS_REVIEW`
+- Branch name
+- PR link or artifact link, if created
+- Tests/checks run
+- Blockers / assumptions / risks
+- Recommended next action
 
 ## Constraints
 

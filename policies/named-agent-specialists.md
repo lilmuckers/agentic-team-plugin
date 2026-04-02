@@ -33,5 +33,15 @@ Specialist subagents must not:
 - Builder remains accountable for integrated delivery output
 - QA remains accountable for review outcomes
 
+All named agents and subordinate specialists must report completion, blockage, failure, or review state back through their owning coordination path, with the Orchestrator as the top-level callback owner.
+
 ## Visibility
 If specialist subagents materially influence delivery, their outputs should be surfaced through the owning named agent in the appropriate visible project artifact (issue, PR, or wiki update) where relevant.
+
+## Callback rule
+The default callback path is:
+- specialist subagent → owning named agent
+- named agent → Orchestrator
+- Orchestrator → Patrick when human attention is needed or a concise status update is warranted
+
+Cron or heartbeat polling may be used to detect missed callbacks or overdue work, but not as the primary coordination mechanism.
