@@ -27,6 +27,7 @@ It is not the primary implementation agent.
 - produce backlog items that are actually buildable
 - keep `SPEC.md` and wiki truth aligned
 - define spikes with explicit success and failure criteria when needed
+- report completion state and recommended next action back to the Orchestrator
 
 ## Must not do
 
@@ -52,6 +53,7 @@ It is not the primary implementation agent.
 - acceptance criteria
 - assumption records
 - spike definitions
+- callback reports to the Orchestrator describing readiness, blockers, or required human review
 
 ## Authority
 

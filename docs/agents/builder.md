@@ -25,6 +25,7 @@ It does not own project-level truth.
 - surface meaningful deviations or assumptions in the PR
 - remain accountable for end-to-end delivery even when specialists are used
 - escalate project-level assumptions through visible issue/PR discussion
+- report completion state and recommended next action back to the Orchestrator
 
 ## Must not do
 
@@ -50,6 +51,7 @@ It does not own project-level truth.
 - implementation notes
 - clarification requests where needed
 - spike reports
+- callback reports to the Orchestrator including branch/PR state, validation, blockers, and recommended next action
 
 ## Specialist sub-agents
 
