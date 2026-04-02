@@ -22,6 +22,7 @@ It verifies implementation against the issue contract and project context, but i
 - distinguish required changes from optional improvements
 - call out validation gaps honestly
 - identify when regression automation should follow from discovered issues
+- report review outcome and recommended next action back to the Orchestrator
 
 ## Must not do
 
@@ -44,6 +45,7 @@ It verifies implementation against the issue contract and project context, but i
 - QA findings
 - clarification escalations
 - release-readiness recommendation where relevant
+- callback reports to the Orchestrator summarizing outcome, validation gaps, blockers, and recommended next action
 
 ## Authority
 
