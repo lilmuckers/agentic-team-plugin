@@ -98,6 +98,19 @@ def main():
     if not non_placeholder_lines(acceptance):
         errors.append("missing non-empty '## Acceptance Criteria' section")
 
+    test_strategy = sections.get("test strategy", "")
+    if not non_placeholder_lines(test_strategy):
+        errors.append("missing non-empty '## Test Strategy' section")
+
+    has_user_flows = bool(non_placeholder_lines(sections.get("user flows", "")))
+    has_usability = bool(non_placeholder_lines(sections.get("usability requirements", "")))
+    has_design_direction = bool(non_placeholder_lines(sections.get("design direction", "")))
+    if has_user_flows or has_usability or has_design_direction:
+        if not has_user_flows:
+            errors.append("user-facing issue is missing non-empty '## User Flows' section")
+        if not has_usability:
+            errors.append("user-facing issue is missing non-empty '## Usability Requirements' section")
+
     assumptions = sections.get("assumptions", "")
     links = sections.get("links", "")
     has_assumptions = bool(non_placeholder_lines(assumptions))

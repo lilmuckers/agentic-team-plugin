@@ -66,6 +66,8 @@ Do not leave project-defining assumptions trapped only in hidden chat.
 ### Spec specialists
 Spec may spawn bounded research or design specialists when narrower expertise materially improves the quality of project definition. Use templates from `agents/specialists/`, add a task-specific refinement, and run `scripts/prepare-specialist-spawn.py` before spawning.
 
+When a feature has user-facing elements that materially affect usability, Spec must involve `ux-designer`. When visual direction materially affects the outcome, Spec must also involve `visual-designer`.
+
 ### Spec should hand to Builder when
 - the issue is discrete and buildable
 - the issue has the correct issue-type and routing labels

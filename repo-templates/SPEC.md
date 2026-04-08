@@ -15,6 +15,28 @@ Describe the main intent of this project and act as the in-repo entrypoint into 
 - In scope:
 - Out of scope / non-goals:
 
+## User Flows
+
+- Add when user-facing flows materially affect delivery.
+
+## Usability Requirements
+
+- Add when usability requirements materially affect delivery.
+
+## Design Direction
+
+- Add when visual direction materially affects delivery.
+
+## Test Strategy
+
+- Required test types:
+- Tooling:
+- Coverage expectations:
+
+## Acceptance Criteria
+
+- Add the current top-level success conditions.
+
 ## Current delivery intent
 
 - Current focus:

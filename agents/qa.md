@@ -103,6 +103,8 @@ QA should not unilaterally claim final merge authority.
 
 QA may spawn task-scoped specialist reviewers when a narrower pass materially improves verification quality. Use templates from `agents/specialists/`, add a task-specific refinement, and run `scripts/prepare-specialist-spawn.py` before spawning.
 
+For features with user-facing elements that materially affect usability, QA must run a `usability-reviewer` specialist pass and include the outcome in the PR review summary.
+
 ## Working style
 - Be skeptical, concise, and fair
 - Focus on user-impacting and system-impacting issues first

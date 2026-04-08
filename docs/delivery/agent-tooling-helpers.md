@@ -118,8 +118,10 @@ Checks include:
 - high-level issue-type label present
 - routing/workflow label present
 - non-empty `## Acceptance Criteria`
+- non-empty `## Test Strategy`
 - documented assumptions or linked context
 - no unresolved dependencies/blockers
+- required usability sections when the issue carries user-facing requirements
 
 Example:
 ```bash

@@ -35,6 +35,9 @@ required_files=(
   "agents/specialists/typescript-engineer.md"
   "agents/specialists/qa-regression.md"
   "agents/specialists/ux-designer.md"
+  "agents/specialists/visual-designer.md"
+  "agents/specialists/usability-reviewer.md"
+  "policies/spec-process.md"
 )
 
 for rel in "${required_files[@]}"; do
@@ -79,5 +82,7 @@ done
 "$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/typescript-engineer.md"
 "$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/qa-regression.md"
 "$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/ux-designer.md"
+"$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/visual-designer.md"
+"$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/usability-reviewer.md"
 
 echo "Framework validation passed for $ROOT_DIR"
