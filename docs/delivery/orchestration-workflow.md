@@ -110,10 +110,11 @@ Once review is complete and repository policy allows:
 - prefer small, shippable issue granularity
 - keep Patrick updated concisely
 - treat blocked/unclear work as a Spec problem, not a Builder improvisation problem
-- maintain an explicit list or ledger of in-flight delegated tasks
+- maintain the durable task ledger in `docs/delivery/task-ledger.md` for all in-flight delegated tasks
 - require every worker to callback on completion, blockage, failure, or review handoff
 - treat missing callbacks as an exception path to investigate
 - use cron/heartbeat only to watch for missed callbacks or overdue work
+- read the task ledger at session start and surface overdue or blocked items before taking new work
 
 ### Spec rules
 

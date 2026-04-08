@@ -19,8 +19,10 @@ required_files=(
   "scripts/validate-agent-artifacts.py"
   "scripts/validate-callback.py"
   "scripts/validate-issue-ready.py"
+  "scripts/validate-task-ledger.py"
   "templates/callback-report.md"
   "schemas/callback.md"
+  "docs/delivery/task-ledger.md"
 )
 
 for rel in "${required_files[@]}"; do
@@ -45,6 +47,7 @@ required_exec=(
   "scripts/lint-agent-markdown.py"
   "scripts/validate-callback.py"
   "scripts/validate-issue-ready.py"
+  "scripts/validate-task-ledger.py"
 )
 
 for rel in "${required_exec[@]}"; do
@@ -53,5 +56,7 @@ for rel in "${required_exec[@]}"; do
     exit 1
   fi
 done
+
+"$ROOT_DIR/scripts/validate-task-ledger.py" "$ROOT_DIR/docs/delivery/task-ledger.md"
 
 echo "Framework validation passed for $ROOT_DIR"

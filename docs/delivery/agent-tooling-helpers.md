@@ -126,6 +126,21 @@ Example:
 scripts/validate-issue-ready.py 123 --repo owner/repo
 ```
 
+### `scripts/validate-task-ledger.py`
+Validate `docs/delivery/task-ledger.md` entries that use markdown headings plus embedded JSON payloads.
+
+Checks include:
+- one `## Task ...` heading per entry
+- exactly one fenced `json` block per entry
+- required JSON fields present
+- valid task state
+- non-empty history items with `at`, `action`, and `by`
+
+Example:
+```bash
+scripts/validate-task-ledger.py docs/delivery/task-ledger.md
+```
+
 ### `scripts/lint-agent-markdown.py`
 Apply lightweight lint checks to GitHub-facing markdown bodies.
 
