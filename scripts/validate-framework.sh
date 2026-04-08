@@ -18,6 +18,7 @@ required_files=(
   "scripts/update-agent-wiki-page.sh"
   "scripts/validate-agent-artifacts.py"
   "scripts/validate-callback.py"
+  "scripts/validate-issue-ready.py"
   "templates/callback-report.md"
   "schemas/callback.md"
 )
@@ -43,6 +44,7 @@ required_exec=(
   "scripts/validate-agent-artifacts.py"
   "scripts/lint-agent-markdown.py"
   "scripts/validate-callback.py"
+  "scripts/validate-issue-ready.py"
 )
 
 for rel in "${required_exec[@]}"; do

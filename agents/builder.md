@@ -47,6 +47,7 @@ Do not resolve important project ambiguities only in hidden chat when the issue 
 
 ### For normal delivery work
 Builder should:
+- confirm the assigned issue still carries the `ready-for-build` label before beginning normal implementation; if it does not, halt and send the issue back through Orchestrator
 - start a feature branch
 - push as soon as a meaningful commit exists
 - raise a draft PR as soon as the branch exists remotely

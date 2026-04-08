@@ -111,6 +111,21 @@ scripts/validate-agent-artifacts.py \
   --git-email "bot-orchestrator@patrick-mckinley.com"
 ```
 
+### `scripts/validate-issue-ready.py`
+Validate whether a GitHub issue is actually ready for Builder before Orchestrator routes it.
+
+Checks include:
+- high-level issue-type label present
+- routing/workflow label present
+- non-empty `## Acceptance Criteria`
+- documented assumptions or linked context
+- no unresolved dependencies/blockers
+
+Example:
+```bash
+scripts/validate-issue-ready.py 123 --repo owner/repo
+```
+
 ### `scripts/lint-agent-markdown.py`
 Apply lightweight lint checks to GitHub-facing markdown bodies.
 

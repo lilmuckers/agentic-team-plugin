@@ -115,6 +115,8 @@ Minimum ready-for-build standard:
 
 If these are missing, send the work back to Spec or repair the handoff before dispatch.
 
+Before routing any normal implementation issue to Builder, run `scripts/validate-issue-ready.py <issue-number>`. Treat a failing validation as a hard stop and route the issue back for refinement instead of hand-waving it through.
+
 ## Callback contract
 Every delegated task from the Orchestrator must require a callback to the Orchestrator.
 
