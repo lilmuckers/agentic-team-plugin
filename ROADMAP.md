@@ -38,11 +38,11 @@ Resolved decisions should be updated inline and dated. Unresolved decisions bloc
 
 ### Steps
 
-1. Define ledger schema — fields: task ID, agent assigned, delegated timestamp, expected callback fields, outcome status, last updated
-2. Write `scripts/update-task-ledger.py` — append or update a ledger entry given task ID and status
+1. Define ledger schema as a markdown table in `docs/delivery/task-ledger.md` — fields: task ID, agent assigned, delegated timestamp, expected callback fields, outcome status, last updated
+2. Write `scripts/update-task-ledger.py` — append or update a ledger row given task ID and status
 3. Add ledger read/write to Orchestrator role doc as a mandatory operating rule
 4. Add a session startup step to Orchestrator: read ledger on start, surface any overdue tasks immediately before taking new work
-5. Write `scripts/validate-task-ledger.py` to validate ledger schema correctness
+5. Write `scripts/validate-task-ledger.py` to validate ledger schema correctness and table structure
 
 ---
 
@@ -129,16 +129,17 @@ Resolved decisions should be updated inline and dated. Unresolved decisions bloc
 2. Add label-application responsibility to each role doc: QA applies `qa-approved`, Spec applies `spec-satisfied`, Orchestrator applies `orchestrator-approved` only after confirming the other two are present
 3. Write `repo-templates/.github/workflows/merge-gate.yml` — GitHub Actions check that fails if any of the three labels are absent from the PR
 4. Add merge gate check to Orchestrator role doc: Orchestrator must confirm `qa-approved` and `spec-satisfied` labels are present before applying `orchestrator-approved` and signalling the human
-5. Add merge gate label check to `scripts/validate-agent-artifacts.py`
+5. Add stale-approval handling to Orchestrator role doc: when a PR changes after approval, the Orchestrator removes approval labels before handing back to the appropriate agents for re-approval
+6. Add merge gate label check to `scripts/validate-agent-artifacts.py`
 
 ### PR Line-Level Review Comments
 
 **Policy (resolved):** When agents have line-specific feedback on a PR, they must post it as a review comment against the relevant line, not as a top-level PR comment. Top-level PR comments are reserved for summary-level observations (e.g. overall outcome, blockers, next action).
 
-6. Write `scripts/post-pr-line-comment.sh <pr-number> <commit-sha> <file-path> <line> <body>` — wraps `gh api /repos/.../pulls/.../comments` to post a line-anchored review comment
-7. Update QA role doc: line-specific feedback must use `post-pr-line-comment.sh`; top-level PR comments are for summary only
-8. Update Builder role doc: when addressing QA feedback, expect line comments and resolve them via `gh pr review` dismiss or by pushing a fix commit
-9. Add `post-pr-line-comment.sh` to `docs/delivery/agent-tooling-helpers.md`
+7. Write `scripts/post-pr-line-comment.sh <pr-number> <commit-sha> <file-path> <line> <body>` — wraps `gh api /repos/.../pulls/.../comments` to post a line-anchored review comment
+8. Update QA role doc: line-specific feedback must use `post-pr-line-comment.sh`; top-level PR comments are for summary only
+9. Update Builder role doc: when addressing QA feedback, expect line comments and resolve them via `gh pr review` dismiss or by pushing a fix commit
+10. Add `post-pr-line-comment.sh` to `docs/delivery/agent-tooling-helpers.md`
 
 ---
 
@@ -302,8 +303,9 @@ Without layer 2, conclusions become brittle. Without layer 3, agents cannot reco
 4. Define storage location: decision records for a project live in `docs/decisions/` within the project repo, committed by the agent that made the decision
 5. Update Orchestrator role doc: any routing, escalation, or architectural decision must be accompanied by a committed decision record before the relevant task is marked DONE
 6. Update Spec role doc: any acceptance criteria, scope, or approval decision must be accompanied by a decision record
-7. Wire `validate-decision-record.py` into `validate-agent-artifacts.py` for CI use
-8. Add decision record reference to the callback template (`templates/callback-report.md`): the `## Artifacts` section should list any decision records produced during the task
+7. Add significance rule to the schema and role docs: if a future agent would benefit from knowing why this was chosen over a plausible alternative, it requires a decision record
+8. Wire `validate-decision-record.py` into `validate-agent-artifacts.py` for CI use
+9. Add decision record reference to the callback template (`templates/callback-report.md`): the `## Artifacts` section should list any decision records produced during the task
 
 ---
 
@@ -334,7 +336,7 @@ What the spike flagged as risks:
 
 ### Pilot success criteria
 
-Run against one project corpus. A retrieval is successful if agents can answer these questions without the human restating context:
+Run against one project corpus. A retrieval is successful if agents can answer these questions without the human restating context, and the answer must reflect the actual recorded rationale rather than a plausible reconstruction:
 
 - "Why did we decide X?"
 - "What tradeoffs led to Y?"
@@ -579,7 +581,7 @@ Every SPEC.md produced through the conversational process must include:
 
 ## Program of Works — Sequencing
 
-All decisions resolved 2026-04-08. Work can begin on all epics immediately. Epic 10 implementation is pending pilot completion — the decision to pilot is made, but production adoption requires the pilot to pass its success criteria.
+All decision points were resolved on 2026-04-08. Work can begin on all epics immediately. Epic 10 implementation remains pending until Epic 9 is complete and the bounded pilot is run, and production adoption requires that pilot to pass its success criteria.
 
 | Order | Epic | Notes |
 |---|---|---|
