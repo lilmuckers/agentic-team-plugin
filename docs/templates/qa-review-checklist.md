@@ -18,6 +18,7 @@ Use this checklist when reviewing a PR.
 ## Verification Check
 
 - [ ] Tests are present or omission is justified
+- [ ] Bugfixes include automated regression coverage, or Spec has explicitly accepted a documented impossibility exception
 - [ ] CI/checks status is acceptable
 - [ ] Manual verification evidence is sufficient if needed
 

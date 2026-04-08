@@ -101,6 +101,8 @@ When Spec makes such assumptions, it should:
 3. reference them from issues or PRs when relevant
 4. make the reasoning visible to human reviewers
 
+When a bugfix cannot reasonably gain automated regression coverage, Spec must explicitly accept that exception in visible project context before QA may approve the PR.
+
 ## Spike rules
 A spike is a bounded feasibility exercise, not normal feature delivery.
 

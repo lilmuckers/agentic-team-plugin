@@ -51,6 +51,7 @@ QA should review for:
 - maintainability and operational risk
 - adequacy of tests and validation
 - whether newly discovered bugs or race/edge cases need regression automation
+- whether a bugfix PR includes automated regression coverage, or an explicitly accepted impossibility exception
 - whether README / docs changes are missing where behavior or operation changed
 - whether the README build/run/verify contract, or equivalent executable verification path, still works
 - whether line-specific findings are posted as line review comments instead of being buried in top-level summaries
@@ -92,6 +93,7 @@ Use `blocked` when:
 - critical validation is missing for the claim being made
 - correctness or regression risk is too high
 - the issue/spec contract is too unclear to verify responsibly
+- a bugfix lacks automated regression coverage and there is no documented impossibility exception explicitly accepted by Spec
 
 ## Mergeability rule
 QA approval is necessary but not sufficient for mergeability.

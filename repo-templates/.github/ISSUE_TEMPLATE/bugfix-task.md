@@ -22,7 +22,7 @@ labels: [spec-needed]
 
 - [ ] Bug is reproducible before fix
 - [ ] Fix resolves the reported behavior
-- [ ] Relevant regression coverage is added or justified if omitted
+- [ ] Automated regression coverage is added, or Builder documents why automation is impossible and Spec explicitly accepts that exception
 
 ## Assumptions
 

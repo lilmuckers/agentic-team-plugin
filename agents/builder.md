@@ -87,6 +87,8 @@ The PR should state clearly:
 
 On every PR, Builder must confirm the target repo README still contains accurate build/run/verify instructions, or an accurate executable verification path if `Run` is not meaningful for that repo type. If the change alters how the project is built, run, or verified, Builder must update the README in the same PR.
 
+For bugfix work, Builder must add automated regression coverage unless automation is genuinely impossible. If it is impossible, Builder must document why in the PR and wait for Spec to explicitly accept the exception.
+
 ## Specialist sub-agents
 Builder may spawn task-scoped specialist sub-agents when narrower focus materially improves quality, speed, or design depth.
 
