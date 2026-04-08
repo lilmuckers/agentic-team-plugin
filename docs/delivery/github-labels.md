@@ -17,6 +17,9 @@
 - `needs-qa` — PR is ready for quality review
 - `changes-requested` — review found required changes
 - `ready-to-merge` — review completed and merge is appropriate
+- `qa-approved` — QA has completed review and approved the PR
+- `spec-satisfied` — Spec confirms project-level assumptions, docs, and intent are satisfied
+- `orchestrator-approved` — Orchestrator confirms merge-gate conditions are met and merge is appropriate now
 
 ## Usage guidance
 

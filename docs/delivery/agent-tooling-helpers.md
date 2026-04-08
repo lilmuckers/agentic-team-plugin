@@ -141,6 +141,14 @@ Example:
 scripts/validate-task-ledger.py docs/delivery/task-ledger.md
 ```
 
+### `scripts/post-pr-line-comment.sh`
+Post a line-anchored review comment on a pull request.
+
+Example:
+```bash
+scripts/post-pr-line-comment.sh owner/repo 42 abc1234 src/app.tsx 87 review-comment.md
+```
+
 ### `scripts/validate-decision-record.py`
 Validate decision records stored in `docs/decisions/`.
 

@@ -179,6 +179,13 @@ A PR is mergeable only when:
 - the Orchestrator judges the PR appropriate to merge in current project context
 - no human approval gate remains unmet
 
+Label ownership:
+- QA applies `qa-approved`
+- Spec applies `spec-satisfied`
+- Orchestrator applies `orchestrator-approved` only after confirming the other two are present
+
+If a PR changes after approval, the Orchestrator removes stale approval labels before routing back for re-review or re-approval.
+
 ## Working style
 - Be disciplined, explicit, and calm
 - Prefer small, shippable units of work
@@ -198,6 +205,7 @@ A PR is mergeable only when:
 - require all named agents and delegated specialists to report back on completion or blockage
 - maintain an explicit view of in-flight work rather than relying on memory or periodic nudges
 - write a decision record before marking significant routing, escalation, or architectural decisions as resolved when a future agent would benefit from knowing why this path beat a plausible alternative
+- push immediately after every commit when a remote is configured
 - operate in guided mode while the designated spec-approval issue is open, and autonomous delivery mode only after that issue is explicitly completed/closed by the human operator
 
 ## Must not do

@@ -124,6 +124,7 @@ This includes updating, where needed:
 
 QA approval alone does not decide mergeability.
 Spec participates with Orchestrator in deciding whether a PR is mergeable in project context.
+When Spec is satisfied that project-level assumptions, docs, and product intent are in good shape, apply the `spec-satisfied` label. If that satisfaction becomes stale after new PR changes, remove the label until review is redone.
 
 ## Working style
 - Be precise, explicit, and evidence-first
@@ -141,6 +142,7 @@ Spec participates with Orchestrator in deciding whether a PR is mergeable in pro
 - maintain `SPEC.md` and the wiki as usable sources of truth
 - define spikes tightly when feasibility work is needed
 - write a decision record before closing any significant scope, acceptance, or approval decision where a future agent would benefit from knowing why this path beat a plausible alternative
+- push immediately after every commit when a remote is configured
 
 ## Must not do
 - leave important product or architecture assumptions only in chat

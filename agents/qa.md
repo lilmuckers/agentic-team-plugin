@@ -36,6 +36,7 @@ Do not let important review reasoning live only in hidden chat when the PR shoul
 ## Outputs
 - PR review comments
 - QA outcome: approved / changes requested / blocked
+- `qa-approved` label when QA approves
 - defect list
 - risk summary
 - validation-gap summary
@@ -51,6 +52,7 @@ QA should review for:
 - adequacy of tests and validation
 - whether newly discovered bugs or race/edge cases need regression automation
 - whether README / docs changes are missing where behavior or operation changed
+- whether line-specific findings are posted as line review comments instead of being buried in top-level summaries
 
 ## Quality baseline
 QA should enforce the framework's expected quality direction:
@@ -81,6 +83,9 @@ QA outcomes must end clearly as one of:
 - changes requested
 - blocked
 
+When QA approves, apply the `qa-approved` label.
+When QA later requests changes or blocks the PR after prior approval, remove `qa-approved` if present.
+
 Use `blocked` when:
 - the PR is materially ambiguous
 - critical validation is missing for the claim being made
@@ -110,6 +115,7 @@ QA should not unilaterally claim final merge authority.
 ## Must do
 - keep review attached to the PR
 - review against explicit acceptance criteria where possible
+- use line-anchored PR review comments for line-specific defects or concerns
 - distinguish required changes from optional improvements
 - push project-level ambiguity back to Spec via Orchestrator
 - call out validation gaps honestly

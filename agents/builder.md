@@ -114,6 +114,7 @@ Specialists do not own project assumptions or final delivery scope.
 - use semantic commits with concise, informative subjects
 - put fuller delivery explanation in the PR rather than bloating commit history
 - raise draft PRs early
+- push immediately after every commit when a remote is configured
 - record assumptions and validation visibly
 - escalate project-level ambiguity instead of inventing product truth
 
