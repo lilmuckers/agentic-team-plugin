@@ -8,7 +8,7 @@ All decisions were resolved 2026-04-08. The Decision Points Index below is a res
 
 ## Decision Points Index
 
-Resolved decisions should be updated inline and dated. Unresolved decisions block the epic they belong to.
+Resolved decisions are recorded here and inline in each epic for traceability.
 
 | # | Decision | Status | Blocks |
 |---|---|---|---|
@@ -16,7 +16,7 @@ Resolved decisions should be updated inline and dated. Unresolved decisions bloc
 | D2 | How does OpenClaw enforce persistent session continuity via `--session-id`? | **Resolved 2026-04-08** — `--session-id` provides routing identity only, not memory continuity; task ledger is the sole persistence mechanism | Epics 1, 4, OpenClaw config |
 | D3 | Merge gate mechanism — labels + branch protection, or GitHub Actions? | **Resolved 2026-04-08** — labels (`qa-approved`, `spec-satisfied`, `orchestrator-approved`) + branch protection + GH Actions workflow in `repo-templates/` | Epic 5 |
 | D4 | Callback format — structured markdown or JSON? | **Resolved 2026-04-08** — structured markdown with required section headers | Epic 3 |
-| D5 | Does OpenClaw have a native heartbeat/cron mechanism? | **Resolved 2026-04-08** — yes; use native OpenClaw cron (not system cron or watchdog script) | Epic 7, OpenClaw config |
+| D5 | Does OpenClaw have a native heartbeat/cron mechanism? | **Resolved 2026-04-08** — yes; use native OpenClaw cron (not system cron or watchdog script) | OpenClaw config |
 | D6 | Are named agent definitions declarative config or CLI-driven? | **Resolved 2026-04-08** — CLI-driven; scripts are source of truth (`deploy-named-agents.py` orchestrates `openclaw agent` calls) | OpenClaw config |
 | D7 | Does OpenClaw auto-load all workspace files, or require an explicit manifest? | **Resolved 2026-04-08** — `AGENTS.md` acts as the explicit boot manifest; agent reads it first, then follows its instructions to load remaining workspace files | OpenClaw config |
 | D8 | Workflow YAMLs — upgrade to real contracts or remove? | **Resolved 2026-04-08** — upgrade to full contracts with schema, preconditions, postconditions, and error paths | Epic 6 |
@@ -571,11 +571,10 @@ Every SPEC.md produced through the conversational process must include:
 1. Update Spec role doc: conversational spec mode is the required process for all new features; document the expected conversation structure (questions → options → agreement → SPEC.md commit)
 2. Write `policies/spec-process.md`: define conversational spec as policy — conversation structure, human approval gate, and SPEC.md as the committed record of what was agreed
 3. Add `## User Flows`, `## Usability Requirements`, `## Design Direction` as required SPEC.md sections when the feature has user-facing elements; add to `scripts/validate-issue-ready.py`
-4. Write `agents/specialists/ux-designer.md` template — base identity, refinement prompts, expected output format (see Epic 11 for template schema)
-5. Write `agents/specialists/visual-designer.md` template — base identity, refinement prompts, expected output format
-6. Update Spec role doc: when a feature has user-facing elements, Spec must spawn UX Designer and (if applicable) Visual Designer specialists and incorporate their output before finalising SPEC.md
-7. Update QA role doc: for features with user-facing elements, QA must spawn the `usability-reviewer` specialist (defined in Epic 11) and include usability findings in the `## Tests` section of its callback report
-8. Add usability review outcome as an input to Spec's `spec-satisfied` merge gate decision — Spec must confirm usability requirements were met before applying the label
+4. Confirm `agents/specialists/ux-designer.md` and `agents/specialists/visual-designer.md` are complete (authored in Epic 11) — Epic 14 depends on both
+5. Update Spec role doc: when a feature has user-facing elements, Spec must spawn UX Designer and (if applicable) Visual Designer specialists using `prepare-specialist-spawn.py`, and incorporate their output before finalising SPEC.md
+6. Update QA role doc: for features with user-facing elements, QA must spawn the `usability-reviewer` specialist (defined in Epic 11) and include usability findings in the `## Tests` section of its callback report
+7. Add usability review outcome as an input to Spec's `spec-satisfied` merge gate decision — Spec must confirm usability requirements were met before applying the label
 
 ---
 
@@ -589,14 +588,14 @@ All decision points were resolved on 2026-04-08. Work can begin on all epics imm
 | 2 | Epic 2 — Issue readiness validation | Unblocked; quick win; gates Builder work immediately |
 | 3 | Epic 1 — Task ledger | Unblocked; critical for Orchestrator persistence |
 | 4 | Epic 9 — Decision record schema | Unblocked; solves rationale-loss problem independently |
-| 4 | OpenClaw config — watchdog cron | Configure as soon as Epic 1 ledger schema is finalised; no other dependency |
-| 5 | Epic 11 — Specialist subagent template library | Depends on Epic 3 (specialists must return structured callbacks); must complete before Epic 14 |
-| 6 | Epic 14 — Conversational spec + UX/Design specialists | Depends on Epic 11 (UX/Design specialist templates must exist); process change can begin immediately, but template authoring blocks full completion |
-| 7 | Epic 12 — Testing standards and quality gates | Depends on Epic 14 (Spec-defined test strategy is part of the spec process); README contract and test-presence gate are unblocked and can start in parallel |
-| 8 | Epic 4 — Session health check | Depends on Epic 1 |
-| 9 | Epic 5 — Merge gate + PR line comments | Depends on Epic 3; usability gate from Epic 14 feeds into `spec-satisfied` label logic |
-| 10 | Epic 13 — Adversarial QA + bug regression workflow | Depends on Epic 3 (callbacks), Epic 12 (test standards), and Epic 5 (PR line comments for bug reports) |
-| 11 | Epic 7 — Deployment security hardening | Mostly independent; can run in parallel with 8–10 |
-| 12 | Epic 6 — Workflow YAML contracts | Depends on Epics 1–5, 12, 13, 14 being stable — YAMLs encode the finalised workflow shape |
-| 13 | Epic 8 — Onboarding script | Depends on Epics 1–5 stable; wraps all setup into a single entry point |
-| 14 | Epic 10 — Memory substrate pilot | Pilot begins after Epic 9; implementation (if adopted) sequences after pilot concludes |
+| 5 | OpenClaw config — watchdog cron | Configure as soon as Epic 1 ledger schema is finalised; no other dependency |
+| 6 | Epic 11 — Specialist subagent template library | Depends on Epic 3 (specialists must return structured callbacks); must complete before Epic 14 |
+| 7 | Epic 14 — Conversational spec + UX/Design specialists | Depends on Epic 11 (UX/Design specialist templates must exist); process change can begin immediately, but template authoring blocks full completion |
+| 8 | Epic 12 — Testing standards and quality gates | Depends on Epic 14 (Spec-defined test strategy is part of the spec process); README contract and test-presence gate are unblocked and can start in parallel |
+| 9 | Epic 4 — Session health check | Depends on Epic 1 |
+| 10 | Epic 5 — Merge gate + PR line comments | Depends on Epic 3; usability gate from Epic 14 feeds into `spec-satisfied` label logic |
+| 11 | Epic 13 — Adversarial QA + bug regression workflow | Depends on Epic 3 (callbacks), Epic 12 (test standards), and Epic 5 (PR line comments for bug reports) |
+| 12 | Epic 7 — Deployment security hardening | Mostly independent; can run in parallel with 9–11 |
+| 13 | Epic 6 — Workflow YAML contracts | Depends on Epics 1–5, 12, 13, 14 being stable — YAMLs encode the finalised workflow shape |
+| 14 | Epic 8 — Onboarding script | Depends on Epics 1–5 stable; wraps all setup into a single entry point |
+| 15 | Epic 10 — Memory substrate pilot | Pilot begins after Epic 9; implementation (if adopted) sequences after pilot concludes |
