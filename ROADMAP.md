@@ -369,7 +369,7 @@ If the pilot fails the success criteria, or if ChromaDB/stability issues prove b
 
 ## Program of Works — Sequencing
 
-All decisions resolved 2026-04-08 except D11 (mempalace spike, pending OpenClaw evaluation). Work can begin on all other epics immediately.
+All decisions resolved 2026-04-08. Work can begin on all epics immediately. Epic 10 implementation is pending pilot completion — the decision to pilot is made, but production adoption requires the pilot to pass its success criteria.
 
 | Order | Epic | Notes |
 |---|---|---|
