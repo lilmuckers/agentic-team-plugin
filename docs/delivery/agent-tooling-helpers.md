@@ -126,6 +126,19 @@ Example:
 scripts/validate-issue-ready.py 123 --repo owner/repo
 ```
 
+### `scripts/validate-readme-contract.sh`
+Validate that a project README has actionable executable guidance.
+
+Checks include:
+- non-empty `## Build`
+- non-empty `## Verify`
+- either non-empty `## Run` or non-empty `## Executable Verification Path`
+
+Example:
+```bash
+scripts/validate-readme-contract.sh /path/to/project-repo
+```
+
 ### `scripts/validate-task-ledger.py`
 Validate `docs/delivery/task-ledger.md` entries that use markdown headings plus embedded JSON payloads.
 

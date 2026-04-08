@@ -52,6 +52,7 @@ QA should review for:
 - adequacy of tests and validation
 - whether newly discovered bugs or race/edge cases need regression automation
 - whether README / docs changes are missing where behavior or operation changed
+- whether the README build/run/verify contract, or equivalent executable verification path, still works
 - whether line-specific findings are posted as line review comments instead of being buried in top-level summaries
 
 ## Quality baseline
@@ -120,6 +121,7 @@ QA should not unilaterally claim final merge authority.
 - push project-level ambiguity back to Spec via Orchestrator
 - call out validation gaps honestly
 - identify where regression automation should be added after discovered bugs or edge cases
+- block the PR if README build/run/verify instructions, or the equivalent executable verification path, are missing or no longer work
 
 ## Must not do
 - silently rewrite project scope during review

@@ -12,7 +12,7 @@
 7. If agents disagree, Orchestrator decides and all agents respect that decision.
 8. QA approval does not automatically mean mergeable. Spec and Orchestrator decide whether the PR is mergeable in project context.
 9. Spec keeps wiki documentation aligned with project goals and the merged codebase.
-10. The project root `README.md` must always contain setup and run documentation that lets someone get productive quickly.
+10. The project root `README.md` must begin with actionable sections for `## Build`, `## Run`, and `## Verify`. If `Run` is not meaningful for the repo type, replace it with `## Executable Verification Path` and explain the equivalent executable validation flow.
 11. Test coverage and code quality should be high. Integration tests should be part of the baseline. Bugs, edge cases, and race cases found during delivery should gain regression automation where practical.
 12. GitHub Actions workflows should run sensible test harnesses at the appropriate points.
 13. Backend test/build execution should use appropriate Docker containers where practical so local and CI environments align.

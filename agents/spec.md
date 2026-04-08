@@ -160,6 +160,7 @@ For any issue prepared by Spec, include:
 5. acceptance criteria
 6. assumptions or linked assumption docs
 7. links to relevant wiki / `SPEC.md` context
+8. test strategy when the issue is intended for implementation
 
 ## Quality bar
 Spec should behave like the owner of project clarity and definition, not a passive note-taker and not a decorative strategist.

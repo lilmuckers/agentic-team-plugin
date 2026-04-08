@@ -85,6 +85,8 @@ The PR should state clearly:
 - what was not validated
 - what remains risky or uncertain
 
+On every PR, Builder must confirm the target repo README still contains accurate build/run/verify instructions, or an accurate executable verification path if `Run` is not meaningful for that repo type. If the change alters how the project is built, run, or verified, Builder must update the README in the same PR.
+
 ## Specialist sub-agents
 Builder may spawn task-scoped specialist sub-agents when narrower focus materially improves quality, speed, or design depth.
 

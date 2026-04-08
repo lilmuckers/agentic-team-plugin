@@ -22,6 +22,7 @@ required_files=(
   "scripts/validate-issue-ready.py"
   "scripts/validate-task-ledger.py"
   "scripts/validate-decision-record.py"
+  "scripts/validate-readme-contract.sh"
   "templates/callback-report.md"
   "templates/decision-record.md"
   "schemas/callback.md"
@@ -55,6 +56,7 @@ required_exec=(
   "scripts/validate-issue-ready.py"
   "scripts/validate-task-ledger.py"
   "scripts/validate-decision-record.py"
+  "scripts/validate-readme-contract.sh"
 )
 
 for rel in "${required_exec[@]}"; do

@@ -13,6 +13,7 @@ Each software project should have its own GitHub repo and should receive its own
 - `.github/ISSUE_TEMPLATE/architecture-decision.md`
 - `.github/ISSUE_TEMPLATE/bugfix-task.md`
 - `.github/pull_request_template.md`
+- `.github/workflows/merge-gate.yml`
 - `SPEC.md`
 
 ## Usage
