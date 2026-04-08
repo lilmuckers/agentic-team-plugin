@@ -151,6 +151,8 @@ Required JSON fields per entry:
 8. Update QA role doc: line-specific feedback must use `post-pr-line-comment.sh`; top-level PR comments are for summary only
 9. Update Builder role doc: when addressing QA feedback, expect line comments and resolve them via `gh pr review` dismiss or by pushing a fix commit
 10. Add `post-pr-line-comment.sh` to `docs/delivery/agent-tooling-helpers.md`
+11. Add commit-then-push rule to `policies/git-safety.md`: every commit must be immediately followed by `git push` if a remote is configured; push failures must be surfaced to the Orchestrator, never resolved silently; force-push is never permitted
+12. Add commit-then-push requirement to Builder, Orchestrator, and Spec role docs
 
 ---
 
@@ -287,6 +289,20 @@ Commit identity format (already defined in policies):
 ```
 <Name> (<Archetype>) <bot-<archetype-slug>@<operator-domain>>
 ```
+
+### 7. Commit-then-Push Policy
+
+**Policy:** Every commit an agent makes must be immediately followed by a push to the remote, if a remote is configured for the repo. Agents must not leave commits in a local-only state.
+
+Rationale: local-only commits are invisible to other agents, the human, and CI. The task ledger and merge gate both rely on GitHub as the source of truth — a commit that has not been pushed has not happened as far as the rest of the system is concerned.
+
+Rules:
+- After every `git commit`, run `git push` before doing any further work
+- If no remote is configured, the commit is acceptable as-is; the agent must note the absence of a remote in its callback report
+- Force-push is never permitted; if a push is rejected, the agent must halt and surface the conflict to the Orchestrator rather than resolving it silently
+- This applies to all agents that make commits: Builder (feature branches), Orchestrator (task ledger updates), Spec (SPEC.md, decision records)
+
+Add this rule to `policies/git-safety.md` and reference it in each role doc that makes commits.
 
 ---
 
