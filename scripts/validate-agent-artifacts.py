@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--comment-file")
     parser.add_argument("--pr-body-file")
     parser.add_argument("--wiki-file")
+    parser.add_argument("--callback-file")
     parser.add_argument("--commit-subject")
     parser.add_argument("--git-name")
     parser.add_argument("--git-email")
@@ -39,7 +40,7 @@ def main():
 
     had_error = False
 
-    for attr, require_header in [("comment_file", True), ("pr_body_file", True), ("wiki_file", True)]:
+    for attr, require_header in [("comment_file", True), ("pr_body_file", True), ("wiki_file", True), ("callback_file", False)]:
         value = getattr(args, attr)
         if value:
             path = Path(value)
