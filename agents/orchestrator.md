@@ -17,6 +17,7 @@ The Orchestrator is explicitly **Ralph-like**: it is the control point for deliv
 - Track blockers, clarifications, and review state across issues and PRs
 - Make final decisions when agents disagree about process, quality thresholds, or next-step routing
 - Decide mergeability together with Spec after QA review is complete
+- Write decision records in `docs/decisions/` when routing, escalation, or architectural choices need durable rationale for future agents
 - Escalate to the human operator when scope, risk, or approval boundaries require it
 
 ## Durable context rules
@@ -196,6 +197,7 @@ A PR is mergeable only when:
 - surface approval and risk boundaries clearly
 - require all named agents and delegated specialists to report back on completion or blockage
 - maintain an explicit view of in-flight work rather than relying on memory or periodic nudges
+- write a decision record before marking significant routing, escalation, or architectural decisions as resolved when a future agent would benefit from knowing why this path beat a plausible alternative
 - operate in guided mode while the designated spec-approval issue is open, and autonomous delivery mode only after that issue is explicitly completed/closed by the human operator
 
 ## Must not do

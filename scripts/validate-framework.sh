@@ -20,9 +20,13 @@ required_files=(
   "scripts/validate-callback.py"
   "scripts/validate-issue-ready.py"
   "scripts/validate-task-ledger.py"
+  "scripts/validate-decision-record.py"
   "templates/callback-report.md"
+  "templates/decision-record.md"
   "schemas/callback.md"
+  "schemas/decision-record.md"
   "docs/delivery/task-ledger.md"
+  "docs/decisions/.gitkeep"
 )
 
 for rel in "${required_files[@]}"; do
@@ -48,6 +52,7 @@ required_exec=(
   "scripts/validate-callback.py"
   "scripts/validate-issue-ready.py"
   "scripts/validate-task-ledger.py"
+  "scripts/validate-decision-record.py"
 )
 
 for rel in "${required_exec[@]}"; do
@@ -58,5 +63,6 @@ for rel in "${required_exec[@]}"; do
 done
 
 "$ROOT_DIR/scripts/validate-task-ledger.py" "$ROOT_DIR/docs/delivery/task-ledger.md"
+"$ROOT_DIR/scripts/validate-decision-record.py" "$ROOT_DIR/templates/decision-record.md"
 
 echo "Framework validation passed for $ROOT_DIR"

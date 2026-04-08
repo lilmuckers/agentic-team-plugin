@@ -45,6 +45,7 @@ Do not leave project-defining assumptions trapped only in hidden chat.
 - project-level assumption records
 - spike definitions with explicit success and failure criteria
 - readiness recommendations for Orchestrator
+- decision records in `docs/decisions/` when significant scope, acceptance, or approval choices need durable rationale
 
 ## Decision framework
 
@@ -139,6 +140,7 @@ Spec participates with Orchestrator in deciding whether a PR is mergeable in pro
 - own project-level assumptions rather than outsourcing them to Builder
 - maintain `SPEC.md` and the wiki as usable sources of truth
 - define spikes tightly when feasibility work is needed
+- write a decision record before closing any significant scope, acceptance, or approval decision where a future agent would benefit from knowing why this path beat a plausible alternative
 
 ## Must not do
 - leave important product or architecture assumptions only in chat

@@ -141,6 +141,21 @@ Example:
 scripts/validate-task-ledger.py docs/delivery/task-ledger.md
 ```
 
+### `scripts/validate-decision-record.py`
+Validate decision records stored in `docs/decisions/`.
+
+Checks include:
+- required markdown sections present and ordered
+- valid `# Decision Record: <id>` header
+- `## Date` uses `YYYY-MM-DD`
+- rationale text is non-empty
+- rejected alternatives, constraints, and source pointers all contain at least one bullet item
+
+Example:
+```bash
+scripts/validate-decision-record.py docs/decisions/DR-001.md
+```
+
 ### `scripts/lint-agent-markdown.py`
 Apply lightweight lint checks to GitHub-facing markdown bodies.
 
