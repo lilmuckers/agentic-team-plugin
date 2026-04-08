@@ -21,6 +21,8 @@ They are disposable, narrow, and subordinate.
 
 They should not be treated as first-class governance roles.
 
+Templates for reusable specialists live in `agents/specialists/`. The spawning agent must choose a template, add a task-specific refinement, and run `scripts/prepare-specialist-spawn.py` before spawning. Templates are starting points, not ready-to-run prompts.
+
 ## Recommended usage by archetype
 
 ### Orchestrator

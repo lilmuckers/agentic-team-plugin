@@ -126,6 +126,22 @@ Example:
 scripts/validate-issue-ready.py 123 --repo owner/repo
 ```
 
+### `scripts/prepare-specialist-spawn.py`
+Merge a base specialist template with a task-specific refinement file.
+
+Example:
+```bash
+scripts/prepare-specialist-spawn.py agents/specialists/typescript-engineer.md refinement.md --output specialist-prompt.md
+```
+
+### `scripts/validate-specialist-template.py`
+Validate a specialist template in `agents/specialists/`.
+
+Example:
+```bash
+scripts/validate-specialist-template.py agents/specialists/typescript-engineer.md
+```
+
 ### `scripts/validate-readme-contract.sh`
 Validate that a project README has actionable executable guidance.
 

@@ -23,12 +23,18 @@ required_files=(
   "scripts/validate-task-ledger.py"
   "scripts/validate-decision-record.py"
   "scripts/validate-readme-contract.sh"
+  "scripts/prepare-specialist-spawn.py"
+  "scripts/validate-specialist-template.py"
   "templates/callback-report.md"
   "templates/decision-record.md"
   "schemas/callback.md"
   "schemas/decision-record.md"
+  "schemas/specialist-template.md"
   "docs/delivery/task-ledger.md"
   "docs/decisions/.gitkeep"
+  "agents/specialists/typescript-engineer.md"
+  "agents/specialists/qa-regression.md"
+  "agents/specialists/ux-designer.md"
 )
 
 for rel in "${required_files[@]}"; do
@@ -57,6 +63,8 @@ required_exec=(
   "scripts/validate-task-ledger.py"
   "scripts/validate-decision-record.py"
   "scripts/validate-readme-contract.sh"
+  "scripts/prepare-specialist-spawn.py"
+  "scripts/validate-specialist-template.py"
 )
 
 for rel in "${required_exec[@]}"; do
@@ -68,5 +76,8 @@ done
 
 "$ROOT_DIR/scripts/validate-task-ledger.py" "$ROOT_DIR/docs/delivery/task-ledger.md"
 "$ROOT_DIR/scripts/validate-decision-record.py" "$ROOT_DIR/templates/decision-record.md"
+"$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/typescript-engineer.md"
+"$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/qa-regression.md"
+"$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/ux-designer.md"
 
 echo "Framework validation passed for $ROOT_DIR"

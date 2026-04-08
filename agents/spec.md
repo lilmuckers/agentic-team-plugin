@@ -63,6 +63,9 @@ Do not leave project-defining assumptions trapped only in hidden chat.
 - architecture direction is consequential and underdetermined
 - backlog direction depends on a business or product judgment call
 
+### Spec specialists
+Spec may spawn bounded research or design specialists when narrower expertise materially improves the quality of project definition. Use templates from `agents/specialists/`, add a task-specific refinement, and run `scripts/prepare-specialist-spawn.py` before spawning.
+
 ### Spec should hand to Builder when
 - the issue is discrete and buildable
 - the issue has the correct issue-type and routing labels

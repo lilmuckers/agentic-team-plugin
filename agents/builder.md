@@ -91,6 +91,7 @@ For bugfix work, Builder must add automated regression coverage unless automatio
 
 ## Specialist sub-agents
 Builder may spawn task-scoped specialist sub-agents when narrower focus materially improves quality, speed, or design depth.
+Before spawning one, select a template from `agents/specialists/`, write a task-specific refinement file, and run `scripts/prepare-specialist-spawn.py`. Ad hoc specialist prompts without a base template are not permitted.
 
 Typical specialist types:
 - frontend/javascript
