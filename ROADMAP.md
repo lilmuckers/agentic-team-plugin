@@ -1,8 +1,8 @@
 # Framework Improvement Roadmap
 
-This roadmap captures the next phase of development for the agentic-team-plugin framework. It is organized as a set of epics with implementation steps and decision points that must be resolved before or during each epic.
+This roadmap captures the next phase of development for the agentic-team-plugin framework. It is organized as a set of epics with implementation steps and decision points.
 
-Decision points are marked **DECIDE:** — these require a judgement call before the relevant work can proceed.
+All decisions were resolved 2026-04-08. The Decision Points Index below is a resolved record — it is not a blocker list.
 
 ---
 
@@ -278,8 +278,6 @@ Commit identity format (already defined in policies):
 
 ---
 
----
-
 ## Epic 9 — Decision Record Schema
 
 **Problem:** Agents preserve decisions but lose the reasoning. Later agents retrieve the conclusion without the rationale, the tradeoffs considered, or the philosophical constraints that shaped it — causing cargo-culting or forcing the human to restate context that was already worked through.
@@ -367,20 +365,236 @@ If the pilot fails the success criteria, or if ChromaDB/stability issues prove b
 
 ---
 
+## Epic 11 — Specialist Subagent Template Library
+
+**Problem:** The specialist subagent model is defined in policy (`docs/delivery/named-agent-specialist-model.md`) — Builder, QA, and Spec can all spawn ephemeral specialists — but there are no reusable templates. Every agent that needs a TypeScript specialist, a QA accessibility reviewer, or a GraphQL analyst must invent it from scratch. This produces inconsistent specialist quality and duplicates effort across projects.
+
+**Goal:** A curated library of generic specialist subagent templates that agents select, then refine for their specific task context before spawning. The refinement step is explicit and required — templates are starting points, not ready-to-run prompts.
+
+### How the refinement model works
+
+A template defines the base identity and capability of a specialist:
+
+> "You are a TypeScript engineer. Your role is to implement TypeScript with correctness and idiomatic style."
+
+The spawning agent refines it for the specific task context before spawning:
+
+> "You are a TypeScript engineer. Your role is to implement TypeScript with correctness and idiomatic style. This project uses React with a GraphQL backend via Apollo Client. Prefer functional components and typed query hooks."
+
+The spawning agent remains accountable for the output — the specialist contributes focused work only. This aligns with the authority boundaries already defined in `docs/delivery/named-agent-specialist-model.md`.
+
+### Template library structure
+
+Templates live in `agents/specialists/`. Each template is a markdown file with two sections:
+
+- `## Base Identity` — the generic, reusable prompt that defines the specialist's role and capability
+- `## Refinement Prompts` — a set of example refinements showing how to extend the base identity for common contexts. Agents pick from these or write their own.
+
+### Initial template set
+
+**Builder specialists** (implementation and testing):
+- `agents/specialists/typescript-engineer.md`
+- `agents/specialists/python-engineer.md`
+- `agents/specialists/frontend-ui.md`
+- `agents/specialists/backend-integration.md`
+- `agents/specialists/api-design.md`
+- `agents/specialists/database-migration.md`
+- `agents/specialists/ci-container.md`
+- `agents/specialists/test-harness.md`
+- `agents/specialists/test-suite-builder.md` — writes full test suites in the project's chosen language and framework; refinement must specify language, test framework, and coverage targets
+
+**QA specialists** (review-focused):
+- `agents/specialists/qa-regression.md`
+- `agents/specialists/qa-edge-case.md`
+- `agents/specialists/qa-accessibility.md`
+- `agents/specialists/qa-security.md`
+- `agents/specialists/qa-docs-verification.md`
+- `agents/specialists/usability-reviewer.md` — evaluates delivered features against SPEC.md usability requirements; used by QA, not Spec
+
+**Spec specialists** (research, analysis, and design):
+- `agents/specialists/architecture-research.md`
+- `agents/specialists/library-evaluation.md`
+- `agents/specialists/technical-option-comparison.md`
+- `agents/specialists/migration-scoping.md`
+- `agents/specialists/ux-designer.md`
+- `agents/specialists/visual-designer.md`
+
+### Steps
+
+1. Define specialist template schema in `schemas/specialist-template.md` — required sections: `## Base Identity`, `## Refinement Prompts`, `## Authority Boundaries` (what this specialist does not own), `## Expected Output`
+2. Write the initial template set above in `agents/specialists/` against the schema
+3. Write `scripts/prepare-specialist-spawn.py <template> <refinement-file>` — merges a base template with an agent-supplied refinement file to produce a ready-to-spawn prompt payload; outputs to stdout or a named file
+4. Update Builder role doc: before spawning any specialist subagent, Builder must select a template from `agents/specialists/`, write a refinement file scoped to the current task, and run `prepare-specialist-spawn.py`; ad hoc specialist definitions without a template are not permitted
+5. Update QA role doc: same requirement for QA specialists
+6. Update Spec role doc: same requirement for Spec specialists
+7. Update `docs/delivery/named-agent-specialist-model.md` to reference the template library and refinement process
+8. Write `scripts/validate-specialist-template.py` — validates a template file against the schema
+9. Wire `validate-specialist-template.py` into `validate-framework.sh`
+10. Add guidance to `docs/delivery/agent-tooling-helpers.md`: how to select a template, write a refinement, and invoke `prepare-specialist-spawn.py`
+
+---
+
+## Epic 12 — Testing Standards and Executable Quality Gates
+
+**Problem:** There is no enforced standard for test presence, test executability, or how the application should be built and verified. Builder produces code; QA reviews it; but neither is mechanically required to prove the application actually runs or that tests exist and pass.
+
+**Goal:** Define and enforce: (1) a README-first contract for every project so any agent or human can build, run, and verify the application; (2) a requirement that all PRs include executable tests; (3) a Spec-owned test strategy that defines the tooling appropriate to the application type.
+
+### README-first contract
+
+The first substantive content of every project README must be actionable instructions covering three things, in order:
+1. How to build the application
+2. How to run it
+3. How to verify it is running correctly (a smoke test or health check a human can execute in under two minutes)
+
+This is not a documentation nicety — it is a quality gate. If QA cannot follow the README to a running application, the PR is blocked.
+
+### Spec-defined test strategy
+
+Spec is responsible for defining the test strategy as part of the specification for every feature or project. The strategy must specify:
+- Test types required (unit, integration, end-to-end, contract, etc.)
+- Test framework and tooling for each type (e.g. Jest for unit, Playwright for browser end-to-end, pytest for Python)
+- Coverage expectations
+- How tests are executed in CI
+
+Builder and QA are bound by the Spec-defined strategy. Builder implements it; QA enforces it.
+
+### Steps
+
+1. Add README-first contract to `policies/repo-management.md` — first section of README must be build/run/verify instructions; define the required headings
+2. Add to Builder role doc: on every PR, confirm README build/run/verify section exists and is accurate; if the feature changes how the application is built or run, update the README as part of the PR
+3. Add to QA role doc: on every PR, verify README instructions still produce a running application; if they do not, block the PR regardless of code review outcome
+4. Add to Spec role doc: every feature specification must include a `## Test Strategy` section defining test types, tooling, and coverage expectations; this is part of the definition of ready
+5. Add `test-strategy` as a required field in `scripts/validate-issue-ready.py` — issue body must reference or contain a test strategy before it is considered ready for build
+6. Add to QA role doc: a PR without executable tests is blocked; QA must verify tests run and pass before applying `qa-approved`
+7. Write `scripts/validate-readme-contract.sh <repo-path>` — checks that README contains the required build/run/verify headings; exits non-zero if absent
+8. Wire `validate-readme-contract.sh` into `validate-agent-artifacts.py`
+
+---
+
+## Epic 13 — Adversarial QA and Bug Regression Workflow
+
+**Problem:** QA currently reviews code and verifies functionality, but there is no policy requiring adversarial exploration — actively trying to break the application. Bugs found by QA have no defined lifecycle: no standard for reporting repro steps, no requirement to write a regression test, and no clear ownership handoff back to Builder.
+
+**Goal:** Define adversarial QA as a first-class QA responsibility, a structured bug lifecycle from discovery through regression test, and a Spec-owned triage gate for deciding which bugs are in-scope.
+
+### Adversarial QA mandate
+
+QA must actively attempt to break the application — not just verify the happy path. Required adversarial passes:
+- Invalid or unexpected inputs at every boundary
+- State transitions in unexpected order
+- Missing dependencies, partial config, empty states
+- Concurrent or rapid repeated actions where applicable
+- Edge cases derived from the acceptance criteria (e.g. empty list, max values, missing optional fields)
+
+QA reports every breakage found, not just the ones it judges to be important. Scope triage is Spec's responsibility, not QA's.
+
+### Bug scope triage
+
+When QA surfaces a bug, Spec decides:
+- **In-scope and must fix** — bug is within the application's defined behaviour; Builder is assigned to fix and write a regression test
+- **Expected / by design** — the behaviour is intentional; Spec documents why and closes the bug
+- **Out of scope** — bug is in a layer the application does not own (e.g. a rendering quirk in a headless environment for a CLI application); Spec documents the boundary and closes the bug
+
+This prevents QA from self-censoring ("this probably doesn't matter") and prevents Builder from arbitrarily deciding a bug is acceptable.
+
+### Bug reproduction and regression workflow
+
+When QA discovers a bug:
+1. QA posts a structured bug report — repro steps, observed vs expected behaviour, environment; QA does not pre-filter by scope
+   - If discovered during PR review: as a line comment on the relevant code (using `scripts/post-pr-line-comment.sh`) plus a PR-level summary comment
+   - If discovered post-merge: as a new GitHub issue with `type:bug` label
+2. Spec triages: in-scope / expected / out-of-scope; records the decision as a decision record (Epic 9 format)
+3. If in-scope: Orchestrator assigns Builder to write a **failing test** that reproduces the bug — the test must fail in the presence of the bug and pass only when it is fixed
+4. Builder writes the regression test, confirms it fails before the fix, then applies the fix and confirms the test passes
+5. The regression test is committed alongside the fix; QA re-verifies both
+
+### Steps
+
+1. Add adversarial QA mandate to QA role doc — list the required adversarial passes; QA must document which passes it ran in the `## Tests` section of its callback report
+2. Define bug report template in `templates/bug-report.md` — required fields: `## Summary`, `## Steps to Reproduce`, `## Observed Behaviour`, `## Expected Behaviour`, `## Environment`, `## Affected Code` (file/line reference)
+3. Update QA role doc: all discovered breakages must be reported using `templates/bug-report.md`; QA does not triage scope — all findings are reported and Spec decides
+4. Update Spec role doc: when QA surfaces bugs, Spec must triage each as in-scope/expected/out-of-scope and record the decision as a decision record (Epic 9 format)
+5. Update Orchestrator role doc: when Spec marks a bug as in-scope, Orchestrator assigns Builder to write the regression test before assigning the fix; regression test and fix are a single deliverable
+6. Update Builder role doc: regression test must be written first and confirmed failing; fix is then applied and test confirmed passing; both must be present in the PR
+7. Add `scripts/post-bug-report.sh <issue-number|pr-number> <bug-report-file>` — posts a formatted bug report as a GitHub issue or PR comment using the template
+8. Wire bug report requirement into `validate-agent-artifacts.py`: if a PR is tagged `type:bug-fix`, verify a linked regression test file exists
+
+---
+
+## Epic 14 — Conversational Spec and UX/Design Specialists
+
+**Problem:** The Spec agent currently builds specifications through document-first, asynchronous work. There is no model for the human and Spec to work through requirements conversationally. Additionally, UX and design decisions are either absent from specifications or handled ad hoc — there are no specialist subagents for Spec to delegate design and usability work to.
+
+**Goal:** Establish a conversational spec-building mode as the primary model for how specifications are produced, and add UX and Design specialist subagents to Spec's toolkit so usability and visual design are first-class outputs of the specification process.
+
+### Conversational spec mode
+
+The specification for a feature is built through direct conversation between the human and the Spec agent — not through the Spec agent drafting a document in isolation and submitting it for review. The conversation is the primary input; the SPEC.md document is the structured output of that conversation.
+
+Spec must:
+- Ask clarifying questions before writing
+- Propose options and tradeoffs rather than asserting a single solution
+- Confirm scope, acceptance criteria, and test strategy with the human before committing anything to SPEC.md
+- Surface design and usability questions explicitly rather than making silent assumptions
+
+The human approves the spec in conversation; SPEC.md is then the durable record of what was agreed.
+
+### UX and Design specialists
+
+Spec spawns UX and Design specialists during the specification conversation when the feature has user-facing elements. These specialists contribute to the spec, not to implementation.
+
+**UX Designer specialist** (`agents/specialists/ux-designer.md`):
+- Defines user flows, interaction patterns, and task completion paths
+- Identifies usability requirements (what must be easy, what must be discoverable)
+- Surfaces accessibility considerations
+- Output: user flow diagrams (in text/Mermaid), usability requirements section of SPEC.md
+
+**Visual Designer specialist** (`agents/specialists/visual-designer.md`):
+- Defines visual language, layout principles, and component hierarchy
+- Specifies how the UI should look and feel where relevant
+- Output: design direction section of SPEC.md; not implementation assets
+
+### Spec output requirements
+
+Every SPEC.md produced through the conversational process must include:
+- `## User Flows` — if the feature has user-facing elements (from UX Designer)
+- `## Usability Requirements` — what must be easy, discoverable, or accessible (from UX Designer)
+- `## Design Direction` — visual and layout guidance (from Visual Designer, if applicable)
+- `## Test Strategy` — tooling and coverage expectations (Epic 12)
+- `## Acceptance Criteria` — functional correctness gates
+
+### Steps
+
+1. Update Spec role doc: conversational spec mode is the required process for all new features; document the expected conversation structure (questions → options → agreement → SPEC.md commit)
+2. Write `policies/spec-process.md`: define conversational spec as policy — conversation structure, human approval gate, and SPEC.md as the committed record of what was agreed
+3. Add `## User Flows`, `## Usability Requirements`, `## Design Direction` as required SPEC.md sections when the feature has user-facing elements; add to `scripts/validate-issue-ready.py`
+4. Write `agents/specialists/ux-designer.md` template — base identity, refinement prompts, expected output format (see Epic 11 for template schema)
+5. Write `agents/specialists/visual-designer.md` template — base identity, refinement prompts, expected output format
+6. Update Spec role doc: when a feature has user-facing elements, Spec must spawn UX Designer and (if applicable) Visual Designer specialists and incorporate their output before finalising SPEC.md
+7. Update QA role doc: for features with user-facing elements, QA must spawn the `usability-reviewer` specialist (defined in Epic 11) and include usability findings in the `## Tests` section of its callback report
+8. Add usability review outcome as an input to Spec's `spec-satisfied` merge gate decision — Spec must confirm usability requirements were met before applying the label
+
+---
+
 ## Program of Works — Sequencing
 
 All decisions resolved 2026-04-08. Work can begin on all epics immediately. Epic 10 implementation is pending pilot completion — the decision to pilot is made, but production adoption requires the pilot to pass its success criteria.
 
 | Order | Epic | Notes |
 |---|---|---|
-| 1 | Epic 3 — Callback schema | Unblocked; foundational — other epics depend on agents returning structured callbacks |
+| 1 | Epic 3 — Callback schema | Unblocked; foundational — all other epics depend on structured callbacks |
 | 2 | Epic 2 — Issue readiness validation | Unblocked; quick win; gates Builder work immediately |
 | 3 | Epic 1 — Task ledger | Unblocked; critical for Orchestrator persistence |
-| 4 | Epic 9 — Decision record schema | Unblocked; independent of all other epics; solves the rationale-loss problem immediately |
-| 5 | Epic 4 — Session health check | Depends on Epic 1 |
-| 6 | Epic 5 — Merge gate + PR line comments | Depends on Epic 3 |
-| 7 | Epic 7 — Deployment security hardening | Mostly independent; can run in parallel with Epics 4–6 |
-| 8 | Epic 6 — Workflow YAML contracts | Depends on Epics 1–5 being stable |
-| 9 | OpenClaw config — watchdog cron | Configure after task ledger (Epic 1) schema is finalised |
-| 10 | Epic 8 — Onboarding script | Depends on Epics 1–5 stable |
-| 11 | Epic 10 — Memory substrate spike | OpenClaw spike runs in parallel; implementation (if adopted) sequences after Epic 9 |
+| 4 | Epic 9 — Decision record schema | Unblocked; solves rationale-loss problem independently |
+| 4 | OpenClaw config — watchdog cron | Configure as soon as Epic 1 ledger schema is finalised; no other dependency |
+| 5 | Epic 11 — Specialist subagent template library | Depends on Epic 3 (specialists must return structured callbacks); must complete before Epic 14 |
+| 6 | Epic 14 — Conversational spec + UX/Design specialists | Depends on Epic 11 (UX/Design specialist templates must exist); process change can begin immediately, but template authoring blocks full completion |
+| 7 | Epic 12 — Testing standards and quality gates | Depends on Epic 14 (Spec-defined test strategy is part of the spec process); README contract and test-presence gate are unblocked and can start in parallel |
+| 8 | Epic 4 — Session health check | Depends on Epic 1 |
+| 9 | Epic 5 — Merge gate + PR line comments | Depends on Epic 3; usability gate from Epic 14 feeds into `spec-satisfied` label logic |
+| 10 | Epic 13 — Adversarial QA + bug regression workflow | Depends on Epic 3 (callbacks), Epic 12 (test standards), and Epic 5 (PR line comments for bug reports) |
+| 11 | Epic 7 — Deployment security hardening | Mostly independent; can run in parallel with 8–10 |
+| 12 | Epic 6 — Workflow YAML contracts | Depends on Epics 1–5, 12, 13, 14 being stable — YAMLs encode the finalised workflow shape |
+| 13 | Epic 8 — Onboarding script | Depends on Epics 1–5 stable; wraps all setup into a single entry point |
+| 14 | Epic 10 — Memory substrate pilot | Pilot begins after Epic 9; implementation (if adopted) sequences after pilot concludes |
