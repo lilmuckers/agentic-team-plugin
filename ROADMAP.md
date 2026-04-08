@@ -36,13 +36,24 @@ Resolved decisions are recorded here and inline in each epic for traceability.
 
 **Decision:** Markdown file committed to the project repo at `docs/delivery/task-ledger.md`. The Orchestrator commits on every delegation and callback. Fits the visibility-first philosophy, survives session rollovers, and is readable by any human without touching OpenClaw.
 
+### Ledger format
+
+The ledger uses markdown sections with human-readable headings, but the structured payload inside each entry is JSON. Each entry should expose readable section names while keeping machine-updatable detail in JSON fields.
+
+Required JSON fields per entry:
+- `task`
+- `state`
+- `current_action`
+- `next_action`
+- `history` (array of timestamped actions)
+
 ### Steps
 
-1. Define ledger schema as a markdown table in `docs/delivery/task-ledger.md` — fields: task ID, agent assigned, delegated timestamp, expected callback fields, outcome status, last updated
-2. Write `scripts/update-task-ledger.py` — append or update a ledger row given task ID and status
+1. Define ledger schema in `docs/delivery/task-ledger.md` as markdown sections with embedded JSON payloads for task details and state
+2. Write `scripts/update-task-ledger.py` — append or update a ledger entry's JSON payload given task ID and status
 3. Add ledger read/write to Orchestrator role doc as a mandatory operating rule
 4. Add a session startup step to Orchestrator: read ledger on start, surface any overdue tasks immediately before taking new work
-5. Write `scripts/validate-task-ledger.py` to validate ledger schema correctness and table structure
+5. Write `scripts/validate-task-ledger.py` to validate ledger schema correctness, required section headings, and JSON structure
 
 ---
 
@@ -449,7 +460,9 @@ The first substantive content of every project README must be actionable instruc
 2. How to run it
 3. How to verify it is running correctly (a smoke test or health check a human can execute in under two minutes)
 
-This is not a documentation nicety — it is a quality gate. If QA cannot follow the README to a running application, the PR is blocked.
+If "run" is not a meaningful concept for the repo type (for example, a library, framework, template, or policy repo), the README must instead define the equivalent executable verification path.
+
+This is not a documentation nicety — it is a quality gate. If QA cannot follow the README to a running application, or to the equivalent executable verification path where "run" is not applicable, the PR is blocked.
 
 ### Spec-defined test strategy
 
@@ -509,7 +522,8 @@ When QA discovers a bug:
 2. Spec triages: in-scope / expected / out-of-scope; records the decision as a decision record (Epic 9 format)
 3. If in-scope: Orchestrator assigns Builder to write a **failing test** that reproduces the bug — the test must fail in the presence of the bug and pass only when it is fixed
 4. Builder writes the regression test, confirms it fails before the fix, then applies the fix and confirms the test passes
-5. The regression test is committed alongside the fix; QA re-verifies both
+5. If the bug cannot be expressed as an automated regression test, Builder must document why, and Spec must explicitly accept that exception before the fix can proceed without one
+6. The regression test is committed alongside the fix; QA re-verifies both
 
 ### Steps
 
@@ -544,7 +558,7 @@ The human approves the spec in conversation; SPEC.md is then the durable record 
 
 ### UX and Design specialists
 
-Spec spawns UX and Design specialists during the specification conversation when the feature has user-facing elements. These specialists contribute to the spec, not to implementation.
+Spec spawns UX and Design specialists during the specification conversation when the feature has user-facing elements and usability or visual decisions materially affect the outcome. These specialists contribute to the spec, not to implementation. They are not required for every tiny UI tweak.
 
 **UX Designer specialist** (`agents/specialists/ux-designer.md`):
 - Defines user flows, interaction patterns, and task completion paths
