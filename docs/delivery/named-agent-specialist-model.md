@@ -37,10 +37,11 @@ Orchestrator should primarily coordinate named archetypes rather than hide work 
 
 ### Spec
 Spec may use specialist subagents for:
-- architecture research
 - library/framework evaluation
-- migration/scoping analysis
 - technical option comparison
+- UX design
+- visual design
+- migration/scoping analysis
 
 Spec remains the owner of project truth, assumptions, and readiness decisions.
 
@@ -53,8 +54,9 @@ Instead, it should supervise and integrate specialist Builder subagents.
 Typical specialist types:
 - frontend-ui
 - backend-integration
-- spotify/auth integration
-- visualization/animation
+- api-design
+- typescript-engineer
+- python-engineer
 - test-harness
 - CI/container
 
@@ -65,7 +67,7 @@ QA may use specialist subagents for:
 - regression analysis
 - edge-case/race-condition review
 - docs/setup verification
-- accessibility review
+- usability review
 - CI/check interpretation
 
 QA remains accountable for the review outcome.
