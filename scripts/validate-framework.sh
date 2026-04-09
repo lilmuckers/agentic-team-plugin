@@ -25,6 +25,7 @@ required_files=(
   "scripts/validate-decision-record.py"
   "scripts/validate-readme-contract.sh"
   "scripts/prepare-specialist-spawn.py"
+  "scripts/onboard-project.sh"
   "scripts/validate-specialist-template.py"
   "scripts/validate-workflows.py"
   "templates/callback-report.md"
@@ -74,6 +75,7 @@ required_exec=(
   "scripts/validate-decision-record.py"
   "scripts/validate-readme-contract.sh"
   "scripts/prepare-specialist-spawn.py"
+  "scripts/onboard-project.sh"
   "scripts/validate-specialist-template.py"
   "scripts/validate-workflows.py"
 )

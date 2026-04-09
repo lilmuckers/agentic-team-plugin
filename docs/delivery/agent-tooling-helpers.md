@@ -172,6 +172,15 @@ Example:
 scripts/validate-task-ledger.py docs/delivery/task-ledger.md
 ```
 
+### `scripts/onboard-project.sh`
+Run the minimum viable project onboarding flow.
+
+Features:
+- creates or reuses project-scoped named agents
+- deploys project agent workspaces
+- optionally installs repo templates and labels with `--with-github-setup`
+- supports `--dry-run`
+
 ### `scripts/deploy-agent-workspace-bootstrap.py`
 Deploy managed workspace bootstrap files for named agents.
 
