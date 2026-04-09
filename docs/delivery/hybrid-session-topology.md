@@ -10,6 +10,8 @@ Define the recommended runtime session model for the delivery archetypes.
 Use one long-lived session per project for:
 - Orchestrator
 - Spec
+- Security
+- Release Manager
 
 ### Ephemeral per-task sessions
 Use fresh task-scoped sessions for:
@@ -45,12 +47,28 @@ Builder should usually work with clean context per issue or spike so that:
 ### QA benefits from scoped review context
 QA should usually review with context scoped to the current PR or delivery slice so quality judgment stays tied to evidence rather than stale session context.
 
+### Security benefits from continuity
+Security needs continuity for:
+- threat models
+- accepted risks
+- trust-boundary context
+- recurring security findings across multiple changes
+
+### Release Manager benefits from continuity
+Release Manager needs continuity for:
+- active release state
+- beta and rc iteration history
+- release blockers
+- publication notes and next-release planning
+
 ## Session naming guidance
 
 ### Persistent sessions
 Use stable project-scoped names such as:
 - `session:musical-statues-orchestrator`
 - `session:musical-statues-spec`
+- `session:musical-statues-security`
+- `session:musical-statues-release-manager`
 
 ### Ephemeral sessions
 Use task-scoped labels such as:
@@ -67,6 +85,7 @@ The human operator may explicitly direct a different session shape when needed.
 
 When independent archetype sessions are spawned:
 - Orchestrator and Spec should target persistent project sessions by default where the surface/runtime supports it
+- Security and Release Manager should also target persistent project sessions by default where the surface/runtime supports it
 - Builder and QA should spawn fresh sessions by default
 - all of them should consume the active deployed runtime bundles
 - Builder and QA may use ephemeral specialist subagents internally for narrow task slices
