@@ -24,6 +24,8 @@ When bootstrapping a new project repository:
 2. Customize labels, language, and checks as needed for the project.
 3. Keep project-specific docs, issue history, PRs, and wiki content in that repo.
 
+The merge-gate template now conditionally requires `security-approved` when a PR carries `security-scope` or `security-review-required`.
+
 ## Boundary
 
 - `docs/` in this workspace = delivery control-plane guidance

@@ -9,6 +9,8 @@ Define how named OpenClaw agents and ephemeral specialist subagents should work 
 The top-level delivery archetypes should be represented as project-scoped named agents:
 - `orchestrator-<project-slug>`
 - `spec-<project-slug>`
+- `security-<project-slug>`
+- `release-manager-<project-slug>`
 - `builder-<project-slug>`
 - `qa-<project-slug>`
 
@@ -62,6 +64,22 @@ Typical specialist types:
 
 Builder remains accountable for the issue, the branch, the PR, and the integrated delivery output.
 
+### Security
+Security may use specialist subagents for:
+- threat modelling
+- dependency auditing
+- focused security verification
+
+Security remains accountable for security requirements, security findings, and `security-approved` decisions.
+
+### Release Manager
+Release Manager may use specialist subagents sparingly for:
+- release note drafting
+- CI/CD and packaging review
+- deployment environment checks
+
+Release Manager remains accountable for release state, tag progression, and final GitHub release publication.
+
 ### QA
 QA may use specialist subagents for:
 - regression analysis
@@ -77,6 +95,8 @@ QA remains accountable for the review outcome.
 ### Named agents own
 - project truth and scope decisions (Spec)
 - routing and conflict resolution (Orchestrator)
+- security sign-off and threat-model continuity (Security)
+- release state and publication flow (Release Manager)
 - implementation delivery (Builder)
 - review outcomes (QA)
 
@@ -93,6 +113,8 @@ They contribute focused work only.
 
 - Orchestrator -> persistent per-project named session where supported
 - Spec -> persistent per-project named session where supported
+- Security -> persistent per-project named session where supported
+- Release Manager -> persistent per-project named session where supported
 - Builder -> task-scoped named-agent execution
 - QA -> review-scoped named-agent execution
 - Specialist subagents -> ephemeral and narrow by default

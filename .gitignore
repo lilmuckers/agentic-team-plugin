@@ -65,3 +65,4 @@ scripts/*
 !scripts/check-task-ledger-overdue.py
 !scripts/post-bug-report.sh
 !scripts/validate-config.sh
+!scripts/validate-docker-first-project.sh

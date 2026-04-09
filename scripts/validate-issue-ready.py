@@ -16,6 +16,7 @@ ROUTING_LABELS = {
     "needs-clarification",
     "blocked",
 }
+SECURITY_SCOPE_LABELS = {"security-scope", "security-review-required"}
 SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 ISSUE_REF_RE = re.compile(r"#(\d+)")
 PLACEHOLDER_LINES = {"-", "*", "none", "n/a", "tbd"}
@@ -117,6 +118,14 @@ def main():
     has_linked_docs = bool(non_placeholder_lines(links))
     if not has_assumptions and not has_linked_docs:
         errors.append("missing documented assumptions or linked docs/context")
+
+    if labels.intersection(SECURITY_SCOPE_LABELS):
+        security_requirements = sections.get("security requirements", "")
+        threat_model = sections.get("threat model", "")
+        if not non_placeholder_lines(security_requirements):
+            errors.append("security-scope issue is missing non-empty '## Security Requirements' section")
+        if not non_placeholder_lines(threat_model):
+            errors.append("security-scope issue is missing non-empty '## Threat Model' section")
 
     blockers = sections.get("dependencies / blockers", sections.get("dependencies", sections.get("blockers", "")))
     blocker_lines = non_placeholder_lines(blockers)

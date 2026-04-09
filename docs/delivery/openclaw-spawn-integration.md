@@ -16,6 +16,8 @@ A helper should prepare a `sessions_spawn`-ready payload containing:
 ### Persistent per-project
 - Orchestrator -> `session:<project>-orchestrator`
 - Spec -> `session:<project>-spec`
+- Security -> `session:<project>-security`
+- Release Manager -> `session:<project>-release-manager`
 
 ### Ephemeral
 - Builder -> `isolated`

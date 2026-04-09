@@ -13,9 +13,11 @@ Define the practical setup flow for project-scoped named agents.
 ## Helpers
 
 ### `scripts/create-project-scoped-agents.sh`
-Create/ensure the four project-scoped named agents:
+Create/ensure the six project-scoped named agents:
 - `orchestrator-<project>`
 - `spec-<project>`
+- `security-<project>`
+- `release-manager-<project>`
 - `builder-<project>`
 - `qa-<project>`
 
@@ -23,6 +25,8 @@ Create/ensure the four project-scoped named agents:
 Write the managed workspace bootstrap files into:
 - `/data/.openclaw/workspace-orchestrator-<project>/`
 - `/data/.openclaw/workspace-spec-<project>/`
+- `/data/.openclaw/workspace-security-<project>/`
+- `/data/.openclaw/workspace-release-manager-<project>/`
 - `/data/.openclaw/workspace-builder-<project>/`
 - `/data/.openclaw/workspace-qa-<project>/`
 

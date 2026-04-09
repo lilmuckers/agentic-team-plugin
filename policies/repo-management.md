@@ -21,6 +21,10 @@
 16. All git commits made by agents should use an identity in the form `<Name> (<Archetype>) <bot-<archetype-slug>@<operator-email-domain>>`. The email domain is configured in `config/framework.yaml`.
 17. All issue comments, PR comments, and substantive PR body updates posted by agents should begin with a visible identity header in the form `> _posted by **<Archetype>**_`.
 18. All issue comments, PR comments, PR bodies, and wiki posts should be written as GitHub-flavored markdown that renders appropriately in the GitHub interface.
+19. Security-scope issues must include visible security requirements and a threat model before they are treated as ready for build.
+20. Security-scope PRs require Security review and the `security-approved` label in addition to the normal merge-gate labels.
+21. Release progression should be coordinated through a durable release-tracking issue and visible release state rather than ad hoc chat-only coordination.
+22. Application repos should be Docker-first for local development, with `docker-compose.yml`, `.devcontainer/devcontainer.json`, and README guidance forming the default setup path unless an explicit exception is recorded.
 
 ## Role implications
 

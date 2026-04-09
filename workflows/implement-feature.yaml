@@ -8,12 +8,22 @@ steps:
       - Human-facing scope questions are clarified enough to begin specification.
     postconditions:
       - Issue has acceptance criteria, test strategy, assumptions, and linked context.
+      - Security requirements and threat model are documented for security-scope work.
       - Issue is either marked ready-for-build or explicitly returned for clarification.
     output: feature issue and specification update
+  - id: security-design
+    agent: security
+    preconditions:
+      - Spec output exists for security-scope work.
+    postconditions:
+      - Security requirements and threat model are reviewed.
+      - Security scope is explicit before build handoff.
+    output: security requirements review
   - id: orchestrate
     agent: orchestrator
     preconditions:
       - Spec output exists.
+      - Security review is complete for security-scope work.
       - scripts/validate-issue-ready.py passes before Builder handoff.
     postconditions:
       - Task ledger entry is updated.
@@ -44,6 +54,9 @@ on_failure:
   - Surface failure to Orchestrator immediately.
   - Record failure reason in the callback report and visible project artifact when relevant.
 loops:
+  - from: security-design
+    to: specify
+    trigger: Security requires specification changes before build.
   - from: qa
     to: build
     trigger: QA requests changes or identifies blocking defects.

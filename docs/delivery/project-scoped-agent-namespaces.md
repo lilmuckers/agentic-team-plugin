@@ -5,11 +5,13 @@
 Define the preferred naming and isolation model for named delivery agents across multiple projects.
 
 ## Core rule
-Do not rely on one global `orchestrator`, `spec`, `builder`, or `qa` agent to span multiple projects.
+Do not rely on one global `orchestrator`, `spec`, `security`, `release-manager`, `builder`, or `qa` agent to span multiple projects.
 
 Instead, create project-scoped named agents such as:
 - `orchestrator-<project-slug>`
 - `spec-<project-slug>`
+- `security-<project-slug>`
+- `release-manager-<project-slug>`
 - `builder-<project-slug>`
 - `qa-<project-slug>`
 
@@ -28,10 +30,14 @@ For project slug `musical-statues`:
 - `spec-musical-statues`
 - `builder-musical-statues`
 - `qa-musical-statues`
+- `security-musical-statues`
+- `release-manager-musical-statues`
 
 ## Lifecycle model inside the namespace
 - `orchestrator-<project>` -> stable project coordinator
 - `spec-<project>` -> stable project truth/spec owner
+- `security-<project>` -> stable security reviewer and sign-off owner
+- `release-manager-<project>` -> stable release coordinator and publisher
 - `builder-<project>` -> top-level builder coordinator
 - `qa-<project>` -> top-level review coordinator
 

@@ -109,6 +109,19 @@ Keep richer explanation, assumptions, and reviewer detail in the pull request.
 When agents commit, use a per-agent Git identity in this format:
 `<Name> (<Archetype>) <bot-<archetype-slug>@<operator-email-domain>>`
 
+## Security and release gates
+
+- security-scope issues need visible security requirements and a threat model before Builder handoff
+- security-scope PRs need Security review and `security-approved`
+- release coordination should live in a release tracking issue plus durable release-state docs
+
+## Docker-first local development baseline
+
+Application repos should normally include:
+- `docker-compose.yml`
+- `.devcontainer/devcontainer.json`
+- README build/verify/run instructions that use the containerized local-dev path
+
 ## Comment and post attribution baseline
 
 When agents post substantive updates on issues or pull requests, begin with:

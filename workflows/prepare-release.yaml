@@ -1,9 +1,18 @@
 name: prepare-release
 description: Assess release readiness from merged work, quality state, and documented scope before recommending release.
 steps:
+  - id: coordinate-release
+    agent: release-manager
+    preconditions:
+      - Release signal or candidate scope exists.
+    postconditions:
+      - Release tracking issue and release state are updated.
+      - Planned beta/rc/final iteration is explicit.
+    output: release tracking state
   - id: scope
     agent: spec
     preconditions:
+      - Release tracking state exists.
       - Candidate merged changes for the release are known.
       - Project docs and decision records are available for review.
     postconditions:
@@ -19,28 +28,43 @@ steps:
       - Release risk assessment is explicit.
       - Blocking quality concerns are listed if present.
     output: release risk assessment
-  - id: coordinate
-    agent: orchestrator
+  - id: security
+    agent: security
     preconditions:
-      - Scope summary and QA readiness output exist.
+      - Release tracking state exists.
+      - Scope summary exists.
+    postconditions:
+      - Release security assessment is explicit.
+      - Blocking security concerns are listed if present.
+    output: release security assessment
+  - id: coordinate
+    agent: release-manager
+    preconditions:
+      - Scope summary, QA readiness output, and Security output exist.
       - Outstanding blockers are known.
     postconditions:
-      - Release recommendation is explicit.
+      - Next beta/rc/final release action is explicit.
       - Human escalation is surfaced when risk or scope requires judgment.
-    output: release recommendation
+    output: release coordination update
 on_blocked:
-  - Hold release recommendation until missing validation, documentation, or scope clarity is resolved.
+  - Hold release progression until missing validation, documentation, or scope clarity is resolved.
   - Surface blockers explicitly to the human when they affect timing or risk.
 on_failure:
   - Stop release coordination and record the failure reason in a visible artifact.
   - Route the blocking work back into the normal delivery workflow.
 loops:
+  - from: coordinate
+    to: coordinate-release
+    trigger: Another beta or rc iteration is needed.
   - from: readiness
     to: scope
     trigger: QA finds missing documentation or unclear release contents.
   - from: coordinate
     to: readiness
-    trigger: Orchestrator needs refreshed risk assessment after late changes.
+    trigger: Release Manager needs refreshed risk assessment after late changes.
+  - from: coordinate
+    to: security
+    trigger: Release Manager needs refreshed security assessment after late changes.
   - from: coordinate
     to: scope
     trigger: Release candidate changes and the scope summary must be updated.

@@ -161,6 +161,19 @@ Example:
 scripts/validate-readme-contract.sh /path/to/project-repo
 ```
 
+### `scripts/validate-docker-first-project.sh`
+Validate the Docker-first local-development contract for a project repo.
+
+Checks include:
+- `docker-compose.yml`
+- `.devcontainer/devcontainer.json`
+- README contract via `scripts/validate-readme-contract.sh`
+
+Example:
+```bash
+scripts/validate-docker-first-project.sh /path/to/project-repo
+```
+
 ### `scripts/update-task-ledger.py`
 Create or update a task entry in `docs/delivery/task-ledger.md`.
 

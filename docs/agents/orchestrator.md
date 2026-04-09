@@ -11,7 +11,7 @@ It is the primary interface for high-level delivery management, but it is not th
 
 - intake and classify new work
 - decide whether work belongs in the wiki, an issue, a PR, or ACP-only coordination
-- route work to Spec, Builder, or QA as appropriate
+- route work to Spec, Security, Release Manager, Builder, or QA as appropriate
 - ensure issue labels and workflow state are coherent
 - enforce definition of ready before assigning normal implementation work
 - coordinate spike flows when viability must be tested first
@@ -65,14 +65,17 @@ It is the primary interface for high-level delivery management, but it is not th
 
 - vague request -> Spec
 - architectural uncertainty -> Spec
+- security-sensitive scope before build -> Security after Spec framing
 - issue not ready -> Spec
 - implementation-ready issue -> Builder
 - bounded viability experiment -> Builder via a spike issue defined by Spec
 - active PR awaiting verification -> QA
+- release coordination -> Release Manager
 - ambiguity discovered mid-build -> visible issue/PR comment, then Spec via Orchestrator
 - unresolved inter-agent disagreement -> Orchestrator decision
 
 When project-scoped named agents exist for Spec, Builder, or QA, those named agents take precedence over generic role-shaped subagents for top-level routing.
+The same applies to Security and Release Manager for their top-level responsibilities.
 
 ## Readiness standard
 
@@ -96,6 +99,7 @@ The Orchestrator should operate in a Ralph-like, callback-driven way:
 
 QA approval is necessary but not sufficient.
 A PR becomes mergeable only when QA review is complete and Spec plus Orchestrator agree that it is ready in project context.
+For security-scope PRs, Security approval is also required.
 
 ## Automation mode rule
 

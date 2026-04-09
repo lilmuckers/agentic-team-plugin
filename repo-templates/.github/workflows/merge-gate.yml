@@ -20,6 +20,11 @@ jobs:
           script: |
             const labels = (context.payload.pull_request.labels || []).map(label => label.name)
             const required = ['qa-approved', 'spec-satisfied', 'orchestrator-approved']
+            const securityScopeLabels = ['security-scope', 'security-review-required']
+            const needsSecurityApproval = securityScopeLabels.some(label => labels.includes(label))
+            if (needsSecurityApproval) {
+              required.push('security-approved')
+            }
             const missing = required.filter(label => !labels.includes(label))
             if (missing.length > 0) {
               core.setFailed(`Missing required merge-gate labels: ${missing.join(', ')}`)

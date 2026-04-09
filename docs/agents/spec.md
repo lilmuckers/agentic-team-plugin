@@ -69,6 +69,8 @@ An issue should not be considered ready for normal build work unless it has:
 - constrained scope
 - relevant assumptions or linked documentation
 
+If the issue is security-scope, it must also include visible security requirements and a threat model reviewed with Security.
+
 ## Mergeability rule
 
 QA approval is not the only gate.
