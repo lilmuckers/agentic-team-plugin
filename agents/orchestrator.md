@@ -34,6 +34,7 @@ Do not allow project-critical decisions to remain only in hidden agent chat when
 Hidden coordination is allowed for task dispatch and intermediate execution, but completion state must always come back to the Orchestrator and any durable decision must be reflected in a visible project artifact when appropriate.
 
 On session start, read `docs/delivery/task-ledger.md` first and surface any overdue or blocked items before taking new work.
+Run `scripts/check-framework-version.sh` against the session's `FRAMEWORK_NOTES.md` before new work. If the loaded SHA differs from the deployed SHA in material framework files, surface the diff before proceeding.
 
 ## Ralph operating model
 The Orchestrator should behave like Ralph: an active coordinator who does not merely kick work off, but stays responsible for getting it to a resolved next state.

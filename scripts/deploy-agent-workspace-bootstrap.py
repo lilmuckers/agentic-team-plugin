@@ -33,10 +33,17 @@ for agent, workspace in AGENT_WORKSPACES.items():
     (workspace / 'USER.md').write_text(USER_TEMPLATE)
     (workspace / 'IDENTITY.md').write_text(IDENTITY_TEMPLATE.format(agent=agent))
     (workspace / 'FRAMEWORK_RUNTIME_BUNDLE.md').write_text(bundle.read_text())
+    deployed_sha_file = ROOT / '.state' / 'framework' / 'deployed-sha.txt'
+    deployed_sha = 'unknown'
+    if deployed_sha_file.exists():
+        deployed_sha = deployed_sha_file.read_text().split()[0]
+
     (workspace / 'FRAMEWORK_NOTES.md').write_text(
         f'# FRAMEWORK_NOTES.md\n\n'
         f'- agent: {agent}\n'
         f'- deployedAt: {now}\n'
+        f'- deployedSha: {deployed_sha}\n'
+        f'- loadedSha: {deployed_sha}\n'
         f'- activeFrameworkDir: {ACTIVE}\n'
         f'- runtimeBundle: {bundle}\n'
         f'- reloadBoundary: start a fresh named-agent session to pick up updates\n'
@@ -44,6 +51,8 @@ for agent, workspace in AGENT_WORKSPACES.items():
     (workspace / 'FRAMEWORK_DEPLOYMENT.json').write_text(json.dumps({
         'agent': agent,
         'deployedAt': now,
+        'deployedSha': deployed_sha,
+        'loadedSha': deployed_sha,
         'activeFrameworkDir': str(ACTIVE),
         'runtimeBundle': str(bundle),
         'reloadBoundary': 'fresh-session',

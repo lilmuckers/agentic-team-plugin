@@ -172,6 +172,14 @@ Example:
 scripts/validate-task-ledger.py docs/delivery/task-ledger.md
 ```
 
+### `scripts/check-framework-version.sh`
+Compare the session's loaded framework SHA from `FRAMEWORK_NOTES.md` against the currently deployed framework SHA and print material-file diffs.
+
+Example:
+```bash
+scripts/check-framework-version.sh . /data/.openclaw/workspace-orchestrator/FRAMEWORK_NOTES.md
+```
+
 ### `scripts/post-pr-line-comment.sh`
 Post a line-anchored review comment on a pull request.
 
