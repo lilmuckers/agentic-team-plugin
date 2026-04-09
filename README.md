@@ -68,6 +68,8 @@ This first version establishes:
 - baseline workflows for feature, bugfix, and release
 - a deploy manifest to distinguish managed vs local files
 - a sync script stub for promoting reviewed framework versions
+- Docker-first local development expectations for downstream application repos
+- durable release-state and conditional security merge-gate scaffolding in repo templates
 
 ## Future direction
 

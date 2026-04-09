@@ -8,12 +8,21 @@ steps:
       - Reproduction and expected behavior are captured or actively being clarified.
     postconditions:
       - Bugfix issue includes acceptance criteria and test strategy.
+      - Security requirements and threat model are documented for security-scope bugs.
       - Regression-test expectation or impossibility exception path is visible.
     output: bugfix issue and clarified defect scope
+  - id: security-design
+    agent: security
+    preconditions:
+      - Spec output exists for security-scope bugs.
+    postconditions:
+      - Security-sensitive bug scope is reviewed before build.
+    output: security bug review
   - id: orchestrate
     agent: orchestrator
     preconditions:
       - Bugfix issue exists.
+      - Security review is complete for security-scope bugs.
       - scripts/validate-issue-ready.py passes before Builder handoff.
     postconditions:
       - Task ledger entry is updated.
@@ -44,6 +53,9 @@ on_failure:
   - Surface failure to Orchestrator immediately.
   - Record the failing validation path and recommended next action.
 loops:
+  - from: security-design
+    to: specify
+    trigger: Security requires bug contract or mitigation changes before build.
   - from: qa
     to: build
     trigger: QA finds regressions, missing coverage, or correctness failures.

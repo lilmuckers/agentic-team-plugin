@@ -45,6 +45,19 @@ Closes #
 - [ ] Repo docs updated
 - [ ] Wiki/spec updated
 
+## Security Review
+
+- [ ] Not security-scope
+- [ ] Security requirements reviewed
+- [ ] Threat model reviewed
+- [ ] `security-approved` applied when required
+
+## Release Impact
+
+- [ ] No release coordination impact
+- [ ] Release notes input captured
+- [ ] Follow-up for Release Manager recorded
+
 ## Specialist Input Used
 
 <!-- Note any specialist sub-agents involved -->
