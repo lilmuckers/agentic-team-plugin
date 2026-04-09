@@ -10,6 +10,8 @@ This is a watchdog only. Normal completion still depends on explicit callbacks.
 - Overdue detector: `scripts/check-task-ledger-overdue.py`
 - Target session: `session:<project>-orchestrator`
 
+This stays routed to Orchestrator even when the overdue owner is Security or Release Manager. Orchestrator owns watchdog follow-through across top-level roles.
+
 ## Ledger expectation
 
 When Orchestrator delegates work that expects a callback, record:

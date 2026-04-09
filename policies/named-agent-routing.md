@@ -8,6 +8,8 @@ Orchestrator must route top-level role work to the corresponding project-scoped 
 
 That includes:
 - Spec work -> `spec-<project-slug>`
+- Security work -> `security-<project-slug>`
+- Release coordination -> `release-manager-<project-slug>`
 - Builder coordination work -> `builder-<project-slug>`
 - QA review ownership -> `qa-<project-slug>`
 

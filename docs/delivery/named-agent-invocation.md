@@ -16,6 +16,8 @@ This is the first verified runtime path we have found that directly targets the 
 Prefer project-scoped named agent ids:
 - `orchestrator-<project-slug>`
 - `spec-<project-slug>`
+- `security-<project-slug>`
+- `release-manager-<project-slug>`
 - `builder-<project-slug>`
 - `qa-<project-slug>`
 
@@ -45,5 +47,7 @@ It also aligns with the revised deployment model: named-agent behavior should be
 
 - Orchestrator -> persistent per-project session id
 - Spec -> persistent per-project session id
+- Security -> persistent per-project session id
+- Release Manager -> persistent per-project session id
 - Builder -> fresh task-scoped session id
 - QA -> fresh review-scoped session id

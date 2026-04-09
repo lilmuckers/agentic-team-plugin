@@ -6,6 +6,8 @@ Named delivery agents should be created per project namespace rather than shared
 Preferred pattern:
 - `orchestrator-<project-slug>`
 - `spec-<project-slug>`
+- `security-<project-slug>`
+- `release-manager-<project-slug>`
 - `builder-<project-slug>`
 - `qa-<project-slug>`
 
@@ -25,6 +27,9 @@ Actual build/delivery work should happen in ephemeral Builder subagents by defau
 
 ## QA execution rule
 QA may use ephemeral specialist subagents for narrow review slices, but the top-level project-scoped QA agent remains accountable for the review outcome.
+
+## Security and release execution rule
+Security and Release Manager should normally be persistent project-scoped named agents because they accumulate durable context across review and release cycles.
 
 ## Override rule
 The human operator may explicitly authorize a different isolation model, but the default framework behavior should follow project-scoped named-agent namespaces.
