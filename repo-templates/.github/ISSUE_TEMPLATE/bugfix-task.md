@@ -28,6 +28,18 @@ labels: [spec-needed]
 
 - 
 
+## Security Requirements
+
+<!-- Fill this in when the bug touches auth, permissions, sensitive data, external interfaces, or other security-sensitive scope -->
+
+- 
+
+## Threat Model
+
+- Trust boundaries:
+- Main abuse paths:
+- Required mitigations:
+
 ## Impact / Severity
 
 - User impact:

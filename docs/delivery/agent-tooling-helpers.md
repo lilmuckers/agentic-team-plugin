@@ -50,6 +50,7 @@ Examples:
 ```bash
 scripts/create-agent-issue.sh owner/repo "Add login flow" Spec feature spec-needed issue.md
 scripts/create-agent-issue.sh owner/repo "Try library X" Spec spike spec-needed spike.md architecture-needed
+scripts/create-agent-issue.sh owner/repo "Release v0.2.0" ReleaseManager chore release-tracking release.md
 ```
 
 ### `scripts/render-agent-pr-body.py`

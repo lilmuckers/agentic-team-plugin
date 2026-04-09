@@ -85,6 +85,7 @@ required_files=(
   "workflows/fix-bug.yaml"
   "workflows/prepare-release.yaml"
   "repo-templates/.github/pull_request_template.md"
+  "repo-templates/.github/ISSUE_TEMPLATE/release-tracking.md"
   "repo-templates/.github/workflows/merge-gate.yml"
   "repo-templates/README.md"
   "repo-templates/docs/delivery/release-state.md"

@@ -31,6 +31,20 @@ labels: [spec-needed]
 - 
 - 
 
+## Security Requirements
+
+<!-- Required when the issue carries security-scope -->
+
+- 
+
+## Threat Model
+
+<!-- Required when the issue carries security-scope -->
+
+- Trust boundaries:
+- Main abuse paths:
+- Required mitigations:
+
 ## Open Questions
 
 - 
