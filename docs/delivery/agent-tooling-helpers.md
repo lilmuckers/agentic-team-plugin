@@ -157,6 +157,14 @@ Example:
 scripts/validate-readme-contract.sh /path/to/project-repo
 ```
 
+### `scripts/update-task-ledger.py`
+Create or update a task entry in `docs/delivery/task-ledger.md`.
+
+Example:
+```bash
+scripts/update-task-ledger.py docs/delivery/task-ledger.md ISSUE-42 "Add login flow" in_progress "Builder implementing auth UI" "QA review after PR is open"
+```
+
 ### `scripts/validate-task-ledger.py`
 Validate `docs/delivery/task-ledger.md` entries that use markdown headings plus embedded JSON payloads.
 
