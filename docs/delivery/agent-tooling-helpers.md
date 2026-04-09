@@ -226,6 +226,15 @@ Example:
 scripts/post-pr-line-comment.sh owner/repo 42 abc1234 src/app.tsx 87 review-comment.md
 ```
 
+### `scripts/post-bug-report.sh`
+Post a structured bug report to a PR or issue using the standard agent header.
+
+Examples:
+```bash
+scripts/post-bug-report.sh owner/repo pr 42 bug-report.md
+scripts/post-bug-report.sh owner/repo issue 108 bug-report.md --archetype QA
+```
+
 ### `scripts/validate-decision-record.py`
 Validate decision records stored in `docs/decisions/`.
 

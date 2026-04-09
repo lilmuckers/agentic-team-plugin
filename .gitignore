@@ -59,3 +59,4 @@ scripts/*
 !scripts/list-agent-sessions.sh
 !scripts/roll-agent-session.sh
 !scripts/check-task-ledger-overdue.py
+!scripts/post-bug-report.sh

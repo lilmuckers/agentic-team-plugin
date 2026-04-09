@@ -37,6 +37,9 @@ def main():
     parser.add_argument("--commit-subject")
     parser.add_argument("--git-name")
     parser.add_argument("--git-email")
+    parser.add_argument("--pr-label", action="append", default=[])
+    parser.add_argument("--regression-test-path", action="append", default=[])
+    parser.add_argument("--accepted-regression-exception", action="store_true")
     args = parser.parse_args()
 
     had_error = False
@@ -65,6 +68,19 @@ def main():
     if args.git_email and not GIT_EMAIL_RE.match(args.git_email):
         print("ERROR: git email does not match 'bot-<archetype-slug>@patrick-mckinley.com' format", file=sys.stderr)
         had_error = True
+
+    if "type:bug-fix" in args.pr_label:
+        if not args.regression_test_path and not args.accepted_regression_exception:
+            print(
+                "ERROR: bug-fix PR requires at least one --regression-test-path or --accepted-regression-exception",
+                file=sys.stderr,
+            )
+            had_error = True
+        for regression_path in args.regression_test_path:
+            path = Path(regression_path)
+            if not path.exists():
+                print(f"ERROR: regression test path not found: {path}", file=sys.stderr)
+                had_error = True
 
     if had_error:
         return 1

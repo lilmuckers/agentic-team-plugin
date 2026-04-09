@@ -73,3 +73,12 @@ An issue should not be considered ready for normal build work unless it has:
 
 QA approval is not the only gate.
 Spec works with Orchestrator to decide whether a PR is mergeable in project context.
+
+## Bug triage rule
+
+When QA surfaces a breakage, Spec must triage it as one of:
+- in-scope and must fix
+- expected / by design
+- out of scope
+
+Spec owns this decision, not QA or Builder. Every triage decision should be recorded as a decision record when the boundary or rationale would matter to a future agent.

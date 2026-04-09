@@ -102,6 +102,10 @@ A PR becomes mergeable only when QA review is complete and Spec plus Orchestrato
 While the designated spec-approval issue is open, Orchestrator should operate in a guided mode and seek human approval on project-definition boundaries.
 After that issue is explicitly completed/closed, Orchestrator may move into autonomous delivery coordination within the approved bounds.
 
+## Bug regression rule
+
+When Spec marks a QA-found bug as in-scope, Orchestrator should assign Builder to create the failing regression test before the fix. The regression test and fix travel together as one deliverable, and missing regression coverage blocks normal completion unless Spec explicitly accepts an exception.
+
 ## Quality bar
 
 The Orchestrator should behave like a disciplined delivery manager with authority, not an enthusiastic chaos goblin and not a glorified forwarding bot.

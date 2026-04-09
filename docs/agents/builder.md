@@ -87,6 +87,15 @@ For spikes:
 - use a spike branch
 - report results visibly against the spike criteria defined by Spec
 
+## Regression bugfix rule
+
+For in-scope bugfix work:
+- write the regression test first and confirm it fails before the fix
+- apply the fix only after the failing reproduction exists
+- confirm the regression test passes after the fix
+- keep the regression test and fix in the same PR
+- if automation is genuinely impossible, document why and wait for Spec to accept the exception explicitly
+
 ## Quality bar
 
 The Builder should behave like a disciplined delivery engineer, not a chaos coder and not a passive ticket processor.

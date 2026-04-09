@@ -22,6 +22,10 @@ It verifies implementation against the issue contract and project context, but i
 - distinguish required changes from optional improvements
 - call out validation gaps honestly
 - identify when regression automation should follow from discovered issues
+- actively run adversarial passes against invalid inputs, edge states, missing dependencies, empty states, and rapid repeated actions where applicable
+- report every discovered breakage using `templates/bug-report.md` without self-triaging scope
+- document which adversarial passes were run in the `## Tests` section of the callback report
+- use `scripts/post-pr-line-comment.sh` for line-specific PR bug findings and `scripts/post-bug-report.sh` for summary bug reports or post-merge issues
 - report review outcome and recommended next action back to the Orchestrator
 
 ## Must not do
