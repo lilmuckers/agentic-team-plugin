@@ -222,11 +222,13 @@ These are the configuration decisions and setup steps needed on top of a baselin
 
 ### 1. Named Agent Definitions
 
-Four named agents per project, using the project-scoped naming convention:
+Six named agents per project, using the project-scoped naming convention:
 
 ```
 orchestrator-<project-slug>
 spec-<project-slug>
+security-<project-slug>
+release-manager-<project-slug>
 builder-<project-slug>
 qa-<project-slug>
 ```
@@ -258,6 +260,8 @@ OpenClaw must be configured to enforce the hybrid session topology:
 |---|---|---|
 | `orchestrator-<project>` | Persistent | `session:<project>-orchestrator` |
 | `spec-<project>` | Persistent | `session:<project>-spec` |
+| `security-<project>` | Persistent | `session:<project>-security` |
+| `release-manager-<project>` | Persistent | `session:<project>-release-manager` |
 | `builder-<project>` | Ephemeral | `isolated` |
 | `qa-<project>` | Ephemeral | `isolated` |
 
@@ -432,6 +436,13 @@ Templates live in `agents/specialists/`. Each template is a markdown file with t
 - `agents/specialists/test-harness.md`
 - `agents/specialists/test-suite-builder.md` — writes full test suites in the project's chosen language and framework; refinement must specify language, test framework, and coverage targets
 
+**Builder specialists** (infrastructure and environment):
+- `agents/specialists/docker-environment.md` — authors Dockerfiles, Compose files, and devcontainer configuration; implements the Docker-first local development environment policy (see note below); refinement must specify base image, service topology, and any project-specific environment requirements
+- `agents/specialists/aws-infrastructure.md` — implements AWS infrastructure using Terraform with AWS-idiomatic provider patterns, state backend conventions, and IAM; refinement must specify target services, region, and environment (dev/staging/prod)
+- `agents/specialists/gcp-infrastructure.md` — implements GCP infrastructure using Terraform with GCP-idiomatic provider patterns and project/IAM model; refinement must specify target services, project, and environment
+- `agents/specialists/azure-infrastructure.md` — implements Azure infrastructure using Terraform with Azure-idiomatic provider patterns, resource group model, and RBAC; refinement must specify target services, subscription, and environment
+- `agents/specialists/terraform-core.md` — provider-agnostic Terraform patterns: module structure, state management, variable conventions, output contracts; used as a base refinement layer for the cloud-specific implementers above
+
 **QA specialists** (review-focused):
 - `agents/specialists/qa-regression.md`
 - `agents/specialists/qa-edge-case.md`
@@ -448,6 +459,30 @@ Templates live in `agents/specialists/`. Each template is a markdown file with t
 - `agents/specialists/ux-designer.md`
 - `agents/specialists/visual-designer.md`
 
+**Spec specialists** (infrastructure and platform architecture):
+- `agents/specialists/cicd-architect.md` — designs CI/CD pipeline architecture; output: pipeline design section of SPEC.md covering stages, gates, environment promotion model, rollback strategy, and tooling selection; must account for Docker-first environment policy
+- `agents/specialists/aws-architect.md` — designs AWS infrastructure architecture; output: cloud architecture section of SPEC.md covering service selection, network topology, IAM model, data residency, and scaling strategy; counterpart to `aws-infrastructure.md` Builder specialist
+- `agents/specialists/gcp-architect.md` — designs GCP infrastructure architecture; counterpart to `gcp-infrastructure.md`
+- `agents/specialists/azure-architect.md` — designs Azure infrastructure architecture; counterpart to `azure-infrastructure.md`
+
+### Docker-first local development policy
+
+**Policy (applies to all projects):** Local development environments must run inside Docker containers. The host node must not require project-specific runtime dependencies (language runtimes, databases, package managers) to be installed directly.
+
+Rationale:
+- Keeps the host node clean and reusable across projects
+- Enables rapid deployment across a swarm of nodes without per-node provisioning
+- Ensures consistency between agent-run and human-run local environments
+- Aligns local dev with the container model used in CI and production
+
+Implementation requirements:
+- Every project must have a `docker-compose.yml` (or equivalent) at the repo root that brings up the full local development environment
+- `devcontainer.json` must be present for IDE/agent workspace integration
+- The README's `## Run` section (Epic 12) must describe starting the environment via Docker, not via direct local installation
+- The `docker-environment.md` Builder specialist is the default implementation path for all local dev environment work; refinement specifies the project's service topology
+
+The `cicd-architect.md` Spec specialist must account for this policy when designing pipelines — container-based CI is the assumed baseline.
+
 ### Steps
 
 1. Define specialist template schema in `schemas/specialist-template.md` — required sections: `## Base Identity`, `## Refinement Prompts`, `## Authority Boundaries` (what this specialist does not own), `## Expected Output`
@@ -460,6 +495,14 @@ Templates live in `agents/specialists/`. Each template is a markdown file with t
 8. Write `scripts/validate-specialist-template.py` — validates a template file against the schema
 9. Wire `validate-specialist-template.py` into `validate-framework.sh`
 10. Add guidance to `docs/delivery/agent-tooling-helpers.md`: how to select a template, write a refinement, and invoke `prepare-specialist-spawn.py`
+11. Write `agents/specialists/docker-environment.md` — Docker-first local dev specialist; base identity covers Dockerfile authoring, Compose file design, and devcontainer configuration; authority boundary: does not own CI pipeline design (that is `cicd-architect.md`) or production infrastructure (that is the cloud specialists)
+12. Write `agents/specialists/aws-infrastructure.md`, `agents/specialists/gcp-infrastructure.md`, `agents/specialists/azure-infrastructure.md` — cloud infrastructure implementers; each covers provider-idiomatic Terraform patterns for the respective cloud; all use `terraform-core.md` conventions as a baseline
+13. Write `agents/specialists/terraform-core.md` — provider-agnostic Terraform conventions; intended as a shared reference layer for cloud implementers, not used directly
+14. Write `agents/specialists/cicd-architect.md` — CI/CD pipeline design for Spec; expected output is a pipeline architecture section of SPEC.md; must treat container-based CI as the assumed baseline per the Docker-first policy
+15. Write `agents/specialists/aws-architect.md`, `agents/specialists/gcp-architect.md`, `agents/specialists/azure-architect.md` — cloud architecture designers for Spec; expected output is a cloud architecture section of SPEC.md; each is the design-time counterpart to its corresponding Builder implementer
+16. Add Docker-first local dev policy to `policies/repo-management.md` — every project must have `docker-compose.yml` and `devcontainer.json`; `## Run` section of README must describe Docker-based startup
+17. Add `docker-compose.yml` and `devcontainer.json` presence checks to `scripts/validate-readme-contract.sh`
+18. Commit Docker-first decision as a framework-level decision record in `docs/decisions/` — decision, rationale (host cleanliness, swarm deployment, human/agent consistency), alternatives rejected (native installs), constraints applied
 
 ---
 
@@ -608,24 +651,352 @@ Every SPEC.md produced through the conversational process must include:
 
 ---
 
+## Epic 15 — Security Agent
+
+**Problem:** Security concerns are currently addressed only by the `qa-security.md` specialist, which runs as a stateless pass during PR review. This covers routine code-level checks but misses three critical points: threat modelling during specification, security-aware review of implementation choices during build, and a formal security sign-off as a merge gate condition. Security knowledge is also project-specific and accumulates — a stateless specialist loses that context on every invocation.
+
+**Goal:** Add Security as a fifth named persistent agent archetype, operating at three points in the delivery lifecycle — spec, build review, and merge gate — with a `security-approved` label owned exclusively by the Security agent.
+
+### Why a named persistent agent, not a specialist
+
+The `qa-security.md` specialist remains appropriate for routine PR review on changes that don't touch sensitive areas. The Security agent is warranted when:
+- The feature touches authentication, authorisation, session management, or identity
+- The feature handles personally identifiable or sensitive data
+- The feature exposes or consumes external interfaces (APIs, webhooks, file uploads, etc.)
+- The feature modifies infrastructure, deployment configuration, or access controls
+
+The Security agent must be persistent (like Orchestrator and Spec) because it accumulates project-specific knowledge: the threat model, data flows, trust boundaries, prior security decisions, and known risk areas. A fresh stateless session cannot reason about whether a new change undermines a previously-established security property.
+
+### Session topology
+
+| Agent | Session type | Session target |
+|---|---|---|
+| `security-<project>` | Persistent | `session:<project>-security` |
+
+### Touch point 1 — Specification
+
+When Spec identifies that a feature touches a sensitive area (see routing criteria above), it must engage the Security agent during the specification conversation before SPEC.md is finalised.
+
+Security's contribution to the spec:
+- **Threat model** — what could go wrong, who are the adversaries, what are the attack surfaces
+- **Trust boundaries** — what is trusted, what is not, where validation must occur
+- **Security requirements** — specific constraints the implementation must satisfy (e.g. "session tokens must not be logged", "all file uploads must be validated server-side before processing")
+- **Rejected approaches** — implementation patterns that must not be used, and why
+
+These are recorded as a `## Security Requirements` section in SPEC.md and as a decision record in `docs/decisions/`.
+
+### Touch point 2 — Build review
+
+When a PR involves a sensitive area, the Orchestrator routes it to the Security agent for review before QA begins. Security reviews:
+- Whether the implementation satisfies the security requirements from SPEC.md
+- Whether new attack surfaces have been introduced
+- Whether trust boundary violations exist (e.g. unsanitised input crossing a boundary, secrets handled incorrectly)
+- Whether the implementation matches the approved approach from the spec
+
+Security posts findings as line comments using `scripts/post-pr-line-comment.sh`. If findings are material, Security returns a BLOCKED callback — the Orchestrator routes back to Builder, not to QA.
+
+### Touch point 3 — Merge gate
+
+Security owns the `security-approved` label. For sensitive-area PRs, all three existing labels plus `security-approved` must be present before merge. The merge gate workflow must be updated to check for `security-approved` when the PR is tagged with a security-scope label.
+
+Routing rule: the Orchestrator determines whether a PR is in-scope for the Security agent based on the PR's labels and the feature's SPEC.md security requirements section. If `## Security Requirements` is present in SPEC.md, the security gate is required.
+
+### Specialist templates owned by Security
+
+The existing `qa-security.md` specialist is reclassified as a Security-owned template, used by the Security agent for focused sub-tasks (e.g. dependency audit, OWASP checklist pass, regex analysis). QA continues to use it for routine review on non-sensitive PRs. Security uses it internally for narrow analysis tasks.
+
+Add two new specialists to `agents/specialists/`:
+- `agents/specialists/threat-modeller.md` — structured threat modelling (STRIDE or equivalent); output: threat model section of SPEC.md
+- `agents/specialists/dependency-auditor.md` — reviews third-party dependencies for known vulnerabilities and licence risk; output: dependency audit report
+
+### Steps
+
+1. Write `agents/security.md` — Security agent role doc; define operating principles, session model, touch point responsibilities, authority boundaries
+2. Add `security-<project-slug>` to the named agent definitions — four agents per project becomes five; update `scripts/create-project-scoped-agents.sh` and `scripts/deploy-named-agents.py`
+3. Add `security-<project>` to the session topology table in `docs/delivery/hybrid-session-topology.md` and `OpenClaw Configuration Required` section
+4. Add `security-approved` label to `docs/delivery/github-labels.md`
+5. Update `repo-templates/.github/workflows/merge-gate.yml` — add conditional check: if PR has security-scope label, require `security-approved` in addition to the three existing labels
+6. Add `security-scope` label to `docs/delivery/github-labels.md` — applied by Orchestrator when routing criteria are met
+7. Add routing logic to Orchestrator role doc: evaluate each feature against security routing criteria; apply `security-scope` label if met; route to Security at spec time and again at PR review time before QA
+8. Update Spec role doc: when a feature meets security routing criteria, engage Security agent during the specification conversation; do not finalise SPEC.md on sensitive features without a `## Security Requirements` section
+9. Add `## Security Requirements` as a conditional required section in `scripts/validate-issue-ready.py` — if `security-scope` label is present, issue must reference security requirements before it is ready for build
+10. Update merge gate check in Orchestrator role doc: for `security-scope` PRs, confirm `security-approved` is present before applying `orchestrator-approved`
+11. Write `agents/specialists/threat-modeller.md` — base identity, refinement prompts, STRIDE output format
+12. Write `agents/specialists/dependency-auditor.md` — base identity, refinement prompts, expected output format
+13. Reclassify `qa-security.md` as shared between Security and QA in `docs/delivery/named-agent-specialist-model.md` — Security owns it; QA may use it for routine non-sensitive PRs
+14. Update `scripts/onboard-project.sh` to create `security-<project-slug>` named agent and deploy its workspace bootstrap
+15. Deploy workspace bootstrap for Security agent: same file set as other persistent agents (`AGENTS.md`, `SOUL.md`, `IDENTITY.md`, `FRAMEWORK_RUNTIME_BUNDLE.md`, `FRAMEWORK_NOTES.md`, `USER.md`)
+16. Add Security agent to `docs/delivery/named-agent-specialist-model.md` authority model — Security does not own routing or delivery decisions; it owns security sign-off only
+17. Update workflow YAMLs (`implement-feature.yaml`, `fix-bug.yaml`) to include the Security agent touch points as conditional steps gated on `security-scope`
+
+---
+
+## Epic 16 — Release Manager Agent
+
+**Problem:** There is no defined agent responsible for release orchestration. Releases are ad hoc — no standardised versioning, no structured pre-release testing loop, no formal issue triage before a release is cut, and no consistent release notes. The existing `prepare-release.yaml` workflow stub is insufficient and will be replaced by this epic.
+
+**Goal:** Add Release Manager as a sixth named persistent agent archetype that owns the full release lifecycle: from receiving the release signal through pre-release testing, issue triage and fix iteration, release candidate validation, and final release publication on GitHub.
+
+### Why a named persistent agent
+
+The release lifecycle is multi-session and stateful. A Release Manager session must track which beta iteration it is on, which issues were accepted/deferred/rejected, which have been fixed and merged, and when to promote to the next stage. Ephemeral sessions cannot hold this state. Release Manager is persistent, like Orchestrator and Spec.
+
+### Session topology
+
+| Agent | Session type | Session target |
+|---|---|---|
+| `release-manager-<project>` | Persistent | `session:<project>-release-manager` |
+
+### Release workflows
+
+Release Manager supports multiple release workflows. The default workflow is defined below. Additional workflows (e.g. continuous delivery, scheduled releases, hotfix releases) may be defined in future. The active workflow for a project is agreed with Spec during onboarding or when a release cadence is first established, and recorded as a decision record.
+
+---
+
+### Default release workflow
+
+#### Prerequisites and conventions
+
+- **Main branch is unstable.** Releasable state is defined by the release process, not branch state.
+- **SemVer versioning.** Starting version is agreed with Spec or the human at project onboarding and recorded as a decision record.
+- **Version scale (major/minor/patch)** is determined by Spec and Orchestrator based on the scope of changes since the last release. Release Manager applies the scale mechanically — it does not determine it.
+- **Pre-release issue tagging.** All issues found during release testing are labelled with the release version they were discovered against (e.g. `release:v1.2.0`). If a finding already exists as an open issue, it is skipped — not re-raised.
+- **Issue triage authority.** Spec and Orchestrator jointly triage release issues using three verdicts:
+  - **Reject** — not a real issue; close it
+  - **Accept** — must be fixed before this release can progress
+  - **Defer** — add to backlog as a separate issue/refinement; does not block the release
+
+---
+
+#### Step 1 — Release signal
+
+Spec or Orchestrator determines that a release is due — based on milestone completion, feature set, scheduled cadence, or human instruction. They notify Release Manager with:
+- The release scope (what is included)
+- The version scale (major / minor / patch)
+- The agreed starting version if this is the first release
+
+Release Manager opens a release tracking issue on GitHub to record the release state throughout the process.
+
+---
+
+#### Step 2 — Pre-release tag: beta 1
+
+Release Manager:
+1. Calculates the next SemVer from the last release tag and the supplied scale
+2. Creates a pre-release Git tag: `vX.Y.Z-beta1`
+3. Creates a GitHub pre-release from that tag with the label **Beta 1**
+4. Generates release notes (see Release Notes format below)
+5. Updates the release tracking issue with current state
+
+---
+
+#### Step 3 — Release testing
+
+Release Manager instructs QA and Security agents to run full release testing against the tagged beta. This is distinct from PR review — it is adversarial, broad, and not limited to changed code:
+
+**QA** runs:
+- Full adversarial pass across the entire application (not just changed areas)
+- Regression suite against all acceptance criteria since the last release
+- README build/run/verify contract verification
+- Any test types defined in the project's test strategy
+
+**Security** runs:
+- Full threat model review against current codebase
+- Dependency audit
+- Attack surface review across all external interfaces
+- Anything surfaced by the `threat-modeller` and `dependency-auditor` specialists
+
+Both agents report findings as new GitHub issues, each labelled `release:vX.Y.Z`. Before creating an issue, they must check whether it already exists as an open issue — if it does, it is skipped.
+
+---
+
+#### Step 4 — Issue triage
+
+Release Manager presents all newly created issues to Spec and Orchestrator for triage. Each issue receives one of:
+- **Reject** — Release Manager closes the issue with a documented reason
+- **Accept** — issue must be fixed before this release progresses
+- **Defer** — issue remains open, is assigned to the backlog, and does not block the release
+
+Triage decisions are recorded as decision records by Spec (Epic 9 format).
+
+---
+
+#### Step 5 — Fix iteration
+
+For each accepted issue, Release Manager delegates to Orchestrator to assign Builder through the standard delivery workflow (issue readiness validation → build → QA review → merge gate). Release Manager monitors the task ledger for completion of each accepted issue.
+
+When all accepted issues are merged, Release Manager returns to Step 2 and cuts the next beta (`vX.Y.Z-beta2`, `beta3`, etc.), repeating the test→triage→fix loop until QA and Security return no accepted issues.
+
+---
+
+#### Step 6 — Release candidate
+
+Once a beta iteration completes with no accepted issues, Release Manager promotes to a release candidate:
+1. Creates tag `vX.Y.Z-rc1`
+2. Creates a GitHub pre-release with the label **Release Candidate 1**
+3. Generates release notes (see format below)
+4. Instructs QA and Security to run the full release testing suite again against the RC
+
+Any issues found against the RC go through the same triage→fix→beta loop, then a new RC is cut (`rc2`, `rc3`, etc.) until the RC iteration also completes clean.
+
+---
+
+#### Step 7 — Final release
+
+Once an RC iteration completes with no accepted issues:
+1. Release Manager creates the final Git tag: `vX.Y.Z`
+2. Creates a GitHub release (not pre-release) with the full release notes
+3. Closes the release tracking issue
+4. Notifies Orchestrator and Spec that the release is complete
+
+---
+
+### Release notes format
+
+#### Full release (`vX.Y.Z`)
+
+- **Changes since `vX.Y.(Z-1)`** — all merged PRs and resolved issues since the last full release, grouped by type (features, fixes, security, infrastructure)
+- Generated from Git log and closed issues labelled with the release version or merged since the last release tag
+
+#### Pre-release (`vX.Y.Z-betaN` or `vX.Y.Z-rcN`)
+
+Two sections, in order:
+1. **Changes since `vX.Y.Z-beta(N-1)` (or since the previous pre-release in this cadence)** — what changed in this iteration specifically
+2. **Changes since `vX.Y.(Z-1)` (the last full release)** — the full scope of what this release contains
+
+This gives reviewers both a delta view (what's new in this iteration) and a cumulative view (what the full release contains).
+
+---
+
+### Release state tracking
+
+Release Manager maintains a release state file committed to the project repo at `docs/delivery/release-state.md`. This is distinct from the task ledger — it records the release-specific state: current version, current stage (beta/rc/released), iteration number, issue triage decisions, and the history of tags cut.
+
+Format mirrors the task ledger (markdown sections with embedded JSON payloads).
+
+---
+
+### Steps
+
+1. Write `agents/release-manager.md` — Release Manager role doc; define operating principles, session model, release workflow, authority boundaries (Release Manager does not own issue routing — it delegates to Orchestrator; it does not triage issues — that is Spec/Orchestrator)
+2. Add `release-manager-<project-slug>` to named agent definitions; update `scripts/create-project-scoped-agents.sh` and `scripts/deploy-named-agents.py`
+3. Add `release-manager-<project>` to session topology table in `docs/delivery/hybrid-session-topology.md` and OpenClaw Configuration Required section
+4. Define release state file schema in `docs/delivery/release-state.md` — fields: `project`, `current_version`, `stage` (beta/rc/released), `iteration`, `last_full_release`, `issues_accepted`, `issues_deferred`, `issues_rejected`, `tags_cut` (array), `history` (array of timestamped state transitions)
+5. Write `scripts/update-release-state.py` — append or update release state entries; analogous to `update-task-ledger.py`
+6. Write `scripts/validate-release-state.py` — validates release state file schema
+7. Write `scripts/cut-release-tag.sh <tag> <pre-release|release>` — creates a Git tag and pushes it; creates a GitHub release or pre-release via `gh release create`; enforces the SemVer format and pre-release naming conventions (`-betaN`, `-rcN`)
+8. Write `scripts/generate-release-notes.sh <from-tag> <to-tag> [since-full-release-tag]` — generates release notes from Git log and closed issues; outputs two-section format for pre-releases, single-section for full releases
+9. Write `scripts/check-release-issues.sh <release-label>` — queries GitHub for open issues labelled with the current release version; outputs a list for triage; used by Release Manager to detect new findings from QA/Security
+10. Add `release:vX.Y.Z` label creation to `scripts/cut-release-tag.sh` — ensure the label exists on GitHub before QA/Security begin testing against that tag
+11. Replace `workflows/prepare-release.yaml` with a full release workflow contract against the `schemas/workflow.json` schema — encode the beta→triage→fix→rc→release state machine with `loops`, `on_blocked`, and `on_failure` paths
+12. Update QA role doc: when instructed by Release Manager, run full release testing (not just changed-code review); check for existing open issues before creating new ones; label all new issues with the release version
+13. Update Security role doc: same — full release security testing mode distinct from PR review mode; skip existing open issues
+14. Update Orchestrator role doc: when Release Manager delegates accepted issues, route them through the standard delivery workflow and report completion back to Release Manager via the task ledger
+15. Update `scripts/onboard-project.sh` to create `release-manager-<project-slug>` named agent and deploy its workspace bootstrap; agree and record starting version as part of `--with-github-setup` flag
+16. Deploy workspace bootstrap for Release Manager: same file set as other persistent agents
+17. Add Release Manager to `docs/delivery/named-agent-specialist-model.md` authority model — Release Manager does not own code review, security sign-off, or issue triage; it owns release state and release publication
+18. Update OpenClaw config section to reflect six named agents per project
+
+---
+
+## Epic 17 — Framework Configuration and Parameterisation
+
+**Problem:** The framework is not reusable in its current form. Operator identity (name, email domain, timezone), agent persona names, and the OpenClaw workspace root path are hardcoded across scripts, docs, and skills files. A new operator cannot adopt the framework without manually finding and replacing values spread across the codebase.
+
+**Goal:** Extract all operator-specific and environment-specific values into a single framework config file that scripts source at runtime. The framework codebase itself becomes fully generic — no operator identity or environment paths appear in committed files.
+
+### What is hardcoded and where
+
+**Operator identity** (appears in 8+ files):
+- `patrick-mckinley.com` — email domain for agent git identities; hardcoded in `scripts/set-agent-git-identity.sh`, `scripts/validate-agent-artifacts.py`, `docs/delivery/agent-tooling-helpers.md`, `docs/delivery/repo-management-operating-model.md`, `policies/repo-management.md`, `skills/agent-identities/SKILL.md`, `skills/semantic-commits/SKILL.md`
+- `Patrick` / `Europe/London` — operator name and timezone hardcoded in `scripts/deploy-agent-workspace-bootstrap.py` and `scripts/deploy-project-agent-workspaces.py` (USER.md template)
+
+**Agent persona names** (appears in 3+ files):
+- `Cohen`, `Rowan` — specific persona names hardcoded in `scripts/set-agent-git-identity.sh` (usage examples) and `scripts/onboard-project.sh` (Rowan set as default identity)
+
+**OpenClaw workspace root** (appears in 5+ scripts):
+- `/data/.openclaw/` — hardcoded in `deploy/sync-framework.sh`, `scripts/deploy-agent-workspace-bootstrap.py`, `scripts/deploy-named-agents.py`, `scripts/create-project-scoped-agents.sh`, `scripts/onboard-project.sh`, `scripts/bootstrap-project-repo.sh`
+- Note: `scripts/deploy-project-agent-workspaces.py` already accepts `--workspace-root`; others do not
+
+### Config file
+
+A single config file at `config/framework.yaml` is the source of truth for all operator-specific and environment-specific values. It is committed to the repo as a template with placeholder values; operators fill it in before first use.
+
+```yaml
+operator:
+  name: ""               # Human operator's name (used in USER.md)
+  callname: ""           # What agents should call the operator
+  email_domain: ""       # Domain for agent git email addresses: bot-<archetype>@<email_domain>
+  timezone: ""           # IANA timezone string, e.g. Europe/London
+
+openclaw:
+  workspace_root: ""     # Absolute path to OpenClaw workspace root, e.g. /data/.openclaw
+
+# Agent persona names are optional. If omitted, the archetype name is used as the persona name.
+# These are the names agents use to identify themselves in git commits and communications.
+agent_personas:
+  orchestrator: ""
+  spec: ""
+  builder: ""
+  qa: ""
+  security: ""
+  release_manager: ""
+```
+
+A filled example is provided at `config/framework.yaml.example` but never committed as the live config.
+
+`config/framework.yaml` is added to `.gitignore` — operator identity must not be committed to the framework repo. The `.yaml.example` file is committed as the template.
+
+### How scripts consume the config
+
+- Python scripts: use a shared `scripts/lib/config.py` loader that reads `config/framework.yaml` and exposes typed values; all scripts import it
+- Shell scripts: use a shared `scripts/lib/config.sh` sourcing helper that reads `config/framework.yaml` via `yq` or a minimal parser and exports values as environment variables
+- Scripts that currently hardcode values are updated to read from the config loader instead
+- If `config/framework.yaml` is absent or a required field is empty, scripts exit with a clear error message identifying which field is missing
+
+### Steps
+
+1. Write `config/framework.yaml.example` — template with all fields, placeholder values, and inline comments explaining each field
+2. Add `config/framework.yaml` to `.gitignore`
+3. Write `scripts/lib/config.py` — Python config loader; reads `config/framework.yaml`, validates required fields are non-empty, exposes typed accessors; raises `ConfigError` with the missing field name if validation fails
+4. Write `scripts/lib/config.sh` — shell config loader; sources `config/framework.yaml` using `yq` and exports `FRAMEWORK_OPERATOR_NAME`, `FRAMEWORK_OPERATOR_CALLNAME`, `FRAMEWORK_OPERATOR_EMAIL_DOMAIN`, `FRAMEWORK_OPERATOR_TIMEZONE`, `FRAMEWORK_OPENCLAW_WORKSPACE_ROOT`, and `FRAMEWORK_AGENT_PERSONA_<ARCHETYPE>` variables
+5. Update `scripts/set-agent-git-identity.sh` — replace hardcoded `patrick-mckinley.com` with `$FRAMEWORK_OPERATOR_EMAIL_DOMAIN`; replace hardcoded persona name examples with `$FRAMEWORK_AGENT_PERSONA_<ARCHETYPE>`
+6. Update `scripts/deploy-agent-workspace-bootstrap.py` — replace hardcoded `Patrick`, `Europe/London`, and `/data/.openclaw/` paths with config values
+7. Update `scripts/deploy-project-agent-workspaces.py` — replace hardcoded `Europe/London` and operator name with config values; `--workspace-root` default reads from config
+8. Update `scripts/validate-agent-artifacts.py` — replace hardcoded `patrick-mckinley\.com` regex with the operator email domain from config
+9. Update `scripts/deploy-named-agents.py` — replace hardcoded `/data/.openclaw/` with config workspace root
+10. Update `scripts/create-project-scoped-agents.sh` — replace hardcoded `/data/.openclaw/` with config workspace root
+11. Update `scripts/onboard-project.sh` — replace hardcoded `Rowan` persona name and `/data/.openclaw/` paths with config values
+12. Update `scripts/bootstrap-project-repo.sh` — replace hardcoded workspace root
+13. Update `deploy/sync-framework.sh` — replace hardcoded `/data/.openclaw/` with config workspace root
+14. Replace hardcoded email domain in `docs/delivery/agent-tooling-helpers.md`, `docs/delivery/repo-management-operating-model.md`, `policies/repo-management.md`, `skills/agent-identities/SKILL.md`, `skills/semantic-commits/SKILL.md` with `<operator-email-domain>` placeholder and a note that the value is set in `config/framework.yaml`
+15. Write `scripts/validate-config.sh` — validates `config/framework.yaml` exists and all required fields are non-empty; exits non-zero with a descriptive message for each missing field; wire into `validate-framework.sh` as the first check
+16. Add config validation to `scripts/onboard-project.sh` as a preflight step — onboarding fails immediately if config is invalid, before any agent or workspace is created
+17. Update `README.md` with a **Getting Started** section: copy `config/framework.yaml.example` to `config/framework.yaml`, fill in operator values, then run `validate-config.sh` before any other script
+
+---
+
 ## Program of Works — Sequencing
 
 All decision points were resolved on 2026-04-08. Work can begin on all epics immediately. Epic 10 implementation remains pending until Epic 9 is complete and the bounded pilot is run, and production adoption requires that pilot to pass its success criteria.
 
 | Order | Epic | Notes |
 |---|---|---|
-| 1 | Epic 3 — Callback schema | Unblocked; foundational — all other epics depend on structured callbacks |
-| 2 | Epic 2 — Issue readiness validation | Unblocked; quick win; gates Builder work immediately |
-| 3 | Epic 1 — Task ledger | Unblocked; critical for Orchestrator persistence |
-| 4 | Epic 9 — Decision record schema | Unblocked; solves rationale-loss problem independently |
+| 1 | Epic 17 — Framework config and parameterisation | Unblocked and foundational — all scripts that touch operator identity or workspace paths depend on this; do first |
+| 2 | Epic 3 — Callback schema | Unblocked; all other epics depend on structured callbacks |
+| 3 | Epic 2 — Issue readiness validation | Unblocked; quick win; gates Builder work immediately |
+| 4 | Epic 1 — Task ledger | Unblocked; critical for Orchestrator persistence |
+| 5 | Epic 9 — Decision record schema | Unblocked; solves rationale-loss problem independently |
 | 5 | OpenClaw config — watchdog cron | Configure as soon as Epic 1 ledger schema is finalised; no other dependency |
-| 6 | Epic 11 — Specialist subagent template library | Depends on Epic 3 (specialists must return structured callbacks); must complete before Epic 14 |
-| 7 | Epic 14 — Conversational spec + UX/Design specialists | Depends on Epic 11 (UX/Design specialist templates must exist); process change can begin immediately, but template authoring blocks full completion |
-| 8 | Epic 12 — Testing standards and quality gates | Depends on Epic 14 (Spec-defined test strategy is part of the spec process); README contract and test-presence gate are unblocked and can start in parallel |
+| 6 | Epic 11 — Specialist subagent template library | Depends on Epic 3; must complete before Epic 14 |
+| 7 | Epic 14 — Conversational spec + UX/Design specialists | Depends on Epic 11; process change can begin immediately, but template authoring blocks full completion |
+| 8 | Epic 12 — Testing standards and quality gates | Depends on Epic 14; README contract and test-presence gate are unblocked and can start in parallel |
 | 9 | Epic 4 — Session health check | Depends on Epic 1 |
 | 10 | Epic 5 — Merge gate + PR line comments | Depends on Epic 3; usability gate from Epic 14 feeds into `spec-satisfied` label logic |
-| 11 | Epic 13 — Adversarial QA + bug regression workflow | Depends on Epic 3 (callbacks), Epic 12 (test standards), and Epic 5 (PR line comments for bug reports) |
+| 11 | Epic 13 — Adversarial QA + bug regression workflow | Depends on Epics 3, 12, and 5 |
 | 12 | Epic 7 — Deployment security hardening | Mostly independent; can run in parallel with 9–11 |
-| 13 | Epic 6 — Workflow YAML contracts | Depends on Epics 1–5, 12, 13, 14 being stable — YAMLs encode the finalised workflow shape |
-| 14 | Epic 8 — Onboarding script | Depends on Epics 1–5 stable; wraps all setup into a single entry point |
-| 15 | Epic 10 — Memory substrate pilot | Pilot begins after Epic 9; implementation (if adopted) sequences after pilot concludes |
+| 13 | Epic 15 — Security agent | Depends on Epic 5 (merge gate); role doc and bootstrap authoring can begin immediately |
+| 14 | Epic 16 — Release Manager agent | Depends on Epics 1, 13, and 15; role doc can begin immediately |
+| 15 | Epic 6 — Workflow YAML contracts | Depends on Epics 1–5, 12, 13, 14, 15, 16 being stable |
+| 16 | Epic 8 — Onboarding script | Depends on Epics 15, 16, and 17 (six named agents; config-driven paths) |
+| 17 | Epic 10 — Memory substrate pilot | Pilot begins after Epic 9; implementation (if adopted) sequences after pilot concludes |
