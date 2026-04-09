@@ -113,7 +113,7 @@ When agents commit, use a per-agent Git identity in this format:
 
 - security-scope issues need visible security requirements and a threat model before Builder handoff
 - security-scope PRs need Security review and `security-approved`
-- release coordination should live in a release tracking issue plus durable release-state docs
+- release coordination should live in a release tracking issue plus `docs/delivery/release-state.md`
 
 ## Docker-first local development baseline
 

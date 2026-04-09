@@ -50,6 +50,9 @@ Patrick
   └── Orchestrator
         ├── Spec Agent
         │     └── Architecture Sub-Agent
+        ├── Security Agent
+        │     └── Security Specialist Sub-Agents
+        ├── Release Manager
         ├── Builder
         │     └── Task-Specific Specialist Sub-Agents
         └── QA / Reviewer
@@ -115,7 +118,37 @@ Authority:
 - does not override Spec
 - does not own final project scope
 
-### 4. Builder
+### 4. Security Agent
+
+The Security agent owns security requirements, threat-model continuity, and security sign-off for security-scope work.
+
+Responsibilities:
+- participate before build for security-scope features
+- define and review security requirements
+- review security-scope PRs before QA when required
+- own `security-approved`
+- run release-time security testing when requested
+
+Authority:
+- owns security sign-off for security-scope work
+- does not own product scope or implementation delivery
+
+### 5. Release Manager
+
+The Release Manager owns release state, beta/rc/final iteration flow, and GitHub release publication.
+
+Responsibilities:
+- maintain the release tracking issue
+- maintain `docs/delivery/release-state.md`
+- coordinate QA and Security release testing
+- cut beta, rc, and final tags
+- publish the final GitHub release
+
+Authority:
+- owns release-state progression and publication flow
+- does not redefine release scope or implementation priorities alone
+
+### 6. Builder
 
 The Builder owns implementation delivery for approved backlog items.
 
@@ -134,7 +167,7 @@ Authority:
 - may decide whether specialist sub-agents are required
 - may not redefine accepted scope, product behavior, or project-level assumptions
 
-### 5. QA / Reviewer
+### 7. QA / Reviewer
 
 The QA / Reviewer agent owns verification through the PR process.
 

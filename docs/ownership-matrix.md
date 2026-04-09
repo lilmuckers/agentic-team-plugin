@@ -4,10 +4,12 @@ This repository manages the delivery-agent framework, not Rowan's personal OpenC
 
 ## In scope
 - agent role definitions
+- six top-level named-agent role definitions
 - reusable delivery skills
 - workflow contracts
 - governance and deployment policies
 - control-plane documentation for the framework
+- release-state and security-review control-plane scaffolding
 - downstream project bootstrap assets
 - deploy manifests and sync scripts
 

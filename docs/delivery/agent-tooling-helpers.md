@@ -186,6 +186,19 @@ Example:
 scripts/update-task-ledger.py docs/delivery/task-ledger.md ISSUE-42 "Add login flow" in_progress "Builder implementing auth UI" "QA review after PR is open" --owner builder-my-project --expected-callback-at 2026-04-09T14:30:00Z
 ```
 
+### `scripts/update-release-state.py`
+Update the `## Current Release` JSON block in `docs/delivery/release-state.md`.
+
+Example:
+```bash
+scripts/update-release-state.py docs/delivery/release-state.md \
+  --version v0.2.0 \
+  --stage beta \
+  --tracking-issue '#321' \
+  --beta-iteration 1 \
+  --updated-by release-manager-my-project
+```
+
 ### `scripts/validate-task-ledger.py`
 Validate `docs/delivery/task-ledger.md` entries that use markdown headings plus embedded JSON payloads.
 

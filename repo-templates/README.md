@@ -15,6 +15,7 @@ Each software project should have its own GitHub repo and should receive its own
 - `.github/pull_request_template.md`
 - `.github/workflows/merge-gate.yml`
 - `SPEC.md`
+- `docs/delivery/release-state.md`
 
 ## Usage
 

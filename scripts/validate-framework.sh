@@ -27,6 +27,7 @@ required_files=(
   "scripts/validate-callback.py"
   "scripts/validate-issue-ready.py"
   "scripts/update-task-ledger.py"
+  "scripts/update-release-state.py"
   "scripts/validate-task-ledger.py"
   "scripts/validate-decision-record.py"
   "scripts/validate-readme-contract.sh"
@@ -45,6 +46,7 @@ required_files=(
   "schemas/workflow.json"
   "docs/delivery/task-ledger.md"
   "docs/delivery/openclaw-cron-watchdog.md"
+  "docs/delivery/release-manager-operating-model.md"
   "docs/decisions/.gitkeep"
   "agents/specialists/typescript-engineer.md"
   "agents/specialists/python-engineer.md"
@@ -85,6 +87,7 @@ required_files=(
   "repo-templates/.github/pull_request_template.md"
   "repo-templates/.github/workflows/merge-gate.yml"
   "repo-templates/README.md"
+  "repo-templates/docs/delivery/release-state.md"
   "repo-templates/SPEC.md"
 )
 
@@ -117,6 +120,7 @@ required_exec=(
   "scripts/validate-callback.py"
   "scripts/validate-issue-ready.py"
   "scripts/update-task-ledger.py"
+  "scripts/update-release-state.py"
   "scripts/validate-task-ledger.py"
   "scripts/validate-decision-record.py"
   "scripts/validate-readme-contract.sh"

@@ -40,8 +40,10 @@ cp "$TEMPLATE_ROOT/pull_request_template.md" "$REPO_PATH/.github/pull_request_te
 mkdir -p "$REPO_PATH/.github/workflows"
 cp "$TEMPLATE_ROOT/workflows/merge-gate.yml" "$REPO_PATH/.github/workflows/merge-gate.yml"
 cp "$WORKSPACE_ROOT/repo-templates/SPEC.md" "$REPO_PATH/SPEC.md"
+mkdir -p "$REPO_PATH/docs/delivery"
+cp "$WORKSPACE_ROOT/repo-templates/docs/delivery/release-state.md" "$REPO_PATH/docs/delivery/release-state.md"
 
-echo "Installed GitHub templates into $REPO_PATH/.github and SPEC.md into $REPO_PATH"
+echo "Installed GitHub templates, SPEC.md, and release-state scaffolding into $REPO_PATH"
 
 create_label() {
   local name="$1"
