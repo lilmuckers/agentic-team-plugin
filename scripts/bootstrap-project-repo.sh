@@ -45,6 +45,7 @@ mkdir -p "$REPO_PATH/docs/delivery"
 cp "$WORKSPACE_ROOT/repo-templates/docs/delivery/release-state.md" "$REPO_PATH/docs/delivery/release-state.md"
 
 echo "Installed GitHub templates, SPEC.md, and release-state scaffolding into $REPO_PATH"
+"$WORKSPACE_ROOT/scripts/validate-project-bootstrap.sh" "$REPO_PATH" >/dev/null
 
 create_label() {
   local name="$1"
@@ -86,5 +87,6 @@ echo "Bootstrap complete. Next steps:"
 echo "  1. Commit the copied .github templates in $REPO_PATH"
 echo "  2. Confirm branch protection requires .github/workflows/merge-gate.yml in $REPO"
 echo "  3. Create initial project docs/spec"
-echo "  4. Create starter issues"
-echo "  5. Configure per-agent git identities with scripts/set-agent-git-identity.sh as needed"
+echo "  4. For application repos, add docker-compose.yml and .devcontainer/devcontainer.json"
+echo "  5. Create starter issues"
+echo "  6. Configure per-agent git identities with scripts/set-agent-git-identity.sh as needed"

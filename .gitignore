@@ -66,4 +66,5 @@ scripts/*
 !scripts/post-bug-report.sh
 !scripts/validate-config.sh
 !scripts/validate-docker-first-project.sh
+!scripts/validate-project-bootstrap.sh
 !scripts/update-release-state.py

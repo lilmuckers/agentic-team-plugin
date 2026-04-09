@@ -94,6 +94,8 @@ else
   echo "Installed minimum repo templates into $REPO_PATH"
 fi
 
+run "$ROOT_DIR/scripts/validate-project-bootstrap.sh" "$REPO_PATH"
+
 if [ "$WITH_GITHUB_SETUP" -eq 1 ]; then
   if [ -z "${GITHUB_REPO:-}" ]; then
     echo "ERROR: set GITHUB_REPO=owner/repo to use --with-github-setup" >&2

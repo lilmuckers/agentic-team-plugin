@@ -175,6 +175,21 @@ Example:
 scripts/validate-docker-first-project.sh /path/to/project-repo
 ```
 
+### `scripts/validate-project-bootstrap.sh`
+Validate that a downstream project repo has the framework bootstrap files installed.
+
+Checks include:
+- required issue templates
+- PR template
+- merge-gate workflow
+- root `SPEC.md`
+- `docs/delivery/release-state.md`
+
+Example:
+```bash
+scripts/validate-project-bootstrap.sh /path/to/project-repo
+```
+
 ### `scripts/update-task-ledger.py`
 Create or update a task entry in `docs/delivery/task-ledger.md`.
 

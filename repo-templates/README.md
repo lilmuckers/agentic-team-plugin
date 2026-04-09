@@ -25,6 +25,7 @@ When bootstrapping a new project repository:
 1. Copy the relevant files from this directory into the repo root.
 2. Customize labels, language, and checks as needed for the project.
 3. Keep project-specific docs, issue history, PRs, and wiki content in that repo.
+4. For application repos, add `docker-compose.yml` and `.devcontainer/devcontainer.json` to satisfy the Docker-first local-dev contract.
 
 The merge-gate template now conditionally requires `security-approved` when a PR carries `security-scope` or `security-review-required`.
 
