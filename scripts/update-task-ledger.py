@@ -24,6 +24,8 @@ def main():
     parser.add_argument("next_action")
     parser.add_argument("--by", default="Orchestrator")
     parser.add_argument("--history-action", default="Task updated")
+    parser.add_argument("--owner")
+    parser.add_argument("--expected-callback-at")
     args = parser.parse_args()
 
     ledger_path = Path(args.ledger_file)
@@ -46,6 +48,10 @@ def main():
         payload["state"] = args.state
         payload["current_action"] = args.current_action
         payload["next_action"] = args.next_action
+        if args.owner is not None:
+            payload["owner"] = args.owner
+        if args.expected_callback_at is not None:
+            payload["expected_callback_at"] = args.expected_callback_at
         history = payload.get("history") or []
         history.append({"at": timestamp, "action": args.history_action, "by": args.by})
         payload["history"] = history
@@ -58,6 +64,8 @@ def main():
             "state": args.state,
             "current_action": args.current_action,
             "next_action": args.next_action,
+            **({"owner": args.owner} if args.owner is not None else {}),
+            **({"expected_callback_at": args.expected_callback_at} if args.expected_callback_at is not None else {}),
             "history": [
                 {"at": timestamp, "action": args.history_action, "by": args.by}
             ],

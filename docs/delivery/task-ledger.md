@@ -17,6 +17,11 @@ This ledger is the Orchestrator's durable record of in-flight delegated work.
 - `next_action`
 - `history`
 
+## Optional Operational Fields
+
+- `owner` — the named agent currently accountable for the task
+- `expected_callback_at` — ISO-8601 timestamp used by the OpenClaw watchdog cron to detect overdue callbacks
+
 ## Allowed States
 
 - `queued`
@@ -35,6 +40,8 @@ This ledger is the Orchestrator's durable record of in-flight delegated work.
   "state": "queued",
   "current_action": "Describe what is happening now",
   "next_action": "Describe the next expected transition",
+  "owner": "builder-project-slug",
+  "expected_callback_at": "2026-04-08T12:30:00Z",
   "history": [
     {
       "at": "2026-04-08T12:00:00Z",

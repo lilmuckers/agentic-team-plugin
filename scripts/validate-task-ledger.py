@@ -3,6 +3,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 REQUIRED_FIELDS = {"task", "state", "current_action", "next_action", "history"}
@@ -28,6 +29,20 @@ def validate_entry(heading: str, payload: dict, errors: list[str]):
 
     if not isinstance(payload["next_action"], str) or not payload["next_action"].strip():
         errors.append(f"{heading}: 'next_action' must be a non-empty string")
+
+    owner = payload.get("owner")
+    if owner is not None and (not isinstance(owner, str) or not owner.strip()):
+        errors.append(f"{heading}: optional 'owner' must be a non-empty string when present")
+
+    expected_callback_at = payload.get("expected_callback_at")
+    if expected_callback_at is not None:
+        if not isinstance(expected_callback_at, str) or not expected_callback_at.strip():
+            errors.append(f"{heading}: optional 'expected_callback_at' must be a non-empty string when present")
+        else:
+            try:
+                datetime.fromisoformat(expected_callback_at.replace("Z", "+00:00"))
+            except ValueError:
+                errors.append(f"{heading}: optional 'expected_callback_at' must be ISO-8601 formatted")
 
     history = payload["history"]
     if not isinstance(history, list) or not history:

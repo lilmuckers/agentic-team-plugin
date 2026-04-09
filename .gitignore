@@ -58,3 +58,4 @@ scripts/*
 !scripts/invoke-named-agent.sh
 !scripts/list-agent-sessions.sh
 !scripts/roll-agent-session.sh
+!scripts/check-task-ledger-overdue.py

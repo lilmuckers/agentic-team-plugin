@@ -160,9 +160,13 @@ scripts/validate-readme-contract.sh /path/to/project-repo
 ### `scripts/update-task-ledger.py`
 Create or update a task entry in `docs/delivery/task-ledger.md`.
 
+Supports optional operational metadata for watchdog use:
+- `--owner`
+- `--expected-callback-at`
+
 Example:
 ```bash
-scripts/update-task-ledger.py docs/delivery/task-ledger.md ISSUE-42 "Add login flow" in_progress "Builder implementing auth UI" "QA review after PR is open"
+scripts/update-task-ledger.py docs/delivery/task-ledger.md ISSUE-42 "Add login flow" in_progress "Builder implementing auth UI" "QA review after PR is open" --owner builder-my-project --expected-callback-at 2026-04-09T14:30:00Z
 ```
 
 ### `scripts/validate-task-ledger.py`
@@ -173,11 +177,20 @@ Checks include:
 - exactly one fenced `json` block per entry
 - required JSON fields present
 - valid task state
+- optional `owner` and `expected_callback_at` fields, when present, are well-formed
 - non-empty history items with `at`, `action`, and `by`
 
 Example:
 ```bash
 scripts/validate-task-ledger.py docs/delivery/task-ledger.md
+```
+
+### `scripts/check-task-ledger-overdue.py`
+Report overdue task-ledger entries for OpenClaw cron/watchdog nudges.
+
+Example:
+```bash
+scripts/check-task-ledger-overdue.py docs/delivery/task-ledger.md --grace-minutes 15
 ```
 
 ### `scripts/onboard-project.sh`
