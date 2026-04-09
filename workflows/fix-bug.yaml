@@ -1,20 +1,55 @@
 name: fix-bug
-description: Route a bugfix through impact analysis, scoped implementation, and QA verification.
+description: Route a bugfix through defect framing, implementation, regression protection, and QA verification.
 steps:
   - id: specify
     agent: spec
-    output: defect framing, scope, and acceptance criteria
-  - id: plan
+    preconditions:
+      - Bug report or defect issue exists.
+      - Reproduction and expected behavior are captured or actively being clarified.
+    postconditions:
+      - Bugfix issue includes acceptance criteria and test strategy.
+      - Regression-test expectation or impossibility exception path is visible.
+    output: bugfix issue and clarified defect scope
+  - id: orchestrate
     agent: orchestrator
-    output: remediation plan
+    preconditions:
+      - Bugfix issue exists.
+      - scripts/validate-issue-ready.py passes before Builder handoff.
+    postconditions:
+      - Task ledger entry is updated.
+      - Builder is routed with explicit callback expectations.
+    output: remediation handoff packet
   - id: build
     agent: builder
-    output: fix change set
+    preconditions:
+      - Issue is ready-for-build.
+      - Reproduction path and expected behavior are visible.
+    postconditions:
+      - Fix PR exists.
+      - Automated regression coverage is added, or a documented impossibility exception is surfaced to Spec.
+    output: fix PR and callback report
   - id: qa
     agent: qa
-    output: verification outcome
-completion:
-  requires:
-    - remediation plan
-    - fix summary
-    - verification outcome
+    preconditions:
+      - PR exists and links back to the bugfix issue.
+      - Validation evidence and regression-test status are visible.
+    postconditions:
+      - QA outcome is explicit.
+      - Missing regression coverage without accepted exception is treated as blocked.
+    output: bugfix verification outcome
+on_blocked:
+  - Route unclear reproduction or behavior questions back to Spec through Orchestrator.
+  - Block approval when regression automation is missing without an explicit accepted exception.
+on_failure:
+  - Surface failure to Orchestrator immediately.
+  - Record the failing validation path and recommended next action.
+loops:
+  - from: qa
+    to: build
+    trigger: QA finds regressions, missing coverage, or correctness failures.
+  - from: build
+    to: specify
+    trigger: Builder cannot determine intended behavior or needs a regression exception approved.
+  - from: specify
+    to: orchestrate
+    trigger: Clarified bug contract or accepted exception is ready for routing.

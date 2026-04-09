@@ -1,17 +1,46 @@
 name: prepare-release
-description: Assess merged changes for release readiness and produce release notes.
+description: Assess release readiness from merged work, quality state, and documented scope before recommending release.
 steps:
   - id: scope
     agent: spec
+    preconditions:
+      - Candidate merged changes for the release are known.
+      - Project docs and decision records are available for review.
+    postconditions:
+      - Release scope summary exists.
+      - Any user-facing release notes inputs are documented.
     output: release scope summary
   - id: readiness
     agent: qa
+    preconditions:
+      - Scope summary exists.
+      - CI, test, and regression signals are available.
+    postconditions:
+      - Release risk assessment is explicit.
+      - Blocking quality concerns are listed if present.
     output: release risk assessment
   - id: coordinate
     agent: orchestrator
+    preconditions:
+      - Scope summary and QA readiness output exist.
+      - Outstanding blockers are known.
+    postconditions:
+      - Release recommendation is explicit.
+      - Human escalation is surfaced when risk or scope requires judgment.
     output: release recommendation
-completion:
-  requires:
-    - release scope summary
-    - release risk assessment
-    - release recommendation
+on_blocked:
+  - Hold release recommendation until missing validation, documentation, or scope clarity is resolved.
+  - Surface blockers explicitly to the human when they affect timing or risk.
+on_failure:
+  - Stop release coordination and record the failure reason in a visible artifact.
+  - Route the blocking work back into the normal delivery workflow.
+loops:
+  - from: readiness
+    to: scope
+    trigger: QA finds missing documentation or unclear release contents.
+  - from: coordinate
+    to: readiness
+    trigger: Orchestrator needs refreshed risk assessment after late changes.
+  - from: coordinate
+    to: scope
+    trigger: Release candidate changes and the scope summary must be updated.

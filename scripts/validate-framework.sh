@@ -25,11 +25,13 @@ required_files=(
   "scripts/validate-readme-contract.sh"
   "scripts/prepare-specialist-spawn.py"
   "scripts/validate-specialist-template.py"
+  "scripts/validate-workflows.py"
   "templates/callback-report.md"
   "templates/decision-record.md"
   "schemas/callback.md"
   "schemas/decision-record.md"
   "schemas/specialist-template.md"
+  "schemas/workflow.json"
   "docs/delivery/task-ledger.md"
   "docs/decisions/.gitkeep"
   "agents/specialists/typescript-engineer.md"
@@ -38,6 +40,9 @@ required_files=(
   "agents/specialists/visual-designer.md"
   "agents/specialists/usability-reviewer.md"
   "policies/spec-process.md"
+  "workflows/implement-feature.yaml"
+  "workflows/fix-bug.yaml"
+  "workflows/prepare-release.yaml"
 )
 
 for rel in "${required_files[@]}"; do
@@ -68,6 +73,7 @@ required_exec=(
   "scripts/validate-readme-contract.sh"
   "scripts/prepare-specialist-spawn.py"
   "scripts/validate-specialist-template.py"
+  "scripts/validate-workflows.py"
 )
 
 for rel in "${required_exec[@]}"; do
@@ -84,5 +90,6 @@ done
 "$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/ux-designer.md"
 "$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/visual-designer.md"
 "$ROOT_DIR/scripts/validate-specialist-template.py" "$ROOT_DIR/agents/specialists/usability-reviewer.md"
+"$ROOT_DIR/scripts/validate-workflows.py" "$ROOT_DIR/workflows/implement-feature.yaml" "$ROOT_DIR/workflows/fix-bug.yaml" "$ROOT_DIR/workflows/prepare-release.yaml"
 
 echo "Framework validation passed for $ROOT_DIR"
