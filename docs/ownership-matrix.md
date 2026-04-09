@@ -27,6 +27,7 @@ This repository manages the delivery-agent framework, not Rowan's personal OpenC
 
 ## Path guidance
 - `agents/`, `skills/`, `workflows/`, `policies/`, `templates/`, `schemas/`, `docs/delivery/` -> managed
+- `docs/agents/` -> managed human-reference docs, not canonical runtime agent definitions
 - `repo-templates/` -> project-template
 - workspace-root Rowan/OpenClaw files -> local
 - `.active/`, `.state/` -> state
