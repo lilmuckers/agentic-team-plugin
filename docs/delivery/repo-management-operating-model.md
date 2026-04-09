@@ -107,7 +107,7 @@ Use semantic commits with concise high-level subjects.
 Keep richer explanation, assumptions, and reviewer detail in the pull request.
 
 When agents commit, use a per-agent Git identity in this format:
-`<Name> (<Archetype>) <bot-<archetype-slug>@patrick-mckinley.com>`
+`<Name> (<Archetype>) <bot-<archetype-slug>@<operator-email-domain>>`
 
 ## Comment and post attribution baseline
 

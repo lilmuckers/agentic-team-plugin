@@ -23,9 +23,13 @@ SOUL.md
 TOOLS.md
 USER.md
 memory/
+config/framework.yaml
 
 # Local helper areas not part of the framework repo unless added intentionally later
 scripts/*
+!scripts/lib/
+!scripts/lib/config.py
+!scripts/lib/config.sh
 !scripts/bootstrap-project-repo.sh
 !scripts/set-agent-git-identity.sh
 !scripts/render-agent-comment.py
@@ -60,3 +64,4 @@ scripts/*
 !scripts/roll-agent-session.sh
 !scripts/check-task-ledger-overdue.py
 !scripts/post-bug-report.sh
+!scripts/validate-config.sh

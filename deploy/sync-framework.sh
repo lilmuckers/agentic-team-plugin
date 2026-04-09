@@ -12,6 +12,8 @@ set -euo pipefail
 # 6. record deployed SHA and metadata
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+. "$ROOT_DIR/scripts/lib/config.sh"
+load_framework_config
 ACTIVE_DIR="${ACTIVE_DIR:-$ROOT_DIR/.active/framework}"
 STATE_DIR="${STATE_DIR:-$ROOT_DIR/.state/framework}"
 STAMP_FILE="$STATE_DIR/deployed-sha.txt"
@@ -21,7 +23,7 @@ BUNDLE_GEN="$ROOT_DIR/scripts/generate-runtime-bundles.py"
 NAMED_AGENT_DEPLOY="$ROOT_DIR/scripts/deploy-named-agents.py"
 WORKSPACE_BOOTSTRAP_DEPLOY="$ROOT_DIR/scripts/deploy-agent-workspace-bootstrap.py"
 
-for path in "$ACTIVE_DIR" "$STATE_DIR" /data/.openclaw; do
+for path in "$ACTIVE_DIR" "$STATE_DIR" "$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT"; do
   if [ -L "$path" ]; then
     echo "Refusing to write through symlinked path: $path" >&2
     exit 1
@@ -30,11 +32,11 @@ done
 
 mkdir -p "$ACTIVE_DIR" "$STATE_DIR"
 
-if [ -e /data/.openclaw ]; then
-  owner="$(stat -c '%U' /data/.openclaw 2>/dev/null || true)"
+if [ -e "$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT" ]; then
+  owner="$(stat -c '%U' "$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT" 2>/dev/null || true)"
   current_user="$(id -un)"
   if [ -n "$owner" ] && [ "$owner" != "$current_user" ]; then
-    echo "WARNING: /data/.openclaw is owned by $owner, current user is $current_user" >&2
+    echo "WARNING: $FRAMEWORK_OPENCLAW_WORKSPACE_ROOT is owned by $owner, current user is $current_user" >&2
   fi
 fi
 
@@ -151,12 +153,12 @@ branch=$BRANCH
 timestamp=$TS
 active_dir=$ACTIVE_DIR
 runtime_dir=$ACTIVE_DIR/.runtime
-named_agents_root=/data/.openclaw/agents
-managed_workspaces=/data/.openclaw/workspace-orchestrator,/data/.openclaw/workspace-spec,/data/.openclaw/workspace-builder,/data/.openclaw/workspace-qa
+named_agents_root=$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/agents
+managed_workspaces=$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-orchestrator,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-spec,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-security,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-release-manager,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-builder,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-qa
 reload_boundary=fresh-session
 EOF
 
 echo "Promoted framework commit $SHA from $BRANCH at $TS to $ACTIVE_DIR"
 echo "Runtime bundles generated in $ACTIVE_DIR/.runtime"
-echo "Named agents deployed under /data/.openclaw/agents"
+echo "Named agents deployed under $FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/agents"
 echo "Managed workspace bootstrap files deployed for named agents"

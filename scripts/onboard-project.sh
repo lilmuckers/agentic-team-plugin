@@ -40,6 +40,10 @@ fi
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_NAME="$(basename "$REPO_PATH")"
 
+"$ROOT_DIR/scripts/validate-config.sh" >/dev/null
+. "$ROOT_DIR/scripts/lib/config.sh"
+load_framework_config
+
 run() {
   echo "+ $*"
   if [ "$DRY_RUN" -ne 1 ]; then
@@ -52,10 +56,10 @@ if [ ! -d "$REPO_PATH" ]; then
   exit 1
 fi
 
-for agent in orchestrator spec builder qa; do
+for agent in orchestrator spec security release-manager builder qa; do
   AGENT_ID="${agent}-${PROJECT}"
-  AGENT_DIR="/data/.openclaw/agents/${AGENT_ID}"
-  WORKSPACE_DIR="/data/.openclaw/workspace-${AGENT_ID}"
+  AGENT_DIR="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/agents/${AGENT_ID}"
+  WORKSPACE_DIR="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-${AGENT_ID}"
 
   if [ -d "$AGENT_DIR" ]; then
     echo "Agent directory already exists: $AGENT_DIR"
@@ -96,7 +100,7 @@ else
   echo "Skipping GitHub label/wiki bootstrap. Re-run with --with-github-setup and GITHUB_REPO=owner/repo for full setup."
 fi
 
-run "$ROOT_DIR/scripts/set-agent-git-identity.sh" "$REPO_PATH" Rowan Orchestrator
+run "$ROOT_DIR/scripts/set-agent-git-identity.sh" "$REPO_PATH" "$FRAMEWORK_AGENT_PERSONA_ORCHESTRATOR" Orchestrator
 
 echo "Project onboarding complete for $PROJECT"
-echo "Default repo-local git identity set to Rowan (Orchestrator); switch archetypes per task as needed."
+echo "Default repo-local git identity set to $FRAMEWORK_AGENT_PERSONA_ORCHESTRATOR (Orchestrator); switch archetypes per task as needed."

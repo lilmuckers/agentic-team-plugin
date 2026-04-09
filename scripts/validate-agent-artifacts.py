@@ -4,9 +4,11 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.lib.config import load_config
+
 HEADER_RE = re.compile(r'^> _posted by \*\*([A-Za-z0-9 /_-]+)\*\*_\s*$', re.MULTILINE)
 SEMANTIC_COMMIT_RE = re.compile(r'^(feat|fix|docs|test|chore|refactor|perf|build|ci|style|revert)(\([^)]+\))?: .+')
-GIT_EMAIL_RE = re.compile(r'^bot-[a-z0-9-]+@patrick-mckinley\.com$')
 GIT_NAME_RE = re.compile(r'^.+ \([A-Za-z0-9 /_-]+\)$')
 
 
@@ -28,6 +30,8 @@ def validate_markdown_file(path: Path, require_header: bool):
 
 
 def main():
+    config = load_config()
+    git_email_re = re.compile(r'^bot-[a-z0-9-]+@' + re.escape(config.operator_email_domain) + r'$')
     parser = argparse.ArgumentParser(description="Validate standardized agent artifacts.")
     parser.add_argument("--comment-file")
     parser.add_argument("--pr-body-file")
@@ -65,8 +69,11 @@ def main():
         print("ERROR: git name does not match '<Name> (<Archetype>)' format", file=sys.stderr)
         had_error = True
 
-    if args.git_email and not GIT_EMAIL_RE.match(args.git_email):
-        print("ERROR: git email does not match 'bot-<archetype-slug>@patrick-mckinley.com' format", file=sys.stderr)
+    if args.git_email and not git_email_re.match(args.git_email):
+        print(
+            f"ERROR: git email does not match 'bot-<archetype-slug>@{config.operator_email_domain}' format",
+            file=sys.stderr,
+        )
         had_error = True
 
     if "type:bug-fix" in args.pr_label:

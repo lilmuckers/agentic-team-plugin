@@ -13,7 +13,7 @@ common_paths = [
     ACTIVE_FRAMEWORK / 'docs' / 'delivery' / 'agent-tooling-helpers.md',
 ]
 
-agent_names = ['orchestrator', 'spec', 'builder', 'qa']
+agent_names = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa']
 
 for agent in agent_names:
     parts = []

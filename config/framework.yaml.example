@@ -1,0 +1,16 @@
+operator:
+  name: "Framework Operator"
+  callname: "Operator"
+  email_domain: "example.com"
+  timezone: "UTC"
+
+openclaw:
+  workspace_root: "/data/.openclaw"
+
+agent_personas:
+  orchestrator: "Orchestrator"
+  spec: "Spec"
+  builder: "Builder"
+  qa: "QA"
+  security: "Security"
+  release_manager: "Release Manager"

@@ -11,10 +11,12 @@ Make it obvious which agent archetype authored a commit or GitHub-visible post.
 ## Git commit identity rule
 Each agent should use a Git identity in this format:
 
-`<Name> (<Archetype>) <bot-<archetype-slug>@patrick-mckinley.com>`
+`<Name> (<Archetype>) <bot-<archetype-slug>@<operator-email-domain>>`
 
 Example:
-- `Cohen (Orchestrator) <bot-orchestrator@patrick-mckinley.com>`
+- `Orchestrator (Orchestrator) <bot-orchestrator@example.com>`
+
+The operator email domain comes from `config/framework.yaml`.
 
 ## GitHub comment/post signature rule
 Every issue comment, PR comment, or substantive PR body update posted by an agent should begin with a visible header:

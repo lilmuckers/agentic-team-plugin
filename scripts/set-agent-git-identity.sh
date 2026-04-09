@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+. "$ROOT_DIR/scripts/lib/config.sh"
+load_framework_config
+
 if [ $# -lt 3 ] || [ $# -gt 4 ]; then
   cat >&2 <<'EOF'
 Usage:
@@ -17,7 +21,7 @@ REPO_PATH="$1"
 AGENT_NAME="$2"
 ARCHETYPE="$3"
 ARCHETYPE_SLUG="${4:-$(printf '%s' "$ARCHETYPE" | tr '[:upper:]' '[:lower:]' | tr ' ' '-') }"
-EMAIL="bot-${ARCHETYPE_SLUG}@patrick-mckinley.com"
+EMAIL="bot-${ARCHETYPE_SLUG}@${FRAMEWORK_OPERATOR_EMAIL_DOMAIN}"
 GIT_NAME="${AGENT_NAME} (${ARCHETYPE})"
 
 if [ ! -d "$REPO_PATH/.git" ]; then

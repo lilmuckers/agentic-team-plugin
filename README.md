@@ -20,6 +20,13 @@ It is intended to:
 - A separate active deployment copy should be synced from reviewed commits on `main`.
 - Rowan's own OpenClaw identity and memory files are intentionally out of scope for this repository.
 
+## Getting Started
+
+1. Copy `config/framework.yaml.example` to `config/framework.yaml`
+2. Fill in operator identity, workspace root, and optional agent persona values
+3. Run `scripts/validate-config.sh`
+4. Only then run onboarding, deployment, or named-agent bootstrap scripts
+
 ## Repo boundary
 
 This repository is for the delivery-agent framework only.
@@ -56,7 +63,7 @@ Excluded intentionally:
 ## Initial scope
 
 This first version establishes:
-- core roles: orchestrator, builder, spec, qa
+- core roles: orchestrator, spec, security, release-manager, builder, qa
 - three starter reusable skills: github-prs, commit-messages, releases
 - baseline workflows for feature, bugfix, and release
 - a deploy manifest to distinguish managed vs local files

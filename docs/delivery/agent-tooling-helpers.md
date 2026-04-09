@@ -12,11 +12,13 @@ These helpers do not replace judgment, but they reduce drift in routine executio
 Configure repo-local Git author identity for a specific agent.
 
 Format enforced:
-- `<Name> (<Archetype>) <bot-<archetype-slug>@patrick-mckinley.com>`
+- `<Name> (<Archetype>) <bot-<archetype-slug>@<operator-email-domain>>`
+
+The email domain is sourced from `config/framework.yaml`.
 
 Example:
 ```bash
-scripts/set-agent-git-identity.sh . Cohen Orchestrator
+scripts/set-agent-git-identity.sh . Orchestrator Orchestrator
 ```
 
 ### `scripts/render-agent-comment.py`
@@ -108,7 +110,7 @@ scripts/validate-agent-artifacts.py \
   --comment-file comment.md \
   --commit-subject "feat(repo): add helper" \
   --git-name "Cohen (Orchestrator)" \
-  --git-email "bot-orchestrator@patrick-mckinley.com"
+  --git-email "bot-orchestrator@example.com"
 ```
 
 ### `scripts/validate-issue-ready.py`
@@ -151,6 +153,8 @@ Checks include:
 - non-empty `## Build`
 - non-empty `## Verify`
 - either non-empty `## Run` or non-empty `## Executable Verification Path`
+
+For application repos, Docker-first local development policy also expects `docker-compose.yml` and `devcontainer.json` at the repo root.
 
 Example:
 ```bash
@@ -209,6 +213,17 @@ Deploy managed workspace bootstrap files for named agents.
 Flags:
 - `--dry-run` shows diffs without writing
 - `--force` overwrites existing managed files
+
+All operator identity fields and workspace-root defaults come from `config/framework.yaml`.
+
+### `scripts/validate-config.sh`
+Validate the framework config before using deployment or onboarding scripts.
+
+Examples:
+```bash
+scripts/validate-config.sh
+scripts/validate-config.sh --file config/framework.yaml.example
+```
 
 ### `scripts/check-framework-version.sh`
 Compare the session's loaded framework SHA from `FRAMEWORK_NOTES.md` against the currently deployed framework SHA and print material-file diffs.

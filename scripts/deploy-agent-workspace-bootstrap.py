@@ -2,16 +2,23 @@
 import argparse
 import difflib
 import json
+import sys
 from pathlib import Path
 from datetime import datetime, timezone
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.lib.config import load_config
+
 ROOT = Path(__file__).resolve().parent.parent
 ACTIVE = ROOT / '.active' / 'framework'
+CONFIG = load_config()
 AGENT_WORKSPACES = {
-    'orchestrator': Path('/data/.openclaw/workspace-orchestrator'),
-    'spec': Path('/data/.openclaw/workspace-spec'),
-    'builder': Path('/data/.openclaw/workspace-builder'),
-    'qa': Path('/data/.openclaw/workspace-qa'),
+    'orchestrator': Path(CONFIG.workspace_root) / 'workspace-orchestrator',
+    'spec': Path(CONFIG.workspace_root) / 'workspace-spec',
+    'security': Path(CONFIG.workspace_root) / 'workspace-security',
+    'release-manager': Path(CONFIG.workspace_root) / 'workspace-release-manager',
+    'builder': Path(CONFIG.workspace_root) / 'workspace-builder',
+    'qa': Path(CONFIG.workspace_root) / 'workspace-qa',
 }
 
 now = datetime.now(timezone.utc).isoformat()
@@ -20,7 +27,7 @@ AGENTS_TEMPLATE = """# AGENTS.md - Managed Agent Workspace\n\nThis workspace is 
 
 SOUL_TEMPLATE = """# SOUL.md\n\nYou are the `{agent}` named agent operating under the reviewed `agentic-team-plugin` framework.\n\nYour detailed runtime contract is in `FRAMEWORK_RUNTIME_BUNDLE.md`.\nYour deployment metadata is in `FRAMEWORK_NOTES.md`.\n\nUse those files as the governing startup context for this workspace.\n"""
 
-USER_TEMPLATE = """# USER.md\n\n- Name: Patrick\n- What to call them: Patrick\n- Timezone: Europe/London\n- Notes: Human operator and framework owner. Use the reviewed framework and visible GitHub artefacts as the operating model.\n"""
+USER_TEMPLATE = f"""# USER.md\n\n- Name: {CONFIG.operator_name}\n- What to call them: {CONFIG.operator_callname}\n- Timezone: {CONFIG.operator_timezone}\n- Notes: Human operator and framework owner. Use the reviewed framework and visible GitHub artefacts as the operating model.\n"""
 
 IDENTITY_TEMPLATE = """# IDENTITY.md\n\n- Name: {agent}\n- Role: named delivery agent\n- Framework: agentic-team-plugin\n"""
 

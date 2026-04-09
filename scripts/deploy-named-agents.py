@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 import json
+import sys
 from pathlib import Path
 from datetime import datetime, timezone
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.lib.config import load_config
 
 ROOT = Path(__file__).resolve().parent.parent
 ACTIVE = ROOT / '.active' / 'framework'
 RUNTIME = ACTIVE / '.runtime'
-AGENTS_ROOT = Path('/data/.openclaw/agents')
+CONFIG = load_config()
+AGENTS_ROOT = Path(CONFIG.workspace_root) / 'agents'
 
-agent_names = ['orchestrator', 'spec', 'builder', 'qa']
+agent_names = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa']
 now = datetime.now(timezone.utc).isoformat()
 
 for agent in agent_names:

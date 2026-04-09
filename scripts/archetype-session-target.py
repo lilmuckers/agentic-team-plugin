@@ -9,7 +9,7 @@ args = parser.parse_args()
 archetype = args.archetype.strip().lower()
 project = args.project.strip().lower().replace(' ', '-').replace('_', '-')
 
-if archetype in ('orchestrator', 'spec'):
+if archetype in ('orchestrator', 'spec', 'security', 'release-manager'):
     print(f'session:{project}-{archetype}')
 elif archetype in ('builder', 'qa'):
     print('isolated')

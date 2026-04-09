@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+. "$ROOT_DIR/scripts/lib/config.sh"
+load_framework_config
+
 if [ $# -ne 1 ]; then
   cat >&2 <<'EOF'
 Usage:
@@ -13,10 +17,10 @@ EOF
 fi
 
 PROJECT="$1"
-for agent in orchestrator spec builder qa; do
+for agent in orchestrator spec security release-manager builder qa; do
   ID="${agent}-${PROJECT}"
-  AGENT_DIR="/data/.openclaw/agents/${ID}"
-  WORKSPACE="/data/.openclaw/workspace-${ID}"
+  AGENT_DIR="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/agents/${ID}"
+  WORKSPACE="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-${ID}"
   echo "Ensuring named agent exists: $ID"
   openclaw agents add "$ID" --agent-dir "$AGENT_DIR" --workspace "$WORKSPACE" --non-interactive --json >/dev/null || true
 done

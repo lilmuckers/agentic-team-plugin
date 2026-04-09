@@ -22,7 +22,7 @@ if not task_file.exists():
 archetype = args.archetype.strip().lower()
 project_slug = args.project.strip().lower().replace(' ', '-').replace('_', '-')
 
-if archetype in ('orchestrator', 'spec'):
+if archetype in ('orchestrator', 'spec', 'security', 'release-manager'):
     session_target = f'session:{project_slug}-{archetype}'
 else:
     session_target = 'isolated'

@@ -3,9 +3,13 @@ import argparse
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.lib.config import load_config
 
 
-def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deployed_sha: str, timestamp: str):
+def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deployed_sha: str, timestamp: str, config):
     return {
         'AGENTS.md': (
             '# AGENTS.md - Managed Project Agent Workspace\n\n'
@@ -27,9 +31,9 @@ def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deploy
         ),
         'USER.md': (
             '# USER.md\n\n'
-            '- Name: Patrick\n'
-            '- What to call them: Patrick\n'
-            '- Timezone: Europe/London\n'
+            f'- Name: {config.operator_name}\n'
+            f'- What to call them: {config.operator_callname}\n'
+            f'- Timezone: {config.operator_timezone}\n'
             '- Notes: Human operator and framework owner.\n'
         ),
         'IDENTITY.md': (
@@ -67,9 +71,10 @@ def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deploy
 
 
 def main():
+    config = load_config()
     parser = argparse.ArgumentParser(description='Deploy managed bootstrap files into project-scoped named-agent workspaces.')
     parser.add_argument('--project', required=True)
-    parser.add_argument('--workspace-root', default='/data/.openclaw')
+    parser.add_argument('--workspace-root', default=config.workspace_root)
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
 
@@ -78,7 +83,7 @@ def main():
     active = root / '.active' / 'framework'
     deployed_sha_file = root / '.state' / 'framework' / 'deployed-sha.txt'
     deployed_sha = deployed_sha_file.read_text().split()[0] if deployed_sha_file.exists() else 'unknown'
-    agents = ['orchestrator', 'spec', 'builder', 'qa']
+    agents = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa']
     timestamp = datetime.now(timezone.utc).isoformat()
     workspace_root = Path(args.workspace_root)
 
@@ -88,7 +93,7 @@ def main():
         if not bundle.exists():
             raise SystemExit(f'Missing runtime bundle for {agent}: {bundle}')
 
-        files = build_files(project, agent, bundle, active, deployed_sha, timestamp)
+        files = build_files(project, agent, bundle, active, deployed_sha, timestamp, config)
 
         if args.dry_run:
             print(f'=== {workspace} ===')

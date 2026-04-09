@@ -4,8 +4,11 @@ set -euo pipefail
 ROOT_DIR="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
 
 required_files=(
+  "config/framework.yaml.example"
   "agents/orchestrator.md"
   "agents/spec.md"
+  "agents/security.md"
+  "agents/release-manager.md"
   "agents/builder.md"
   "agents/qa.md"
   "policies/repo-management.md"
@@ -27,6 +30,7 @@ required_files=(
   "scripts/validate-task-ledger.py"
   "scripts/validate-decision-record.py"
   "scripts/validate-readme-contract.sh"
+  "scripts/validate-config.sh"
   "scripts/prepare-specialist-spawn.py"
   "scripts/onboard-project.sh"
   "scripts/validate-specialist-template.py"
@@ -81,6 +85,7 @@ done
 
 required_exec=(
   "deploy/sync-framework.sh"
+  "scripts/validate-config.sh"
   "scripts/set-agent-git-identity.sh"
   "scripts/create-agent-issue.sh"
   "scripts/create-agent-pr.sh"
@@ -114,6 +119,8 @@ for rel in "${required_exec[@]}"; do
     exit 1
   fi
 done
+
+"$ROOT_DIR/scripts/validate-config.sh" --file "$ROOT_DIR/config/framework.yaml.example"
 
 "$ROOT_DIR/scripts/validate-task-ledger.py" "$ROOT_DIR/docs/delivery/task-ledger.md"
 "$ROOT_DIR/scripts/validate-decision-record.py" "$ROOT_DIR/templates/decision-record.md"
