@@ -54,6 +54,10 @@ required_files=(
   "workflows/implement-feature.yaml"
   "workflows/fix-bug.yaml"
   "workflows/prepare-release.yaml"
+  "repo-templates/.github/pull_request_template.md"
+  "repo-templates/.github/workflows/merge-gate.yml"
+  "repo-templates/README.md"
+  "repo-templates/SPEC.md"
 )
 
 for rel in "${required_files[@]}"; do

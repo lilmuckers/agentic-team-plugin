@@ -71,18 +71,29 @@ done
 
 run python3 "$ROOT_DIR/scripts/deploy-project-agent-workspaces.py" --project "$PROJECT"
 
-if [ -f "$REPO_PATH/.github/pull_request_template.md" ] && [ -f "$REPO_PATH/SPEC.md" ]; then
+if [ -f "$REPO_PATH/.github/pull_request_template.md" ] \
+  && [ -f "$REPO_PATH/.github/workflows/merge-gate.yml" ] \
+  && [ -f "$REPO_PATH/SPEC.md" ]; then
   echo "Repo templates already appear installed in $REPO_PATH"
 else
-  if [ "$WITH_GITHUB_SETUP" -eq 1 ]; then
-    if [ -z "${GITHUB_REPO:-}" ]; then
-      echo "ERROR: set GITHUB_REPO=owner/repo to use --with-github-setup" >&2
-      exit 1
-    fi
-    run "$ROOT_DIR/scripts/bootstrap-project-repo.sh" "$GITHUB_REPO" "$REPO_PATH"
-  else
-    echo "Skipping GitHub setup. Re-run with --with-github-setup and GITHUB_REPO=owner/repo to install templates and labels."
+  mkdir -p "$REPO_PATH/.github/ISSUE_TEMPLATE" "$REPO_PATH/.github/workflows"
+  run cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/spec-task.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/spec-task.md"
+  run cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/architecture-decision.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/architecture-decision.md"
+  run cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/bugfix-task.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/bugfix-task.md"
+  run cp "$ROOT_DIR/repo-templates/.github/pull_request_template.md" "$REPO_PATH/.github/pull_request_template.md"
+  run cp "$ROOT_DIR/repo-templates/.github/workflows/merge-gate.yml" "$REPO_PATH/.github/workflows/merge-gate.yml"
+  run cp "$ROOT_DIR/repo-templates/SPEC.md" "$REPO_PATH/SPEC.md"
+  echo "Installed minimum repo templates into $REPO_PATH"
+fi
+
+if [ "$WITH_GITHUB_SETUP" -eq 1 ]; then
+  if [ -z "${GITHUB_REPO:-}" ]; then
+    echo "ERROR: set GITHUB_REPO=owner/repo to use --with-github-setup" >&2
+    exit 1
   fi
+  run "$ROOT_DIR/scripts/bootstrap-project-repo.sh" "$GITHUB_REPO" "$REPO_PATH"
+else
+  echo "Skipping GitHub label/wiki bootstrap. Re-run with --with-github-setup and GITHUB_REPO=owner/repo for full setup."
 fi
 
 run "$ROOT_DIR/scripts/set-agent-git-identity.sh" "$REPO_PATH" Rowan Orchestrator

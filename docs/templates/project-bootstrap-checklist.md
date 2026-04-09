@@ -14,6 +14,8 @@ Use this checklist when creating a new project repo.
 - [ ] `.github/ISSUE_TEMPLATE/architecture-decision.md` installed
 - [ ] `.github/ISSUE_TEMPLATE/bugfix-task.md` installed
 - [ ] `.github/pull_request_template.md` installed
+- [ ] `.github/workflows/merge-gate.yml` installed
+- [ ] `SPEC.md` scaffold installed
 
 ## Labels
 
@@ -29,6 +31,9 @@ Use this checklist when creating a new project repo.
 - [ ] `needs-qa`
 - [ ] `changes-requested`
 - [ ] `ready-to-merge`
+- [ ] `qa-approved`
+- [ ] `spec-satisfied`
+- [ ] `orchestrator-approved`
 
 ## Initial Documentation
 
@@ -49,6 +54,12 @@ Use this checklist when creating a new project repo.
 - [ ] Spec reviewed by Patrick
 - [ ] Backlog reviewed by Patrick
 - [ ] Architecture direction reviewed if needed
+
+## Onboarding Automation
+
+- [ ] `scripts/onboard-project.sh <project-slug> <repo-path>` run successfully
+- [ ] `scripts/set-agent-git-identity.sh` applied to the project repo
+- [ ] Branch protection configured to require the merge-gate workflow (if GitHub setup enabled)
 
 ## Ready-to-Build Gate
 

@@ -186,7 +186,8 @@ Run the minimum viable project onboarding flow.
 Features:
 - creates or reuses project-scoped named agents
 - deploys project agent workspaces
-- optionally installs repo templates and labels with `--with-github-setup`
+- installs repo templates, including `.github/workflows/merge-gate.yml`, into the target repo
+- optionally creates GitHub labels and related setup with `--with-github-setup`
 - supports `--dry-run`
 
 ### `scripts/deploy-agent-workspace-bootstrap.py`
