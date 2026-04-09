@@ -24,3 +24,9 @@ For each active release, keep these artifacts current:
 ## Helper
 
 Use `scripts/update-release-state.py` to keep the `## Current Release` JSON block current.
+Validate it with `scripts/validate-release-state.py`.
+
+For release execution:
+- use `scripts/check-release-issues.sh` to inspect labeled release issues
+- use `scripts/generate-release-notes.sh` to prepare the two-section release notes draft
+- use `scripts/cut-release-tag.sh` to create the tag plus GitHub pre-release or final release

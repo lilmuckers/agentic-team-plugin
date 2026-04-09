@@ -68,3 +68,7 @@ scripts/*
 !scripts/validate-docker-first-project.sh
 !scripts/validate-project-bootstrap.sh
 !scripts/update-release-state.py
+!scripts/validate-release-state.py
+!scripts/check-release-issues.sh
+!scripts/generate-release-notes.sh
+!scripts/cut-release-tag.sh
