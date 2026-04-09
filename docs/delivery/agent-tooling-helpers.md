@@ -172,6 +172,13 @@ Example:
 scripts/validate-task-ledger.py docs/delivery/task-ledger.md
 ```
 
+### `scripts/deploy-agent-workspace-bootstrap.py`
+Deploy managed workspace bootstrap files for named agents.
+
+Flags:
+- `--dry-run` shows diffs without writing
+- `--force` overwrites existing managed files
+
 ### `scripts/check-framework-version.sh`
 Compare the session's loaded framework SHA from `FRAMEWORK_NOTES.md` against the currently deployed framework SHA and print material-file diffs.
 

@@ -21,7 +21,22 @@ BUNDLE_GEN="$ROOT_DIR/scripts/generate-runtime-bundles.py"
 NAMED_AGENT_DEPLOY="$ROOT_DIR/scripts/deploy-named-agents.py"
 WORKSPACE_BOOTSTRAP_DEPLOY="$ROOT_DIR/scripts/deploy-agent-workspace-bootstrap.py"
 
+for path in "$ACTIVE_DIR" "$STATE_DIR" /data/.openclaw; do
+  if [ -L "$path" ]; then
+    echo "Refusing to write through symlinked path: $path" >&2
+    exit 1
+  fi
+done
+
 mkdir -p "$ACTIVE_DIR" "$STATE_DIR"
+
+if [ -e /data/.openclaw ]; then
+  owner="$(stat -c '%U' /data/.openclaw 2>/dev/null || true)"
+  current_user="$(id -un)"
+  if [ -n "$owner" ] && [ "$owner" != "$current_user" ]; then
+    echo "WARNING: /data/.openclaw is owned by $owner, current user is $current_user" >&2
+  fi
+fi
 
 if ! command -v git >/dev/null 2>&1; then
   echo "git is required" >&2
@@ -67,6 +82,14 @@ fi
 
 "$VALIDATOR" "$ROOT_DIR"
 
+manifest_local_patterns() {
+  awk '
+    $1 == "local:" { in_local=1; next }
+    in_local && /^[^[:space:]-]/ { exit }
+    in_local && /^[[:space:]]+- / { sub(/^[[:space:]]+- /, ""); print }
+  ' "$ROOT_DIR/deploy/manifest.yaml"
+}
+
 EXCLUDES=(
   '.git/'
   '.active/'
@@ -86,6 +109,21 @@ EXCLUDES=(
   'repo-templates/'
 )
 
+mapfile -t MANIFEST_LOCAL < <(manifest_local_patterns)
+for pattern in "${MANIFEST_LOCAL[@]}"; do
+  found=0
+  for excluded in "${EXCLUDES[@]}"; do
+    if [ "$excluded" = "$pattern" ]; then
+      found=1
+      break
+    fi
+  done
+  if [ "$found" -ne 1 ]; then
+    echo "ERROR: manifest local pattern not excluded from sync: $pattern" >&2
+    exit 1
+  fi
+done
+
 if command -v rsync >/dev/null 2>&1; then
   rsync -a --delete \
     $(printf -- " --exclude %q" "${EXCLUDES[@]}") \
@@ -104,7 +142,7 @@ fi
   "$BUNDLE_GEN"
 )
 "$NAMED_AGENT_DEPLOY"
-"$WORKSPACE_BOOTSTRAP_DEPLOY"
+"$WORKSPACE_BOOTSTRAP_DEPLOY" --force
 
 printf '%s %s\n' "$SHA" "$TS" > "$STAMP_FILE"
 cat > "$META_FILE" <<EOF

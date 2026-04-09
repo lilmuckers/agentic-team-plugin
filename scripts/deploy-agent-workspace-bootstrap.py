@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import argparse
+import difflib
 import json
 from pathlib import Path
 from datetime import datetime, timezone
@@ -22,40 +24,82 @@ USER_TEMPLATE = """# USER.md\n\n- Name: Patrick\n- What to call them: Patrick\n-
 
 IDENTITY_TEMPLATE = """# IDENTITY.md\n\n- Name: {agent}\n- Role: named delivery agent\n- Framework: agentic-team-plugin\n"""
 
-for agent, workspace in AGENT_WORKSPACES.items():
-    workspace.mkdir(parents=True, exist_ok=True)
-    bundle = ACTIVE / '.runtime' / f'{agent}.md'
-    if not bundle.exists():
-        raise SystemExit(f'Missing runtime bundle for {agent}: {bundle}')
-
-    (workspace / 'AGENTS.md').write_text(AGENTS_TEMPLATE.format(agent=agent))
-    (workspace / 'SOUL.md').write_text(SOUL_TEMPLATE.format(agent=agent))
-    (workspace / 'USER.md').write_text(USER_TEMPLATE)
-    (workspace / 'IDENTITY.md').write_text(IDENTITY_TEMPLATE.format(agent=agent))
-    (workspace / 'FRAMEWORK_RUNTIME_BUNDLE.md').write_text(bundle.read_text())
+def build_files(agent: str, bundle: Path):
     deployed_sha_file = ROOT / '.state' / 'framework' / 'deployed-sha.txt'
     deployed_sha = 'unknown'
     if deployed_sha_file.exists():
         deployed_sha = deployed_sha_file.read_text().split()[0]
 
-    (workspace / 'FRAMEWORK_NOTES.md').write_text(
-        f'# FRAMEWORK_NOTES.md\n\n'
-        f'- agent: {agent}\n'
-        f'- deployedAt: {now}\n'
-        f'- deployedSha: {deployed_sha}\n'
-        f'- loadedSha: {deployed_sha}\n'
-        f'- activeFrameworkDir: {ACTIVE}\n'
-        f'- runtimeBundle: {bundle}\n'
-        f'- reloadBoundary: start a fresh named-agent session to pick up updates\n'
-    )
-    (workspace / 'FRAMEWORK_DEPLOYMENT.json').write_text(json.dumps({
-        'agent': agent,
-        'deployedAt': now,
-        'deployedSha': deployed_sha,
-        'loadedSha': deployed_sha,
-        'activeFrameworkDir': str(ACTIVE),
-        'runtimeBundle': str(bundle),
-        'reloadBoundary': 'fresh-session',
-    }, indent=2))
+    return {
+        'AGENTS.md': AGENTS_TEMPLATE.format(agent=agent),
+        'SOUL.md': SOUL_TEMPLATE.format(agent=agent),
+        'USER.md': USER_TEMPLATE,
+        'IDENTITY.md': IDENTITY_TEMPLATE.format(agent=agent),
+        'FRAMEWORK_RUNTIME_BUNDLE.md': bundle.read_text(),
+        'FRAMEWORK_NOTES.md': (
+            f'# FRAMEWORK_NOTES.md\n\n'
+            f'- agent: {agent}\n'
+            f'- deployedAt: {now}\n'
+            f'- deployedSha: {deployed_sha}\n'
+            f'- loadedSha: {deployed_sha}\n'
+            f'- activeFrameworkDir: {ACTIVE}\n'
+            f'- runtimeBundle: {bundle}\n'
+            f'- reloadBoundary: start a fresh named-agent session to pick up updates\n'
+        ),
+        'FRAMEWORK_DEPLOYMENT.json': json.dumps({
+            'agent': agent,
+            'deployedAt': now,
+            'deployedSha': deployed_sha,
+            'loadedSha': deployed_sha,
+            'activeFrameworkDir': str(ACTIVE),
+            'runtimeBundle': str(bundle),
+            'reloadBoundary': 'fresh-session',
+        }, indent=2),
+    }
 
-    print(f'Deployed workspace bootstrap files into {workspace}')
+
+def main():
+    parser = argparse.ArgumentParser(description='Deploy managed workspace bootstrap files for named agents.')
+    parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--force', action='store_true')
+    args = parser.parse_args()
+
+    for agent, workspace in AGENT_WORKSPACES.items():
+        workspace.mkdir(parents=True, exist_ok=True)
+        bundle = ACTIVE / '.runtime' / f'{agent}.md'
+        if not bundle.exists():
+            raise SystemExit(f'Missing runtime bundle for {agent}: {bundle}')
+
+        files = build_files(agent, bundle)
+        if args.dry_run:
+            print(f'=== {workspace} ===')
+            for name, content in files.items():
+                target = workspace / name
+                existing = target.read_text() if target.exists() else ''
+                if existing != content:
+                    diff = difflib.unified_diff(
+                        existing.splitlines(),
+                        content.splitlines(),
+                        fromfile=str(target),
+                        tofile=f'{target} (new)',
+                        lineterm='',
+                    )
+                    for line in diff:
+                        print(line)
+            continue
+
+        if not args.force:
+            existing_files = [workspace / name for name in files if (workspace / name).exists()]
+            if existing_files:
+                raise SystemExit(
+                    f'Workspace {workspace} already contains managed files; rerun with --force or --dry-run first.'
+                )
+
+        for name, content in files.items():
+            (workspace / name).write_text(content)
+
+        print(f'Deployed workspace bootstrap files into {workspace}')
+
+
+if __name__ == '__main__':
+    main()
