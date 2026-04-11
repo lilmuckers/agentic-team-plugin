@@ -108,14 +108,25 @@ EXCLUDES=(
   'AGENTS.md'
   'BOOT.md'
   'BOOTSTRAP.md'
-  'repo-templates/'
 )
+
+normalize_pattern() {
+  local pattern="$1"
+  pattern="${pattern%/**}"
+  if [ -n "$pattern" ] && [ "$pattern" != "${pattern%/}" ]; then
+    printf '%s' "$pattern"
+  else
+    printf '%s/' "$pattern"
+  fi
+}
 
 mapfile -t MANIFEST_LOCAL < <(manifest_local_patterns)
 for pattern in "${MANIFEST_LOCAL[@]}"; do
   found=0
+  normalized_pattern="$(normalize_pattern "$pattern")"
   for excluded in "${EXCLUDES[@]}"; do
-    if [ "$excluded" = "$pattern" ]; then
+    normalized_excluded="$(normalize_pattern "$excluded")"
+    if [ "$normalized_excluded" = "$normalized_pattern" ]; then
       found=1
       break
     fi
