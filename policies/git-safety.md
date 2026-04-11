@@ -1,6 +1,7 @@
 # Git Safety Policy
 
 ## Rules
+- Every agent session must work from its own dedicated local clone of the project repo, stored in that agent's workspace directory. Never share a checkout between concurrent agent sessions — different agents will be on different branches simultaneously and sharing one directory will cause branch conflicts and data loss. If a checkout does not yet exist in the workspace, clone it before starting any git work.
 - Prefer feature branches for all changes after initial bootstrap
 - Keep commits scoped and reviewable
 - Avoid mixing framework changes with unrelated workspace changes

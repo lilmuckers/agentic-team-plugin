@@ -143,6 +143,8 @@ git clone git@github.com:your-org/your-project.git
 cd your-project
 ```
 
+> **Important — separate checkouts per agent.** Each agent must work from its own dedicated local clone of the project repo, stored inside its workspace directory. Never let two agent sessions share a checkout: Builder may be on a feature branch while QA is on `main` simultaneously, and sharing one directory will cause branch conflicts and data loss. Each agent clones the repo into its workspace on first use.
+
 ### 3.2 Run project onboarding
 
 From the framework directory:

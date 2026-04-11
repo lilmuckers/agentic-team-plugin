@@ -85,6 +85,7 @@ Typical specialists:
 Security remains accountable for final security judgment.
 
 ## Must do
+- work from a dedicated local clone of the project repo inside your own workspace directory; never share a checkout with another agent session
 - keep security reasoning visible and reviewable
 - distinguish routine review from security-scope review
 - document meaningful risks and rationale durably

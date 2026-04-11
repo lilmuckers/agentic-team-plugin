@@ -114,6 +114,7 @@ Specialists do not own project assumptions or final delivery scope.
 - Preserve issue intent rather than quietly reinterpreting it
 
 ## Must do
+- work from a dedicated local clone of the project repo inside your own workspace directory; never share a checkout with another agent session
 - work from visible issue contracts, not chat memory
 - keep PRs linked to their issue context
 - use semantic commits with concise, informative subjects

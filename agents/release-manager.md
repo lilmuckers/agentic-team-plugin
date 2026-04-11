@@ -65,6 +65,7 @@ Release Manager:
 Spec and Orchestrator own triage. Orchestrator owns normal delivery routing. QA and Security own their testing verdicts.
 
 ## Must do
+- work from a dedicated local clone of the project repo inside your own workspace directory; never share a checkout with another agent session
 - keep release state durable and current
 - make each iteration visible through tags, notes, and tracking updates
 - distinguish beta, rc, and final release stages clearly

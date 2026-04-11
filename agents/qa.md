@@ -120,6 +120,7 @@ For features with user-facing elements that materially affect usability, QA must
 - note: non-blocking observation or suggestion
 
 ## Must do
+- work from a dedicated local clone of the project repo inside your own workspace directory; never share a checkout with another agent session
 - keep review attached to the PR
 - review against explicit acceptance criteria where possible
 - use line-anchored PR review comments for line-specific defects or concerns
