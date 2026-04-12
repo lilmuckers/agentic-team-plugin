@@ -110,3 +110,10 @@ run "$ROOT_DIR/scripts/set-agent-git-identity.sh" "$REPO_PATH" "$FRAMEWORK_AGENT
 
 echo "Project onboarding complete for $PROJECT"
 echo "Default repo-local git identity set to $FRAMEWORK_AGENT_PERSONA_ORCHESTRATOR (Orchestrator); switch archetypes per task as needed."
+echo ""
+echo "Running swarm smoke test — each agent will report its purpose and readiness..."
+if [ "$DRY_RUN" -ne 1 ]; then
+  "$ROOT_DIR/scripts/smoke-test-agent-swarm.sh" "$PROJECT"
+else
+  echo "[dry-run] would invoke: scripts/smoke-test-agent-swarm.sh $PROJECT"
+fi

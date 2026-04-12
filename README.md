@@ -174,6 +174,16 @@ GITHUB_REPO=your-org/your-project \
 
 Use `--dry-run` to preview what would happen without making changes.
 
+After onboarding completes, the script automatically runs a swarm smoke test. Each of the six agents is sent a startup verification message and asked to report their name, purpose, what they are ready to do, and any gaps in their configuration. Review each response to confirm they are correctly wired before starting work. If any agent fails or reports a missing prerequisite, investigate before proceeding.
+
+You can re-run the smoke test at any time:
+
+```bash
+scripts/smoke-test-agent-swarm.sh <project-slug>
+# or a subset
+scripts/smoke-test-agent-swarm.sh musical-statues --agents orchestrator,spec
+```
+
 ### 3.3 Agree the starting version
 
 Open `docs/delivery/release-state.md` in the project repo and set the initial version entry. The Release Manager and Orchestrator must agree on the starting version (typically `0.1.0-beta1`) before any build work begins.
