@@ -70,7 +70,7 @@ Use for every project-scoped named agent (Spec, Builder, QA, Security, Release M
 scripts/dispatch-named-agent.sh <project> <archetype> <task-file>
 ```
 
-- Sends into the **existing** named-agent session.
+- Routes to the **existing** named-agent session by agent name — no synthetic `--session-id` unless a task-suffix is explicitly provided. OpenClaw resolves the agent's live session internally by name.
 - Does **not** spawn a new session.
 - Exits non-zero with a clear error if the named agent cannot be reached.
 - **Never** falls back to Path B silently.

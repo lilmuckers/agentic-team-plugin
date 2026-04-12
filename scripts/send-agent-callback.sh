@@ -8,6 +8,13 @@ set -euo pipefail
 # from the dispatch mechanism — the dispatch call that delivered the
 # original task is NOT the callback channel.
 #
+# Routing:
+#   Sends to agent 'orchestrator-<project>' WITHOUT a synthetic session id.
+#   OpenClaw routes to the agent's existing live session by agent name alone.
+#   Do NOT pass --session-id here. The Orchestrator's session is already
+#   running and has its own internal session key. Generating a synthetic id
+#   (e.g. 'lapwing-orchestrator') will miss the real session.
+#
 # Behaviour:
 #   - Validates the callback file against the callback schema before sending.
 #   - Sends the callback directly into the orchestrator-<project> named session.
@@ -45,7 +52,6 @@ THINKING="${3:-minimal}"
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 VALIDATE="$ROOT_DIR/scripts/validate-callback.py"
-SESSION_GEN="$ROOT_DIR/scripts/agent-session-id.py"
 
 if [ ! -f "$CALLBACK_FILE" ]; then
   echo "ERROR: callback file not found: $CALLBACK_FILE" >&2
@@ -59,14 +65,14 @@ if ! python3 "$VALIDATE" "$CALLBACK_FILE"; then
 fi
 
 ORCHESTRATOR_AGENT="orchestrator-${PROJECT}"
-SESSION_ID="$(python3 "$SESSION_GEN" --project "$PROJECT" --agent "orchestrator")"
 MESSAGE="$(cat "$CALLBACK_FILE")"
 
-echo "Sending callback to: $ORCHESTRATOR_AGENT (session: $SESSION_ID)"
+# Route by agent name only — no synthetic session id.
+# OpenClaw resolves the agent's live session internally.
+echo "Sending callback to: $ORCHESTRATOR_AGENT"
 
 if ! openclaw agent \
     --agent "$ORCHESTRATOR_AGENT" \
-    --session-id "$SESSION_ID" \
     --message "$MESSAGE" \
     --thinking "$THINKING" \
     --json; then

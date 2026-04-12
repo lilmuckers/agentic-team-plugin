@@ -18,7 +18,11 @@ set -euo pipefail
 #   authoritative completion report.
 #
 # Behaviour:
-#   - Targets the existing named-agent session by its canonical session id.
+#   - Targets the existing named-agent session by agent name alone.
+#   - Does NOT pass a synthetic --session-id unless an explicit task-suffix is
+#     provided. OpenClaw routes to the agent's live session by agent name.
+#     Generating a synthetic session id (e.g. 'lapwing-spec') and passing it
+#     to --session-id can miss the real running session.
 #   - Does NOT spawn a new session.
 #   - Does NOT fall back to a generic sub-agent if the named agent is
 #     unavailable. Instead it exits non-zero with a clear message so the
@@ -55,33 +59,38 @@ TASK_SUFFIX="${4:-}"
 THINKING="${5:-minimal}"
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-SESSION_GEN="$ROOT_DIR/scripts/agent-session-id.py"
 
 if [ ! -f "$TASK_FILE" ]; then
   echo "ERROR: task file not found: $TASK_FILE" >&2
   exit 1
 fi
 
-# Derive canonical agent id and session id.
+# Agent id is always <archetype>-<project>.
+# Route by agent name only — no synthetic session id unless a task-suffix was
+# explicitly provided for task isolation. OpenClaw resolves the agent's live
+# session internally by agent name.
 AGENT_ID="${ARCHETYPE}-${PROJECT}"
-
-if [ -n "$TASK_SUFFIX" ]; then
-  SESSION_ID="$(python3 "$SESSION_GEN" --project "$PROJECT" --agent "$ARCHETYPE" --task "$TASK_SUFFIX")"
-else
-  SESSION_ID="$(python3 "$SESSION_GEN" --project "$PROJECT" --agent "$ARCHETYPE")"
-fi
-
 MESSAGE="$(cat "$TASK_FILE")"
 
-echo "Dispatching to named agent: $AGENT_ID (session: $SESSION_ID)"
+OPENCLAW_ARGS=(
+  --agent "$AGENT_ID"
+  --message "$MESSAGE"
+  --thinking "$THINKING"
+  --json
+)
+
+if [ -n "$TASK_SUFFIX" ]; then
+  SESSION_GEN="$ROOT_DIR/scripts/agent-session-id.py"
+  SESSION_ID="$(python3 "$SESSION_GEN" --project "$PROJECT" --agent "$ARCHETYPE" --task "$TASK_SUFFIX")"
+  OPENCLAW_ARGS+=(--session-id "$SESSION_ID")
+  echo "Dispatching to named agent: $AGENT_ID (session: $SESSION_ID)"
+else
+  echo "Dispatching to named agent: $AGENT_ID"
+fi
+
 echo "NOTE: This confirms delivery only. Task completion comes via send-agent-callback.sh."
 
-if ! openclaw agent \
-    --agent "$AGENT_ID" \
-    --session-id "$SESSION_ID" \
-    --message "$MESSAGE" \
-    --thinking "$THINKING" \
-    --json; then
+if ! openclaw agent "${OPENCLAW_ARGS[@]}"; then
   cat >&2 <<EOF
 
 ERROR: dispatch to named agent '$AGENT_ID' failed — task was NOT delivered.

@@ -11,6 +11,7 @@ The Orchestrator has two distinct, non-interchangeable dispatch paths. Using the
 Use this for every project-scoped named agent: `spec-<project>`, `builder-<project>`, `qa-<project>`, `security-<project>`, `release-manager-<project>`.
 
 - Sends work directly into the **existing** named-agent session.
+- Routes by **agent name only** — no synthetic `--session-id` unless a `task-suffix` is explicitly provided for task isolation. OpenClaw resolves the agent's live session by agent name internally. Forcing a synthetic session id can miss the real running session.
 - Does **not** spawn a new session or thread.
 - Fails with a clear error and non-zero exit if the named agent is unavailable.
 - **Never** falls back to a generic sub-agent. Surface unavailability as a blocker.
@@ -24,7 +25,7 @@ scripts/dispatch-named-agent.sh merlin builder issue-5.md issue-5
 scripts/dispatch-named-agent.sh merlin qa pr-review.md pr-42 low
 ```
 
-Decision rule: if a named project agent for the target role exists, always use Path A. The named agent routing hard rule applies before anything else. Do not use Path B for a role that has a project-scoped named agent.
+Decision rule: if a named project agent for the target role exists, always use Path A. The named agent routing hard rule applies before anything else. Do not use Path C for a role that has a project-scoped named agent.
 
 ### Path A — delivery vs. completion (critical distinction)
 
@@ -42,7 +43,7 @@ scripts/send-agent-callback.sh <project> callback.md
 ```
 
 - Validates the callback file against `schemas/callback.md` before sending.
-- Sends directly into the `orchestrator-<project>` session.
+- Routes by **agent name only** (`orchestrator-<project>`) — no synthetic session id. OpenClaw resolves the Orchestrator's live session internally.
 - Exits non-zero if delivery fails, with instructions to retry or notify the operator.
 
 ### Path C — generic ephemeral worker spawn (`scripts/direct-spawn-archetype.sh`)
