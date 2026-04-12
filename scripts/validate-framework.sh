@@ -59,6 +59,8 @@ required_files=(
   "docs/delivery/task-ledger.md"
   "docs/delivery/openclaw-cron-watchdog.md"
   "docs/delivery/release-manager-operating-model.md"
+  "docs/delivery/orchestrator-tooling-helpers.md"
+  "docs/delivery/release-manager-tooling-helpers.md"
   "docs/agents/README.md"
   "docs/agents/orchestrator.md"
   "docs/agents/spec.md"
