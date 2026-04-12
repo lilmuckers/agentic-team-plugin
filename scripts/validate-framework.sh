@@ -45,6 +45,7 @@ required_files=(
   "templates/callback-report.md"
   "templates/bug-report.md"
   "templates/decision-record.md"
+  "templates/swarm-smoke-test.md"
   "schemas/callback.md"
   "schemas/decision-record.md"
   "schemas/specialist-template.md"
@@ -147,6 +148,9 @@ required_exec=(
   "scripts/onboard-project.sh"
   "scripts/validate-specialist-template.py"
   "scripts/validate-workflows.py"
+  "scripts/smoke-test-agent-swarm.sh"
+  "scripts/smoke-test-workflow.sh"
+  "scripts/validate-agent-workspace-layout.sh"
 )
 
 for rel in "${required_exec[@]}"; do

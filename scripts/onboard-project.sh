@@ -4,7 +4,7 @@ set -euo pipefail
 usage() {
   cat >&2 <<'EOF'
 Usage:
-  scripts/onboard-project.sh <project-slug> [repo-path] [--with-github-setup] [--dry-run]
+  scripts/onboard-project.sh <project-slug> [repo-path] [--with-github-setup] [--dry-run] [--no-smoke-test]
 EOF
 }
 
@@ -17,12 +17,14 @@ PROJECT=""
 REPO_PATH="."
 WITH_GITHUB_SETUP=0
 DRY_RUN=0
+SMOKE_TEST=1
 POSITIONAL=()
 
 for arg in "$@"; do
   case "$arg" in
     --with-github-setup) WITH_GITHUB_SETUP=1 ;;
     --dry-run) DRY_RUN=1 ;;
+    --no-smoke-test) SMOKE_TEST=0 ;;
     *) POSITIONAL+=("$arg") ;;
   esac
 done
@@ -111,9 +113,13 @@ run "$ROOT_DIR/scripts/set-agent-git-identity.sh" "$REPO_PATH" "$FRAMEWORK_AGENT
 echo "Project onboarding complete for $PROJECT"
 echo "Default repo-local git identity set to $FRAMEWORK_AGENT_PERSONA_ORCHESTRATOR (Orchestrator); switch archetypes per task as needed."
 echo ""
-echo "Running swarm smoke test — each agent will report its purpose and readiness..."
-if [ "$DRY_RUN" -ne 1 ]; then
-  "$ROOT_DIR/scripts/smoke-test-agent-swarm.sh" "$PROJECT"
+if [ "$SMOKE_TEST" -eq 1 ]; then
+  echo "Running swarm smoke test — each agent will report its purpose and readiness..."
+  if [ "$DRY_RUN" -ne 1 ]; then
+    "$ROOT_DIR/scripts/smoke-test-agent-swarm.sh" "$PROJECT"
+  else
+    echo "[dry-run] would invoke: scripts/smoke-test-agent-swarm.sh $PROJECT"
+  fi
 else
-  echo "[dry-run] would invoke: scripts/smoke-test-agent-swarm.sh $PROJECT"
+  echo "Skipping swarm smoke test (--no-smoke-test). Run scripts/smoke-test-agent-swarm.sh $PROJECT manually when ready."
 fi

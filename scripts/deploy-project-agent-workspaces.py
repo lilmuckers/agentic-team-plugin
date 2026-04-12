@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.lib.config import load_config
 
 
-def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deployed_sha: str, timestamp: str, config):
+def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deployed_sha: str, timestamp: str, config, workspace_root: Path):
     return {
         'AGENTS.md': (
             '# AGENTS.md - Managed Project Agent Workspace\n\n'
@@ -21,7 +21,11 @@ def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deploy
             '3. Read `IDENTITY.md`\n'
             '4. Read `FRAMEWORK_RUNTIME_BUNDLE.md`\n'
             '5. Read `FRAMEWORK_NOTES.md`\n\n'
-            'A fresh session is the reload boundary for these files.\n'
+            'A fresh session is the reload boundary for these files.\n\n'
+            '## Project repo checkout\n\n'
+            f'Clone the project repo into the `repo/` subdirectory of this workspace — see `repoCheckoutPath` in `FRAMEWORK_NOTES.md`.\n\n'
+            'NEVER clone at the workspace root. Your workspace config files (SOUL.md, IDENTITY.md, AGENTS.md, FRAMEWORK_*.md, etc.) '
+            'must not be inside the project git working tree. If two agents share a checkout they will stomp each other\'s branches.\n'
         ),
         'SOUL.md': (
             '# SOUL.md\n\n'
@@ -53,6 +57,7 @@ def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deploy
             f'- activeFrameworkDir: {active_dir}\n'
             f'- source bundle: {bundle}\n'
             '- reload boundary: fresh session required\n'
+            f'- repoCheckoutPath: {workspace_root}/workspace-{agent}-{project}/repo\n'
         ),
         'FRAMEWORK_DEPLOYMENT.json': json.dumps(
             {
@@ -64,6 +69,7 @@ def build_files(project: str, agent: str, bundle: Path, active_dir: Path, deploy
                 'activeFrameworkDir': str(active_dir),
                 'runtimeBundle': str(bundle),
                 'reloadBoundary': 'fresh-session',
+                'repoCheckoutPath': f'{workspace_root}/workspace-{agent}-{project}/repo',
             },
             indent=2,
         ),
@@ -93,7 +99,7 @@ def main():
         if not bundle.exists():
             raise SystemExit(f'Missing runtime bundle for {agent}: {bundle}')
 
-        files = build_files(project, agent, bundle, active, deployed_sha, timestamp, config)
+        files = build_files(project, agent, bundle, active, deployed_sha, timestamp, config, workspace_root)
 
         if args.dry_run:
             print(f'=== {workspace} ===')
