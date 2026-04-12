@@ -93,3 +93,4 @@ scripts/*
 !scripts/clone-agent-project-repo.sh
 !scripts/scaffold-project-repo.sh
 !scripts/clone-agent-project-repo.sh
+!scripts/dispatch-named-agent.sh

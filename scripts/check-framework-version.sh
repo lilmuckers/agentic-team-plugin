@@ -10,11 +10,6 @@ if [ ! -f "$NOTES_FILE" ]; then
   exit 1
 fi
 
-if [ ! -f "$DEPLOYED_SHA_FILE" ]; then
-  echo "ERROR: deployed sha file not found: $DEPLOYED_SHA_FILE" >&2
-  exit 1
-fi
-
 loaded_sha="$(sed -n 's/^- loadedSha: //p' "$NOTES_FILE" | head -n1)"
 if [ -z "$loaded_sha" ]; then
   loaded_sha="$(sed -n 's/^- deployedSha: //p' "$NOTES_FILE" | head -n1)"
@@ -24,7 +19,19 @@ if [ -z "$loaded_sha" ]; then
   exit 1
 fi
 
-current_sha="$(awk '{print $1}' "$DEPLOYED_SHA_FILE")"
+if [ ! -f "$DEPLOYED_SHA_FILE" ]; then
+  # deployed-sha.txt is written by the deploy step; it may be absent on first
+  # onboard or in ephemeral agent workspaces. Fall back to the deployedSha
+  # recorded in FRAMEWORK_NOTES.md and treat it as the current baseline.
+  current_sha="$(sed -n 's/^- deployedSha: //p' "$NOTES_FILE" | head -n1)"
+  if [ -z "$current_sha" ]; then
+    echo "ERROR: deployed-sha.txt absent and deployedSha not found in $NOTES_FILE" >&2
+    exit 1
+  fi
+  echo "NOTE: deployed-sha.txt not found; using deployedSha from FRAMEWORK_NOTES.md as baseline"
+else
+  current_sha="$(awk '{print $1}' "$DEPLOYED_SHA_FILE")"
+fi
 
 if [ "$loaded_sha" = "$current_sha" ]; then
   echo "Framework SHA matches: $current_sha"

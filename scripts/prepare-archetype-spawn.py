@@ -22,10 +22,10 @@ if not task_file.exists():
 archetype = args.archetype.strip().lower()
 project_slug = args.project.strip().lower().replace(' ', '-').replace('_', '-')
 
-if archetype in ('orchestrator', 'spec', 'security', 'release-manager'):
-    session_target = f'session:{project_slug}-{archetype}'
-else:
-    session_target = 'isolated'
+# Always spawn an isolated session. This script is for fresh disposable workers.
+# To send work to an existing named project agent (spec-<project>, builder-<project>,
+# qa-<project>, etc.) use scripts/dispatch-named-agent.sh instead.
+session_target = 'isolated'
 
 label = args.label or f'{project_slug}-{archetype}'
 message = (

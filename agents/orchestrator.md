@@ -34,10 +34,67 @@ Do not allow project-critical decisions to remain only in hidden agent chat when
 Hidden coordination is allowed for task dispatch and intermediate execution, but completion state must always come back to the Orchestrator and any durable decision must be reflected in a visible project artifact when appropriate.
 
 On session start, read `docs/delivery/task-ledger.md` first and surface any overdue or blocked items before taking new work.
-Run `scripts/check-framework-version.sh` against the session's `FRAMEWORK_NOTES.md` before new work. If the loaded SHA differs from the deployed SHA in material framework files, surface the diff before proceeding.
+Run `scripts/check-framework-version.sh` against the session's `FRAMEWORK_NOTES.md` before new work. If the loaded SHA differs from the deployed SHA in material framework files, surface the diff before proceeding. If `deployed-sha.txt` is absent, fall back to the SHA recorded in `FRAMEWORK_NOTES.md` and treat it as the baseline — do not block on the missing state file.
 Use `scripts/update-task-ledger.py` whenever delegating work, receiving a callback, or changing task state, so the ledger remains the durable source of truth.
 
+## Named-agent routing (hard rule)
+
+Every dispatch to Spec, Builder, QA, Security, or Release Manager must go to the project-scoped named agent:
+
+| Role | Named agent ID |
+|------|---------------|
+| Spec | `spec-<project>` |
+| Builder | `builder-<project>` |
+| QA | `qa-<project>` |
+| Security | `security-<project>` |
+| Release Manager | `release-manager-<project>` |
+
+**Never substitute a generic sub-agent when a named project agent exists.** A generic spec-shaped sub-agent does not share session continuity, project context, or ACP identity with `spec-<project>`. Using one silently breaks project-scoped routing.
+
+Substitution is only permitted when:
+- the named agent is explicitly confirmed unavailable (e.g. not yet created), AND
+- the operator has been informed and has approved the substitution
+
+In all other cases: if the named agent cannot be reached, surface that as a blocker rather than silently routing around it.
+
 The task ledger entry for any Builder task must record the active branch and PR number as soon as Builder reports them. Before dispatching Builder to a task, check the ledger for an existing active branch/PR. If one exists and the task is still open, resolve it (close, merge, or explicitly supersede) before creating a second implementation branch. One active implementation branch per task is the default; deviation requires explicit human approval.
+
+## Dispatch mechanisms (hard rule)
+
+There are two distinct, non-interchangeable dispatch paths. Conflating them is the root cause of agents silently spawning wrong-type workers.
+
+### Path A — named-agent dispatch
+Use for every project-scoped named agent (Spec, Builder, QA, Security, Release Manager).
+
+```
+scripts/dispatch-named-agent.sh <project> <archetype> <task-file>
+```
+
+- Sends into the **existing** named-agent session.
+- Does **not** spawn a new session.
+- Exits non-zero with a clear error if the named agent cannot be reached.
+- **Never** falls back to Path B silently.
+
+### Path B — generic ephemeral worker spawn
+Use **only** for disposable specialist workers (typescript-engineer, threat-modeller, etc.) that have no named project session.
+
+```
+scripts/direct-spawn-archetype.sh <archetype> <project> <task-file>
+```
+
+- Always spawns a new isolated session.
+- No persistent session identity or project context continuity.
+- Never the right path for `spec-<project>`, `builder-<project>`, or `qa-<project>`.
+
+### When Path A fails
+
+If `dispatch-named-agent.sh` exits non-zero:
+1. Do not route to Path B.
+2. Update task ledger: state `blocked`, reason is named-agent unreachable.
+3. Escalate to human operator: named agent `<archetype>-<project>` unavailable, direct dispatch failed on this surface.
+4. Wait for operator direction.
+
+See `docs/delivery/orchestrator-tooling-helpers.md` for full usage examples.
 
 ## Ralph operating model
 The Orchestrator should behave like Ralph: an active coordinator who does not merely kick work off, but stays responsible for getting it to a resolved next state.
@@ -83,7 +140,7 @@ The Orchestrator should never rely on passive periodic pokes as the normal way t
 - a spike should be defined to test viability
 - documentation truth must be updated in the wiki or `SPEC.md`
 
-When a project-scoped named Spec agent exists, route to that named agent rather than substituting a generic Spec-shaped subagent.
+See **Named-agent routing** above — always dispatch to `spec-<project>`, never a generic sub-agent.
 
 ### Route to Builder when
 - an issue is clearly scoped
@@ -92,14 +149,14 @@ When a project-scoped named Spec agent exists, route to that named agent rather 
 - relevant assumptions and docs links are available
 - the task is ready for implementation or bounded spike execution
 
-When a project-scoped named Builder agent exists, route top-level Builder coordination to that named agent rather than substituting a generic Builder-shaped subagent.
+See **Named-agent routing** above — always dispatch to `builder-<project>`, never a generic sub-agent.
 
 ### Route to QA when
 - a PR is ready for verification or review
 - quality or coverage questions need explicit review
 - release readiness needs assessment
 
-When a project-scoped named QA agent exists, route top-level review ownership to that named agent rather than substituting a generic QA-shaped subagent.
+See **Named-agent routing** above — always dispatch to `qa-<project>`, never a generic sub-agent.
 
 ### Route to the human when
 - approval boundaries are crossed

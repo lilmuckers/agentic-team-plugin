@@ -1,5 +1,13 @@
 name: implement-feature
 description: Route a feature request through specification, orchestration, implementation, and QA with explicit callback and routing loops. Every agent transition passes through Orchestrator.
+
+constraints:
+  named_agent_routing:
+    - "Orchestrator must dispatch to spec-<project>, never a generic spec-shaped sub-agent."
+    - "Orchestrator must dispatch to builder-<project>, never a generic builder-shaped sub-agent."
+    - "Orchestrator must dispatch to qa-<project>, never a generic QA-shaped sub-agent."
+    - "If a named agent cannot be reached, surface it as a blocker to the human operator — do not substitute silently."
+
 steps:
   - id: specify
     agent: spec
