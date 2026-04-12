@@ -154,10 +154,17 @@ fi
   cd "$ACTIVE_DIR"
   "$BUNDLE_GEN"
 )
+
+# Write the stamp BEFORE any downstream deployment that reads it.
+# deploy-named-agents.py and deploy-agent-workspace-bootstrap.py both
+# propagate this SHA into FRAMEWORK_NOTES.md in each workspace. Writing
+# it after those steps (the old order) caused workspaces to be stamped
+# with the previous SHA even though the runtime bundles were already new.
+printf '%s %s\n' "$SHA" "$TS" > "$STAMP_FILE"
+
 "$NAMED_AGENT_DEPLOY"
 "$WORKSPACE_BOOTSTRAP_DEPLOY" --force
 
-printf '%s %s\n' "$SHA" "$TS" > "$STAMP_FILE"
 cat > "$META_FILE" <<EOF
 sha=$SHA
 branch=$BRANCH
