@@ -72,3 +72,4 @@ scripts/*
 !scripts/check-release-issues.sh
 !scripts/generate-release-notes.sh
 !scripts/cut-release-tag.sh
+!scripts/smoke-test-agent-swarm.sh
