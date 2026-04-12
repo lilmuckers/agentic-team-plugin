@@ -155,7 +155,8 @@ if [ -f "$REPO_PATH/.github/pull_request_template.md" ] \
   && [ -f "$REPO_PATH/.github/workflows/merge-gate.yml" ] \
   && [ -f "$REPO_PATH/SPEC.md" ] \
   && [ -f "$REPO_PATH/.github/ISSUE_TEMPLATE/release-tracking.md" ] \
-  && [ -f "$REPO_PATH/docs/delivery/release-state.md" ]; then
+  && [ -f "$REPO_PATH/docs/delivery/release-state.md" ] \
+  && [ -f "$REPO_PATH/docs/delivery/task-ledger.md" ]; then
   echo "Repo templates already appear installed in $REPO_PATH"
 else
   mkdir -p "$REPO_PATH/.github/ISSUE_TEMPLATE" "$REPO_PATH/.github/workflows" "$REPO_PATH/docs/delivery"
@@ -167,6 +168,7 @@ else
   run cp "$ROOT_DIR/repo-templates/.github/workflows/merge-gate.yml"               "$REPO_PATH/.github/workflows/merge-gate.yml"
   run cp "$ROOT_DIR/repo-templates/SPEC.md"                                        "$REPO_PATH/SPEC.md"
   run cp "$ROOT_DIR/repo-templates/docs/delivery/release-state.md"                 "$REPO_PATH/docs/delivery/release-state.md"
+  run cp "$ROOT_DIR/repo-templates/docs/delivery/task-ledger.md"                   "$REPO_PATH/docs/delivery/task-ledger.md"
   echo "Installed minimum repo templates into $REPO_PATH"
 fi
 

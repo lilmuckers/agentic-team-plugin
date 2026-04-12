@@ -109,6 +109,7 @@ required_files=(
   "repo-templates/.github/workflows/merge-gate.yml"
   "repo-templates/README.md"
   "repo-templates/docs/delivery/release-state.md"
+  "repo-templates/docs/delivery/task-ledger.md"
   "repo-templates/SPEC.md"
 )
 

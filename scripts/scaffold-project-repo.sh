@@ -77,6 +77,7 @@ run cp "$ROOT_DIR/repo-templates/.github/pull_request_template.md"              
 run cp "$ROOT_DIR/repo-templates/.github/workflows/merge-gate.yml"               "$REPO_PATH/.github/workflows/merge-gate.yml"
 run cp "$ROOT_DIR/repo-templates/SPEC.md"                                        "$REPO_PATH/SPEC.md"
 run cp "$ROOT_DIR/repo-templates/docs/delivery/release-state.md"                 "$REPO_PATH/docs/delivery/release-state.md"
+run cp "$ROOT_DIR/repo-templates/docs/delivery/task-ledger.md"                   "$REPO_PATH/docs/delivery/task-ledger.md"
 
 # Minimal README so the repo looks reasonable
 if [ ! -f "$REPO_PATH/README.md" ]; then

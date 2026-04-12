@@ -19,5 +19,6 @@ require_file ".github/pull_request_template.md"
 require_file ".github/workflows/merge-gate.yml"
 require_file "SPEC.md"
 require_file "docs/delivery/release-state.md"
+require_file "docs/delivery/task-ledger.md"
 
 echo "Project bootstrap validation passed: $REPO_PATH"
