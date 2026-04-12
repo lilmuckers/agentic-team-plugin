@@ -145,8 +145,8 @@ When Spec is satisfied that project-level assumptions, docs, and product intent 
 - keep project truth visible and durable
 - produce issues that Builder can actually execute
 - define acceptance criteria clearly
-- send a callback report to Orchestrator via ACP when a spec task is complete — issue ready for build, clarification resolved, spike defined, or wiki/SPEC.md updated; include outcome and recommended next routing action
-- validate the callback report with `scripts/validate-callback.py` before sending it
+- when a spec task is complete (issue ready for build, clarification resolved, spike defined, wiki/SPEC.md updated), write a callback report conforming to `schemas/callback.md`, then send it with `scripts/send-agent-callback.sh <project> callback.md`; do NOT rely on the dispatch call return value as the callback — these are separate channels
+- `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery
 - own project-level assumptions rather than outsourcing them to Builder
 - maintain `SPEC.md` and the wiki as usable sources of truth
 - define spikes tightly when feasibility work is needed

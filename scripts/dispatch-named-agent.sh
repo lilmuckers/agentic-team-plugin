@@ -7,6 +7,16 @@ set -euo pipefail
 #   spec-<project>, builder-<project>, qa-<project>,
 #   security-<project>, release-manager-<project>
 #
+# IMPORTANT — delivery versus completion:
+#   This script confirms task DELIVERY only. It is NOT the callback channel.
+#   A successful exit (0) means the task message was accepted by the named
+#   agent's session. It does NOT mean the task is complete.
+#
+#   Task completion is signalled by the named agent sending an explicit
+#   callback to orchestrator-<project> using scripts/send-agent-callback.sh.
+#   Orchestrator must NOT treat the return value of this script as the
+#   authoritative completion report.
+#
 # Behaviour:
 #   - Targets the existing named-agent session by its canonical session id.
 #   - Does NOT spawn a new session.
@@ -64,6 +74,7 @@ fi
 MESSAGE="$(cat "$TASK_FILE")"
 
 echo "Dispatching to named agent: $AGENT_ID (session: $SESSION_ID)"
+echo "NOTE: This confirms delivery only. Task completion comes via send-agent-callback.sh."
 
 if ! openclaw agent \
     --agent "$AGENT_ID" \
@@ -73,7 +84,7 @@ if ! openclaw agent \
     --json; then
   cat >&2 <<EOF
 
-ERROR: dispatch to named agent '$AGENT_ID' failed.
+ERROR: dispatch to named agent '$AGENT_ID' failed — task was NOT delivered.
 
 This path does NOT fall back to a generic sub-agent.
 Possible causes:
@@ -88,3 +99,5 @@ Required action:
 EOF
   exit 1
 fi
+
+echo "Task delivered to $AGENT_ID. Waiting for callback via send-agent-callback.sh."

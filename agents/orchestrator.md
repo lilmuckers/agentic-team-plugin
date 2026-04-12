@@ -86,6 +86,14 @@ scripts/direct-spawn-archetype.sh <archetype> <project> <task-file>
 - No persistent session identity or project context continuity.
 - Never the right path for `spec-<project>`, `builder-<project>`, or `qa-<project>`.
 
+### Delivery vs. completion (critical distinction)
+
+`dispatch-named-agent.sh` confirms **delivery** only. A successful exit means the task message reached the named agent's session. It does **not** mean the task is complete.
+
+Task completion is confirmed only when the named agent sends an explicit callback using `scripts/send-agent-callback.sh`. Do not treat the dispatch return value as the authoritative callback. Do not advance workflow on dispatch success alone.
+
+If a dispatch succeeds but no callback arrives within the expected window, treat that as a timeout — re-check visible GitHub artifacts, then follow the silence and timeout handling rules below.
+
 ### When Path A fails
 
 If `dispatch-named-agent.sh` exits non-zero:
@@ -197,7 +205,9 @@ Minimum callback fields:
 
 The Orchestrator should reject vague completions such as "finished" or "done now" when they do not provide enough information to decide the next step.
 
-Callbacks must be validated with `scripts/validate-callback.py` by the sending agent before dispatch. Orchestrator should refuse to act on a callback that does not pass validation.
+Callbacks must be sent using `scripts/send-agent-callback.sh`, which validates them automatically. The sending agent should also run `scripts/validate-callback.py` directly before that step to catch errors early. Orchestrator should refuse to act on a callback that does not pass validation.
+
+A callback received via `send-agent-callback.sh` is the authoritative completion signal. A dispatch delivery confirmation from `dispatch-named-agent.sh` is not a callback and must never be treated as one.
 
 ## Routing on callback receipt
 

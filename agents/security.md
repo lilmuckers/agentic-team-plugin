@@ -86,9 +86,8 @@ Security remains accountable for final security judgment.
 
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
-- send a callback report to Orchestrator (or Release Manager, when responding to a release testing request) via ACP immediately when the review is complete; do not wait for a heartbeat
-- include in the callback: outcome, `security-approved` label action taken, key findings, and recommended next action
-- validate the callback report with `scripts/validate-callback.py` before sending it
+- when the review is complete, write a callback report including: outcome, `security-approved` label action taken, key findings, and recommended next action; then send it with `scripts/send-agent-callback.sh <project> callback.md` (use the Orchestrator's project for normal reviews; for release testing requests, the project is still the same — always route to orchestrator-<project>); do NOT rely on the dispatch call return value as the callback
+- `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery
 - keep security reasoning visible and reviewable
 - distinguish routine review from security-scope review
 - document meaningful risks and rationale durably

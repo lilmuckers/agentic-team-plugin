@@ -119,9 +119,9 @@ Specialists do not own project assumptions or final delivery scope.
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - refuse to begin implementation if `SPEC.md` is blank, a placeholder, or contains no content relevant to the assigned issue; send it back to Spec
 - refuse to begin implementation if the issue does not link to a spec artifact, wiki page, or architecture decision; send it back to Orchestrator
-- send a callback report to Orchestrator via ACP immediately when the PR is marked ready for review; do not wait for a heartbeat or cron prompt — the callback is what triggers QA assignment
-- send a callback report to Orchestrator via ACP immediately when blocked, failed, or when an assumption requires explicit approval; include outcome, blockers, and recommended next action
-- validate the callback report with `scripts/validate-callback.py` before sending it; a callback that fails validation is not a callback
+- when the PR is marked ready for review, write a callback report (outcome: NEEDS_REVIEW, artifact: PR URL), then send it with `scripts/send-agent-callback.sh <project> callback.md`; do NOT rely on the dispatch call return value as the callback — dispatch delivery and callback completion are separate channels; the callback is what triggers QA assignment
+- when blocked, failed, or when an assumption requires explicit approval, write a callback immediately and send it with `scripts/send-agent-callback.sh <project> callback.md`; include outcome, blockers, and recommended next action
+- `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery; a callback that fails validation is not a callback
 - work from visible issue contracts, not chat memory
 - keep PRs linked to their issue context
 - use semantic commits with concise, informative subjects

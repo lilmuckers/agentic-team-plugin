@@ -26,7 +26,26 @@ scripts/dispatch-named-agent.sh merlin qa pr-review.md pr-42 low
 
 Decision rule: if a named project agent for the target role exists, always use Path A. The named agent routing hard rule applies before anything else. Do not use Path B for a role that has a project-scoped named agent.
 
-### Path B — generic ephemeral worker spawn (`scripts/direct-spawn-archetype.sh`)
+### Path A — delivery vs. completion (critical distinction)
+
+A successful `dispatch-named-agent.sh` exit confirms **delivery only** — the task message reached the named agent's session. It does NOT mean the task is complete.
+
+Task completion is confirmed only when the named agent sends an explicit callback using `scripts/send-agent-callback.sh`. Do not treat the dispatch return value as the authoritative completion signal. Do not advance workflow state on dispatch success alone.
+
+### Path B — callback receipt (`scripts/send-agent-callback.sh` — used by named agents, not Orchestrator)
+
+Named agents (Spec, Builder, QA, Security, Release Manager) use this to send their completion callback back to Orchestrator. It is the authoritative completion signal.
+
+```bash
+# Run by the named agent (e.g. spec-lapwing) after completing work:
+scripts/send-agent-callback.sh <project> callback.md
+```
+
+- Validates the callback file against `schemas/callback.md` before sending.
+- Sends directly into the `orchestrator-<project>` session.
+- Exits non-zero if delivery fails, with instructions to retry or notify the operator.
+
+### Path C — generic ephemeral worker spawn (`scripts/direct-spawn-archetype.sh`)
 
 Use this **only** when you genuinely need a fresh, disposable worker with no session continuity requirement. Typical uses: specialist sub-agents (typescript-engineer, threat-modeller, etc.), one-shot research tasks, temporary spikes with no ongoing project session.
 
