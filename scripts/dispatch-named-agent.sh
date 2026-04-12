@@ -53,7 +53,7 @@ if [ ! -f "$TASK_FILE" ]; then
 fi
 
 # Derive canonical agent id and session id.
-AGENT_ID="${PROJECT}-${ARCHETYPE}"
+AGENT_ID="${ARCHETYPE}-${PROJECT}"
 
 if [ -n "$TASK_SUFFIX" ]; then
   SESSION_ID="$(python3 "$SESSION_GEN" --project "$PROJECT" --agent "$ARCHETYPE" --task "$TASK_SUFFIX")"
