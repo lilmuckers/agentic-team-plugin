@@ -1,24 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Validate that project-scoped agent workspaces have the correct layout:
-#   - no .git at the workspace root (would contaminate workspace files)
-#   - repo/ subdirectory is a proper git clone
+# Validate that project-scoped agent workspaces have the correct layout.
+#
+# OpenClaw initialises a git repo at the workspace root as part of its own
+# session tracking. This is expected and tolerated. The only failure conditions
+# related to a root .git are:
+#
+#   - the root .git remote matches the project remote (project was cloned at root
+#     instead of into repo/)
+#   - project files exist at the workspace root that belong in repo/
+#
+# The canonical project checkout must be in repo/ — a dedicated subdirectory.
 #
 # Usage:
 #   scripts/validate-agent-workspace-layout.sh <project-slug> [options]
 #
 # Options:
 #   --workspace-root <path>   Override workspace root (default: from config)
+#   --remote <url>            Project remote URL to check against root .git
+#                             (default: auto-detected from repo/ if present)
 #   --require-repo            Treat missing repo/ as an error, not a warning
-#                             (use this after onboarding to assert fully-ready state)
-#   --repair                  Remove stray root-level .git dirs that are empty/corrupt
-#                             WILL NOT remove a root .git that contains real commits
+#                             (use after onboarding to assert fully-ready state)
 
 usage() {
   cat >&2 <<'EOF'
 Usage:
-  scripts/validate-agent-workspace-layout.sh <project-slug> [--workspace-root <path>] [--require-repo] [--repair]
+  scripts/validate-agent-workspace-layout.sh <project-slug> [--workspace-root <path>] [--remote <url>] [--require-repo]
 EOF
 }
 
@@ -29,15 +37,15 @@ fi
 
 PROJECT=""
 WORKSPACE_ROOT_OVERRIDE=""
+PROJECT_REMOTE=""
 REQUIRE_REPO=0
-REPAIR=0
 POSITIONAL=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --workspace-root) shift; WORKSPACE_ROOT_OVERRIDE="$1" ;;
+    --remote)         shift; PROJECT_REMOTE="$1" ;;
     --require-repo)   REQUIRE_REPO=1 ;;
-    --repair)         REPAIR=1 ;;
     -h|--help)        usage; exit 0 ;;
     *)                POSITIONAL+=("$1") ;;
   esac
@@ -60,12 +68,6 @@ WORKSPACE_ROOT="${WORKSPACE_ROOT_OVERRIDE:-$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT}"
 ERRORS=0
 WARNINGS=0
 
-is_empty_git_repo() {
-  # Returns 0 (true) if the .git dir has no commits — safe to remove
-  local dir="$1"
-  ! git -C "$dir" rev-parse HEAD >/dev/null 2>&1
-}
-
 for agent in orchestrator spec security release-manager builder qa; do
   WORKSPACE="$WORKSPACE_ROOT/workspace-${agent}-${PROJECT}"
 
@@ -75,30 +77,34 @@ for agent in orchestrator spec security release-manager builder qa; do
   fi
 
   # ── root .git check ──────────────────────────────────────────────────────────
+  # A root .git is OpenClaw's own session tracking — tolerated unless it is
+  # actually serving as the project repo checkout (wrong remote or project files
+  # at root instead of in repo/).
   if [ -d "$WORKSPACE/.git" ]; then
-    if [ "$REPAIR" -eq 1 ]; then
-      if is_empty_git_repo "$WORKSPACE"; then
-        echo "REPAIR $agent: removing empty stray .git at workspace root ($WORKSPACE/.git)"
-        rm -rf "$WORKSPACE/.git"
-        echo "OK    $agent: stray root .git removed"
-      else
-        echo "ERROR $agent: workspace root has .git with commits — refusing to auto-remove." >&2
-        echo "       Inspect $WORKSPACE manually before proceeding." >&2
-        ERRORS=$(( ERRORS + 1 ))
-        continue
-      fi
-    else
-      echo "ERROR $agent: workspace root is a git repo — project repo must be in $WORKSPACE/repo/" >&2
-      echo "       Run with --repair to auto-remove if the root .git is empty/corrupt." >&2
+    ROOT_REMOTE="$(git -C "$WORKSPACE" remote get-url origin 2>/dev/null || true)"
+
+    # Determine what remote to compare against
+    COMPARE_REMOTE="$PROJECT_REMOTE"
+    if [ -z "$COMPARE_REMOTE" ] && [ -d "$WORKSPACE/repo/.git" ]; then
+      COMPARE_REMOTE="$(git -C "$WORKSPACE/repo" remote get-url origin 2>/dev/null || true)"
+    fi
+
+    if [ -n "$ROOT_REMOTE" ] && [ -n "$COMPARE_REMOTE" ] && [ "$ROOT_REMOTE" = "$COMPARE_REMOTE" ]; then
+      echo "ERROR $agent: workspace root .git has the same remote as the project repo." >&2
+      echo "       The project was cloned at the workspace root instead of into $WORKSPACE/repo/." >&2
+      echo "       Move the checkout: git clone $ROOT_REMOTE $WORKSPACE/repo/" >&2
       ERRORS=$(( ERRORS + 1 ))
       continue
     fi
+
+    # Root .git is OpenClaw's — tolerated
+    echo "NOTE  $agent: workspace root has a .git (OpenClaw session tracking — OK)"
   fi
 
   # ── repo/ presence check ─────────────────────────────────────────────────────
   if [ ! -d "$WORKSPACE/repo" ]; then
     if [ "$REQUIRE_REPO" -eq 1 ]; then
-      echo "ERROR $agent: repo/ subdirectory missing — agents are not in a usable state ($WORKSPACE/repo)" >&2
+      echo "ERROR $agent: repo/ subdirectory missing — agent is not in a usable state ($WORKSPACE/repo)" >&2
       ERRORS=$(( ERRORS + 1 ))
     else
       echo "WARN  $agent: repo/ not yet cloned ($WORKSPACE/repo) — expected before first task"

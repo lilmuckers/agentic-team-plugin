@@ -246,26 +246,32 @@ MD
 run_check "validate-callback" \
   python3 "$ROOT_DIR/scripts/validate-callback.py" "$CALLBACK_FILE"
 
-# 10. workspace layout: no workspaces yet → validator exits 0 (warnings only, no errors)
-WL_EMPTY_ROOT="$TMPDIR_BASE/wl-empty"
-mkdir -p "$WL_EMPTY_ROOT"
-run_check "validate-agent-workspace-layout (no workspaces yet = warnings only)" \
+# 10. workspace layout: openclaw-style root .git (no matching remote) → exits 0, repo/ missing = warn only
+WL_OPENCLAW_ROOT="$TMPDIR_BASE/wl-openclaw"
+mkdir -p "$WL_OPENCLAW_ROOT"
+OPENCLAW_WS="$WL_OPENCLAW_ROOT/workspace-builder-smoke"
+mkdir -p "$OPENCLAW_WS"
+git init "$OPENCLAW_WS" -q   # OpenClaw-style root .git, different/no remote
+run_check "validate-agent-workspace-layout (openclaw root .git tolerated, repo/ not yet cloned = warn only)" \
   "$ROOT_DIR/scripts/validate-agent-workspace-layout.sh" "smoke" \
-  --workspace-root "$WL_EMPTY_ROOT"
+  --workspace-root "$WL_OPENCLAW_ROOT" \
+  --remote "https://example.com/repo.git"
 
-# 11. workspace layout: .git at workspace root → validator must exit non-zero
+# 11. workspace layout: root .git remote matches project remote → validator must exit non-zero
 WL_CONTAMINATED_ROOT="$TMPDIR_BASE/wl-contaminated"
 mkdir -p "$WL_CONTAMINATED_ROOT"
-# create a workspace dir for builder-smoke and init git at its root (the bad pattern)
+# simulate: project repo was cloned at workspace root (wrong) instead of into repo/
 CONTAMINATED_WS="$WL_CONTAMINATED_ROOT/workspace-builder-smoke"
 mkdir -p "$CONTAMINATED_WS"
 git init "$CONTAMINATED_WS" -q
+git -C "$CONTAMINATED_WS" remote add origin "https://example.com/repo.git"
 if "$ROOT_DIR/scripts/validate-agent-workspace-layout.sh" "smoke" \
-    --workspace-root "$WL_CONTAMINATED_ROOT" >/dev/null 2>&1; then
-  RESULTS+=("FAIL  validate-agent-workspace-layout should reject .git at workspace root")
+    --workspace-root "$WL_CONTAMINATED_ROOT" \
+    --remote "https://example.com/repo.git" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  validate-agent-workspace-layout should reject root .git with matching project remote")
   FAIL=$(( FAIL + 1 ))
 else
-  RESULTS+=("PASS  validate-agent-workspace-layout rejects .git at workspace root")
+  RESULTS+=("PASS  validate-agent-workspace-layout rejects root .git whose remote matches project remote")
   PASS=$(( PASS + 1 ))
 fi
 
@@ -288,20 +294,20 @@ else
   PASS=$(( PASS + 1 ))
 fi
 
-# 14. clone-agent-project-repo: workspace root is a git repo → exits non-zero
+# 14. clone-agent-project-repo: root .git remote matches project remote → exits non-zero
 CL_ROOT="$TMPDIR_BASE/clone-guard-test"
 mkdir -p "$CL_ROOT"
 CONTAMINATED_CL="$CL_ROOT/workspace-builder-smoke"
 mkdir -p "$CONTAMINATED_CL"
 git init "$CONTAMINATED_CL" -q
-if FRAMEWORK_OPENCLAW_WORKSPACE_ROOT="$CL_ROOT" \
-    "$ROOT_DIR/scripts/clone-agent-project-repo.sh" \
+git -C "$CONTAMINATED_CL" remote add origin "https://example.com/repo.git"
+if "$ROOT_DIR/scripts/clone-agent-project-repo.sh" \
     --project smoke --agent builder --remote "https://example.com/repo.git" \
     --workspace-root "$CL_ROOT" >/dev/null 2>&1; then
-  RESULTS+=("FAIL  clone-agent-project-repo should refuse when workspace root is a git repo")
+  RESULTS+=("FAIL  clone-agent-project-repo should refuse when root .git remote matches project remote")
   FAIL=$(( FAIL + 1 ))
 else
-  RESULTS+=("PASS  clone-agent-project-repo refuses when workspace root is a git repo")
+  RESULTS+=("PASS  clone-agent-project-repo refuses when root .git remote matches project remote")
   PASS=$(( PASS + 1 ))
 fi
 

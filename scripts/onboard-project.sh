@@ -103,20 +103,6 @@ done
 
 run python3 "$ROOT_DIR/scripts/deploy-project-agent-workspaces.py" --project "$PROJECT"
 
-# ── guard: no .git at workspace roots before we touch anything ────────────────
-
-if [ "$DRY_RUN" -ne 1 ]; then
-  for agent in orchestrator spec security release-manager builder qa; do
-    WS="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-${agent}-${PROJECT}"
-    if [ -d "$WS/.git" ]; then
-      echo "ERROR: $WS has a .git at its root — workspace is contaminated." >&2
-      echo "       Run: scripts/validate-agent-workspace-layout.sh $PROJECT --repair" >&2
-      echo "       to remove stray root-level git repos before continuing." >&2
-      exit 1
-    fi
-  done
-fi
-
 # ── seed empty repo before cloning ────────────────────────────────────────────
 
 if [ "$DO_CLONE" -eq 1 ]; then
@@ -155,10 +141,10 @@ fi
 # ── validate workspace layout — hard failure if repo/ missing ─────────────────
 
 if [ "$DO_CLONE" -eq 1 ] && [ "$DRY_RUN" -ne 1 ]; then
-  if ! "$ROOT_DIR/scripts/validate-agent-workspace-layout.sh" "$PROJECT" --require-repo; then
+  LAYOUT_ARGS=("$PROJECT" --require-repo)
+  [ -n "$REMOTE" ] && LAYOUT_ARGS+=(--remote "$REMOTE")
+  if ! "$ROOT_DIR/scripts/validate-agent-workspace-layout.sh" "${LAYOUT_ARGS[@]}"; then
     echo "ERROR: workspace layout validation failed — agents are not in a usable state." >&2
-    echo "       Inspect output above. To repair stray root .git dirs, run:" >&2
-    echo "       scripts/validate-agent-workspace-layout.sh $PROJECT --repair" >&2
     exit 1
   fi
 fi

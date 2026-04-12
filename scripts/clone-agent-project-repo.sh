@@ -7,8 +7,13 @@ set -euo pipefail
 # It is safe to call multiple times — if repo/ already exists and is a valid
 # git repo pointing at the right remote, it reports the path and exits 0.
 #
+# OpenClaw initialises a git repo at the workspace root for its own session
+# tracking. This is tolerated. The workspace root .git is only treated as an
+# error if its remote matches the project remote (meaning the project was
+# cloned at root instead of into repo/).
+#
 # Refuses to proceed if:
-#   - the workspace root is itself a git repo (leaked checkout)
+#   - workspace root .git remote matches the project remote (leaked project checkout)
 #   - repo/ exists but is not a git repo (corrupted state)
 #   - repo/ exists, is a git repo, but has a different remote (mismatch)
 #
@@ -71,13 +76,19 @@ WORKSPACE_ROOT="${WORKSPACE_ROOT_OVERRIDE:-$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT}"
 WORKSPACE="$WORKSPACE_ROOT/workspace-${AGENT}-${PROJECT}"
 CHECKOUT="$WORKSPACE/repo"
 
-# ── guard: workspace root must not be a git repo ──────────────────────────────
+# ── guard: workspace root .git must not be the project repo ──────────────────
+# A root .git is normal OpenClaw session tracking — tolerated unless its remote
+# matches the project remote, which would mean the project was cloned at root.
 
 if [ -d "$WORKSPACE/.git" ]; then
-  echo "ERROR: workspace root is a git repo ($WORKSPACE/.git exists)." >&2
-  echo "       This means a previous session cloned at the workspace root, not into repo/." >&2
-  echo "       Move the checkout to $CHECKOUT before continuing." >&2
-  exit 1
+  ROOT_REMOTE="$(git -C "$WORKSPACE" remote get-url origin 2>/dev/null || true)"
+  if [ -n "$ROOT_REMOTE" ] && [ "$ROOT_REMOTE" = "$REMOTE" ]; then
+    echo "ERROR: workspace root .git remote matches the project remote." >&2
+    echo "       The project repo appears to have been cloned at the workspace root." >&2
+    echo "       Expected checkout location: $CHECKOUT" >&2
+    echo "       Found at root: $WORKSPACE (remote: $ROOT_REMOTE)" >&2
+    exit 1
+  fi
 fi
 
 # ── idempotent: repo/ already exists ──────────────────────────────────────────
