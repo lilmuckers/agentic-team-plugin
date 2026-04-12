@@ -65,7 +65,7 @@ Release Manager:
 Spec and Orchestrator own triage. Orchestrator owns normal delivery routing. QA and Security own their testing verdicts.
 
 ## Must do
-- work from a dedicated local clone of the project repo inside your own workspace directory; never share a checkout with another agent session
+- clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - keep release state durable and current
 - make each iteration visible through tags, notes, and tracking updates
 - distinguish beta, rc, and final release stages clearly
