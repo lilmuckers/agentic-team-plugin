@@ -46,6 +46,12 @@ required_files=(
   "templates/bug-report.md"
   "templates/decision-record.md"
   "templates/swarm-smoke-test.md"
+  "templates/swarm-behavior-test/orchestrator.md"
+  "templates/swarm-behavior-test/spec.md"
+  "templates/swarm-behavior-test/builder.md"
+  "templates/swarm-behavior-test/qa.md"
+  "templates/swarm-behavior-test/security.md"
+  "templates/swarm-behavior-test/release-manager.md"
   "schemas/callback.md"
   "schemas/decision-record.md"
   "schemas/specialist-template.md"
@@ -151,6 +157,7 @@ required_exec=(
   "scripts/smoke-test-agent-swarm.sh"
   "scripts/smoke-test-workflow.sh"
   "scripts/validate-agent-workspace-layout.sh"
+  "scripts/clone-agent-project-repo.sh"
 )
 
 for rel in "${required_exec[@]}"; do

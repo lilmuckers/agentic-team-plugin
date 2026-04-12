@@ -217,32 +217,75 @@ MD
 run_check "validate-callback" \
   python3 "$ROOT_DIR/scripts/validate-callback.py" "$CALLBACK_FILE"
 
-# 10. workspace layout validator — workspace root must not be a git repo
-FAKE_WORKSPACE="$TMPDIR_BASE/fake-workspace"
-mkdir -p "$FAKE_WORKSPACE"
-# should pass (no .git at workspace root)
-if [ -d "$FAKE_WORKSPACE/.git" ]; then
-  RESULTS+=("FAIL  workspace layout: unexpected .git in fresh workspace")
+# 10. workspace layout: no workspaces yet → validator exits 0 (warnings only, no errors)
+WL_EMPTY_ROOT="$TMPDIR_BASE/wl-empty"
+mkdir -p "$WL_EMPTY_ROOT"
+run_check "validate-agent-workspace-layout (no workspaces yet = warnings only)" \
+  "$ROOT_DIR/scripts/validate-agent-workspace-layout.sh" "smoke" \
+  --workspace-root "$WL_EMPTY_ROOT"
+
+# 11. workspace layout: .git at workspace root → validator must exit non-zero
+WL_CONTAMINATED_ROOT="$TMPDIR_BASE/wl-contaminated"
+mkdir -p "$WL_CONTAMINATED_ROOT"
+# create a workspace dir for builder-smoke and init git at its root (the bad pattern)
+CONTAMINATED_WS="$WL_CONTAMINATED_ROOT/workspace-builder-smoke"
+mkdir -p "$CONTAMINATED_WS"
+git init "$CONTAMINATED_WS" -q
+if "$ROOT_DIR/scripts/validate-agent-workspace-layout.sh" "smoke" \
+    --workspace-root "$WL_CONTAMINATED_ROOT" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  validate-agent-workspace-layout should reject .git at workspace root")
   FAIL=$(( FAIL + 1 ))
 else
-  RESULTS+=("PASS  workspace layout: no .git at workspace root (pre-clone state)")
+  RESULTS+=("PASS  validate-agent-workspace-layout rejects .git at workspace root")
   PASS=$(( PASS + 1 ))
 fi
 
-# 11. workspace layout validator — .git at workspace root must be rejected
-CONTAMINATED_WORKSPACE="$TMPDIR_BASE/contaminated-workspace"
-mkdir -p "$CONTAMINATED_WORKSPACE"
-git init "$CONTAMINATED_WORKSPACE" -q
-# create a fake project entry using the validator directly
-if "$ROOT_DIR/scripts/validate-agent-workspace-layout.sh" "smoke" \
-    --workspace-root "$TMPDIR_BASE" >/dev/null 2>&1; then
-  # warnings (repo not cloned yet) are fine — errors are not
-  RESULTS+=("PASS  validate-agent-workspace-layout (no workspace yet = warnings only)")
-  PASS=$(( PASS + 1 ))
+# 12. workspace layout: repo/ subdirectory is a git repo → validator exits 0
+WL_CORRECT_ROOT="$TMPDIR_BASE/wl-correct"
+mkdir -p "$WL_CORRECT_ROOT"
+CORRECT_WS="$WL_CORRECT_ROOT/workspace-builder-smoke"
+mkdir -p "$CORRECT_WS/repo"
+git init "$CORRECT_WS/repo" -q
+run_check "validate-agent-workspace-layout (correct: repo/ is the checkout)" \
+  "$ROOT_DIR/scripts/validate-agent-workspace-layout.sh" "smoke" \
+  --workspace-root "$WL_CORRECT_ROOT"
+
+# 13. clone-agent-project-repo: missing required args → exits non-zero
+if "$ROOT_DIR/scripts/clone-agent-project-repo.sh" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  clone-agent-project-repo should require --project/--agent/--remote")
+  FAIL=$(( FAIL + 1 ))
 else
-  RESULTS+=("PASS  validate-agent-workspace-layout (expected non-zero for missing workspace)")
+  RESULTS+=("PASS  clone-agent-project-repo rejects missing required args")
   PASS=$(( PASS + 1 ))
 fi
+
+# 14. clone-agent-project-repo: workspace root is a git repo → exits non-zero
+CL_ROOT="$TMPDIR_BASE/clone-guard-test"
+mkdir -p "$CL_ROOT"
+CONTAMINATED_CL="$CL_ROOT/workspace-builder-smoke"
+mkdir -p "$CONTAMINATED_CL"
+git init "$CONTAMINATED_CL" -q
+if FRAMEWORK_OPENCLAW_WORKSPACE_ROOT="$CL_ROOT" \
+    "$ROOT_DIR/scripts/clone-agent-project-repo.sh" \
+    --project smoke --agent builder --remote "https://example.com/repo.git" \
+    --workspace-root "$CL_ROOT" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  clone-agent-project-repo should refuse when workspace root is a git repo")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  clone-agent-project-repo refuses when workspace root is a git repo")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 15. clone-agent-project-repo: idempotent — existing valid checkout exits 0
+CL_EXISTING_ROOT="$TMPDIR_BASE/clone-idempotent-test"
+mkdir -p "$CL_EXISTING_ROOT/workspace-builder-smoke/repo"
+git init "$CL_EXISTING_ROOT/workspace-builder-smoke/repo" -q
+git -C "$CL_EXISTING_ROOT/workspace-builder-smoke/repo" \
+  remote add origin "https://example.com/repo.git" 2>/dev/null || true
+run_check "clone-agent-project-repo idempotent (existing checkout exits 0)" \
+  "$ROOT_DIR/scripts/clone-agent-project-repo.sh" \
+  --project smoke --agent builder --remote "https://example.com/repo.git" \
+  --workspace-root "$CL_EXISTING_ROOT"
 
 # ── summary ───────────────────────────────────────────────────────────────────
 

@@ -176,13 +176,27 @@ Use `--dry-run` to preview what would happen without making changes.
 
 After onboarding completes, the script automatically runs a swarm smoke test. Each of the six agents is sent a startup verification message and asked to report their name, purpose, what they are ready to do, and any gaps in their configuration. Review each response to confirm they are correctly wired before starting work. If any agent fails or reports a missing prerequisite, investigate before proceeding.
 
-You can re-run the smoke test at any time:
+You can re-run the identity test at any time:
 
 ```bash
 scripts/smoke-test-agent-swarm.sh <project-slug>
 # or a subset
 scripts/smoke-test-agent-swarm.sh musical-statues --agents orchestrator,spec
 ```
+
+Once the project repo exists and agents have context, run the behavioral test. Each agent receives a role-specific task (read project state, make a routing decision, name the scripts it would run, reply in callback format) rather than just reporting identity:
+
+```bash
+scripts/smoke-test-agent-swarm.sh musical-statues --mode behavior
+```
+
+To test the framework toolchain without invoking any agents:
+
+```bash
+scripts/smoke-test-workflow.sh
+```
+
+This creates a throwaway repo, runs all key scripts against it, and verifies outputs — including workspace layout validation and the clone helper guard conditions.
 
 ### 3.3 Agree the starting version
 
