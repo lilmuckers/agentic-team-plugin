@@ -202,16 +202,45 @@ fi
 # 9. callback validation — write a minimal callback file and validate it
 CALLBACK_FILE="$TMPDIR_BASE/callback.md"
 cat > "$CALLBACK_FILE" <<'MD'
-# Callback Report
+## Task
 
-**Task:** smoke-test-task
-**Worker:** builder-smoke
-**Outcome:** DONE
-**What changed:** created smoke test scaffold
-**Artifacts:** none
-**Tests run:** validate-project-bootstrap, validate-task-ledger
-**Blockers:** none
-**Recommended next action:** close task
+- Task ID: smoke-test-task
+- Title: Smoke test scaffold
+
+## Agent
+
+- Agent: builder-smoke
+- Session: smoke-smoke-builder-smoke-test
+
+## Outcome
+
+DONE
+
+## Routing
+
+- To: orchestrator-smoke
+- Via: ACP
+
+## Changed
+
+- Created smoke test scaffold
+
+## Artifacts
+
+- None
+
+## Tests
+
+- validate-project-bootstrap passed
+- validate-task-ledger passed
+
+## Blockers
+
+- None
+
+## Next Action
+
+- Orchestrator to assign for QA review
 MD
 
 run_check "validate-callback" \

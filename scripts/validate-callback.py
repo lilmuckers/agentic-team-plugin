@@ -8,6 +8,7 @@ REQUIRED_SECTIONS = [
     "Task",
     "Agent",
     "Outcome",
+    "Routing",
     "Changed",
     "Artifacts",
     "Tests",
@@ -16,6 +17,8 @@ REQUIRED_SECTIONS = [
 ]
 VALID_OUTCOMES = {"DONE", "BLOCKED", "FAILED", "NEEDS_REVIEW"}
 SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+# Routing section must name a recipient agent: "To: <something>"
+ROUTING_TO_RE = re.compile(r"To:\s*\S+", re.IGNORECASE)
 
 
 def extract_sections(text: str):
@@ -47,10 +50,19 @@ def validate_callback(path: Path):
             errors.append(f"section '## {required}' must appear exactly once")
 
     section_map = {name: body for name, body in sections}
+
     outcome = section_map.get("Outcome", "").strip()
     if outcome and outcome not in VALID_OUTCOMES:
         errors.append(
             "section '## Outcome' must be exactly one of: " + ", ".join(sorted(VALID_OUTCOMES))
+        )
+
+    routing = section_map.get("Routing", "").strip()
+    if not routing:
+        errors.append("section '## Routing' must not be empty — name the receiving agent")
+    elif not ROUTING_TO_RE.search(routing):
+        errors.append(
+            "section '## Routing' must contain 'To: <agent-id>' — a callback with no named recipient is not a callback"
         )
 
     for name in ["Changed", "Artifacts", "Tests", "Blockers", "Next Action"]:

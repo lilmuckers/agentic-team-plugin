@@ -1,5 +1,5 @@
 name: implement-feature
-description: Route a feature request through specification, orchestration, implementation, and QA with explicit callback and review loops.
+description: Route a feature request through specification, orchestration, implementation, and QA with explicit callback and routing loops. Every agent transition passes through Orchestrator.
 steps:
   - id: specify
     agent: spec
@@ -7,62 +7,102 @@ steps:
       - Request or issue exists and feature intent has been surfaced.
       - Human-facing scope questions are clarified enough to begin specification.
     postconditions:
-      - Issue has acceptance criteria, test strategy, assumptions, and linked context.
+      - Issue has acceptance criteria, test strategy, assumptions, and a link to a spec artifact.
       - Security requirements and threat model are documented for security-scope work.
-      - Issue is either marked ready-for-build or explicitly returned for clarification.
-    output: feature issue and specification update
+      - Issue carries ready-for-build label or is explicitly returned with a blocking reason.
+      - Spec sends a callback report to Orchestrator via ACP on completion.
+    output: feature issue, spec artifact update, callback to orchestrator
+
   - id: security-design
     agent: security
     preconditions:
       - Spec output exists for security-scope work.
+      - Orchestrator has routed this step explicitly.
     postconditions:
       - Security requirements and threat model are reviewed.
       - Security scope is explicit before build handoff.
-    output: security requirements review
-  - id: orchestrate
+      - Security sends a callback report to Orchestrator via ACP on completion.
+    output: security requirements review, callback to orchestrator
+
+  - id: orchestrate-to-build
     agent: orchestrator
     preconditions:
-      - Spec output exists.
-      - Security review is complete for security-scope work.
-      - scripts/validate-issue-ready.py passes before Builder handoff.
+      - Spec callback received with outcome DONE or NEEDS_REVIEW.
+      - Security callback received for security-scope work.
+      - scripts/validate-issue-ready.py passes.
     postconditions:
-      - Task ledger entry is updated.
-      - Builder receives a delegated packet with callback expectations.
+      - Task ledger entry created with active branch/PR field empty.
+      - Builder receives a delegated packet with explicit callback expectations.
+      - Orchestrator records that it is waiting for Builder callback.
     output: builder handoff packet
+
   - id: build
     agent: builder
     preconditions:
       - Issue is ready-for-build.
-      - Required docs and assumptions are linked.
+      - SPEC.md contains content relevant to the issue.
+      - Issue links to a spec artifact, wiki page, or architecture decision.
     postconditions:
       - Branch, commits, and PR exist.
-      - Callback report is returned with tests and next action.
-    output: implementation PR and callback report
+      - PR is marked ready for review.
+      - Builder sends a callback report to Orchestrator via ACP immediately — outcome NEEDS_REVIEW, artifact is the PR URL.
+    output: implementation PR, callback to orchestrator
+
+  - id: orchestrate-to-qa
+    agent: orchestrator
+    preconditions:
+      - Builder callback received with outcome NEEDS_REVIEW.
+      - PR URL recorded in task ledger.
+    postconditions:
+      - Task ledger updated with PR reference.
+      - QA receives a delegated review packet with the PR URL and callback expectations.
+      - Orchestrator records that it is waiting for QA callback.
+    output: QA review handoff packet
+
   - id: qa
     agent: qa
     preconditions:
       - PR exists and links back to the issue.
-      - Validation evidence is available.
+      - Orchestrator has routed this step explicitly.
     postconditions:
-      - QA outcome is explicit.
-      - qa-approved label is applied or required changes are recorded.
-    output: QA review outcome
+      - QA outcome is explicit: approved, changes requested, or blocked.
+      - qa-approved label applied or withheld.
+      - QA sends a callback report to Orchestrator via ACP immediately on completion.
+    output: QA review outcome, callback to orchestrator
+
+  - id: orchestrate-to-merge-or-rework
+    agent: orchestrator
+    preconditions:
+      - QA callback received.
+    postconditions:
+      - If approved and spec-satisfied and security-approved (where needed): orchestrator-approved label applied and PR is mergeable.
+      - If changes requested: Builder receives a rework packet with QA findings.
+      - If blocked: Spec or human operator is notified.
+      - Task ledger updated with final state.
+    output: merge approval or rework routing
+
 on_blocked:
   - Route missing product meaning or unclear acceptance criteria back to Spec through Orchestrator.
   - Keep the task ledger current with blocked state and next action.
+
 on_failure:
-  - Surface failure to Orchestrator immediately.
+  - Surface failure to Orchestrator immediately via ACP callback with outcome FAILED.
   - Record failure reason in the callback report and visible project artifact when relevant.
+
 loops:
   - from: security-design
     to: specify
+    via: orchestrator
     trigger: Security requires specification changes before build.
-  - from: qa
-    to: build
-    trigger: QA requests changes or identifies blocking defects.
   - from: build
     to: specify
+    via: orchestrator
     trigger: Implementation reveals project-level ambiguity or missing requirements.
+  - from: qa
+    to: build
+    via: orchestrator
+    trigger: QA requests changes or identifies blocking defects. Orchestrator creates a rework packet from QA findings.
   - from: specify
-    to: orchestrate
+    to: orchestrate-to-build
+    via: orchestrator
     trigger: Clarification is complete and the issue is ready for build again.

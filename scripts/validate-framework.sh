@@ -158,6 +158,7 @@ required_exec=(
   "scripts/smoke-test-workflow.sh"
   "scripts/validate-agent-workspace-layout.sh"
   "scripts/clone-agent-project-repo.sh"
+  "scripts/scaffold-project-repo.sh"
 )
 
 for rel in "${required_exec[@]}"; do

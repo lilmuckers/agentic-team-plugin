@@ -48,6 +48,8 @@ Do not resolve important project ambiguities only in hidden chat when the issue 
 ### For normal delivery work
 Builder should:
 - confirm the assigned issue still carries the `ready-for-build` label before beginning normal implementation; if it does not, halt and send the issue back through Orchestrator
+- confirm that `SPEC.md` exists in the project repo and contains a non-empty specification; if it is blank or a placeholder template, halt and request Spec to complete it before build proceeds — a one-line intent or placeholder is not a spec
+- confirm the issue contains an explicit link to the relevant section of `SPEC.md`, the wiki, or a referenced architecture decision; if none exists, halt and route back to Spec via Orchestrator for a proper ready-for-build handoff
 - start a feature branch
 - push as soon as a meaningful commit exists
 - raise a draft PR as soon as the branch exists remotely
@@ -115,6 +117,11 @@ Specialists do not own project assumptions or final delivery scope.
 
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
+- refuse to begin implementation if `SPEC.md` is blank, a placeholder, or contains no content relevant to the assigned issue; send it back to Spec
+- refuse to begin implementation if the issue does not link to a spec artifact, wiki page, or architecture decision; send it back to Orchestrator
+- send a callback report to Orchestrator via ACP immediately when the PR is marked ready for review; do not wait for a heartbeat or cron prompt — the callback is what triggers QA assignment
+- send a callback report to Orchestrator via ACP immediately when blocked, failed, or when an assumption requires explicit approval; include outcome, blockers, and recommended next action
+- validate the callback report with `scripts/validate-callback.py` before sending it; a callback that fails validation is not a callback
 - work from visible issue contracts, not chat memory
 - keep PRs linked to their issue context
 - use semantic commits with concise, informative subjects

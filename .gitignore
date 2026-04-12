@@ -11,7 +11,10 @@ coverage/
 __pycache__/
 *.pyc
 
-# Rowan / OpenClaw local workspace state
+# Tool and IDE local state
+.claude/
+
+# OpenClaw local workspace state
 .openclaw/
 AGENTS.md
 BOOT.md
@@ -73,3 +76,20 @@ scripts/*
 !scripts/generate-release-notes.sh
 !scripts/cut-release-tag.sh
 !scripts/smoke-test-agent-swarm.sh
+!scripts/smoke-test-workflow.sh
+!scripts/validate-agent-workspace-layout.sh
+!scripts/onboard-project.sh
+!scripts/validate-callback.py
+!scripts/validate-issue-ready.py
+!scripts/update-task-ledger.py
+!scripts/validate-task-ledger.py
+!scripts/validate-decision-record.py
+!scripts/validate-readme-contract.sh
+!scripts/prepare-specialist-spawn.py
+!scripts/validate-specialist-template.py
+!scripts/validate-workflows.py
+!scripts/check-framework-version.sh
+!scripts/post-pr-line-comment.sh
+!scripts/clone-agent-project-repo.sh
+!scripts/scaffold-project-repo.sh
+!scripts/clone-agent-project-repo.sh

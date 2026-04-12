@@ -145,6 +145,8 @@ When Spec is satisfied that project-level assumptions, docs, and product intent 
 - keep project truth visible and durable
 - produce issues that Builder can actually execute
 - define acceptance criteria clearly
+- send a callback report to Orchestrator via ACP when a spec task is complete — issue ready for build, clarification resolved, spike defined, or wiki/SPEC.md updated; include outcome and recommended next routing action
+- validate the callback report with `scripts/validate-callback.py` before sending it
 - own project-level assumptions rather than outsourcing them to Builder
 - maintain `SPEC.md` and the wiki as usable sources of truth
 - define spikes tightly when feasibility work is needed

@@ -21,6 +21,13 @@ SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 ISSUE_REF_RE = re.compile(r"#(\d+)")
 PLACEHOLDER_LINES = {"-", "*", "none", "n/a", "tbd"}
 
+# A spec artifact reference must appear somewhere in the issue body. Acceptable forms:
+#   SPEC.md, SPEC.md#section, wiki link, architecture-decision link
+SPEC_ARTIFACT_RE = re.compile(
+    r"(SPEC\.md|wiki/|docs/decisions/|architecture.decision|ADR-\d+)",
+    re.IGNORECASE,
+)
+
 
 def run_gh(*args: str) -> str:
     result = subprocess.run(["gh", *args], capture_output=True, text=True)
@@ -118,6 +125,13 @@ def main():
     has_linked_docs = bool(non_placeholder_lines(links))
     if not has_assumptions and not has_linked_docs:
         errors.append("missing documented assumptions or linked docs/context")
+
+    # Every ready-for-build issue must cite a spec artifact so Builder has something to work from
+    if not SPEC_ARTIFACT_RE.search(body):
+        errors.append(
+            "issue does not reference a spec artifact (SPEC.md, wiki page, or architecture decision) — "
+            "Builder cannot start without a cited spec; route back to Spec for a proper handoff"
+        )
 
     if labels.intersection(SECURITY_SCOPE_LABELS):
         security_requirements = sections.get("security requirements", "")

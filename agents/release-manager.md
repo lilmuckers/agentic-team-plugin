@@ -66,6 +66,8 @@ Spec and Orchestrator own triage. Orchestrator owns normal delivery routing. QA 
 
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
+- send a callback report to Orchestrator via ACP after each release milestone: beta cut, RC cut, QA/Security sign-off received, blocker triage complete, final release published; do not batch these into a single end-of-release report
+- validate each callback report with `scripts/validate-callback.py` before sending it
 - keep release state durable and current
 - make each iteration visible through tags, notes, and tracking updates
 - distinguish beta, rc, and final release stages clearly

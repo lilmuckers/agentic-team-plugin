@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Validate that a project-scoped agent workspace does not have a git repo at its
-# root. The project repo must be cloned into the repo/ subdirectory, never at
-# the workspace root itself, to prevent agent config files from being inside
-# the project git working tree.
+# Validate that project-scoped agent workspaces have the correct layout:
+#   - no .git at the workspace root (would contaminate workspace files)
+#   - repo/ subdirectory is a proper git clone
 #
 # Usage:
-#   scripts/validate-agent-workspace-layout.sh <project-slug>
-#   scripts/validate-agent-workspace-layout.sh <project-slug> --workspace-root <path>
+#   scripts/validate-agent-workspace-layout.sh <project-slug> [options]
+#
+# Options:
+#   --workspace-root <path>   Override workspace root (default: from config)
+#   --require-repo            Treat missing repo/ as an error, not a warning
+#                             (use this after onboarding to assert fully-ready state)
+#   --repair                  Remove stray root-level .git dirs that are empty/corrupt
+#                             WILL NOT remove a root .git that contains real commits
 
 usage() {
   cat >&2 <<'EOF'
 Usage:
-  scripts/validate-agent-workspace-layout.sh <project-slug> [--workspace-root <path>]
+  scripts/validate-agent-workspace-layout.sh <project-slug> [--workspace-root <path>] [--require-repo] [--repair]
 EOF
 }
 
@@ -24,21 +29,17 @@ fi
 
 PROJECT=""
 WORKSPACE_ROOT_OVERRIDE=""
+REQUIRE_REPO=0
+REPAIR=0
 POSITIONAL=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --workspace-root)
-      shift
-      WORKSPACE_ROOT_OVERRIDE="$1"
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      POSITIONAL+=("$1")
-      ;;
+    --workspace-root) shift; WORKSPACE_ROOT_OVERRIDE="$1" ;;
+    --require-repo)   REQUIRE_REPO=1 ;;
+    --repair)         REPAIR=1 ;;
+    -h|--help)        usage; exit 0 ;;
+    *)                POSITIONAL+=("$1") ;;
   esac
   shift
 done
@@ -59,32 +60,57 @@ WORKSPACE_ROOT="${WORKSPACE_ROOT_OVERRIDE:-$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT}"
 ERRORS=0
 WARNINGS=0
 
+is_empty_git_repo() {
+  # Returns 0 (true) if the .git dir has no commits — safe to remove
+  local dir="$1"
+  ! git -C "$dir" rev-parse HEAD >/dev/null 2>&1
+}
+
 for agent in orchestrator spec security release-manager builder qa; do
   WORKSPACE="$WORKSPACE_ROOT/workspace-${agent}-${PROJECT}"
 
   if [ ! -d "$WORKSPACE" ]; then
-    echo "SKIP  $agent: workspace not yet created ($WORKSPACE)" >&2
+    echo "SKIP  $agent: workspace not yet created ($WORKSPACE)"
     continue
   fi
 
-  # Hard failure: workspace root must not itself be a git repo
+  # ── root .git check ──────────────────────────────────────────────────────────
   if [ -d "$WORKSPACE/.git" ]; then
-    echo "ERROR $agent: workspace root is a git repo — project repo must be in $WORKSPACE/repo/, not at the workspace root" >&2
-    ERRORS=$(( ERRORS + 1 ))
-    continue
+    if [ "$REPAIR" -eq 1 ]; then
+      if is_empty_git_repo "$WORKSPACE"; then
+        echo "REPAIR $agent: removing empty stray .git at workspace root ($WORKSPACE/.git)"
+        rm -rf "$WORKSPACE/.git"
+        echo "OK    $agent: stray root .git removed"
+      else
+        echo "ERROR $agent: workspace root has .git with commits — refusing to auto-remove." >&2
+        echo "       Inspect $WORKSPACE manually before proceeding." >&2
+        ERRORS=$(( ERRORS + 1 ))
+        continue
+      fi
+    else
+      echo "ERROR $agent: workspace root is a git repo — project repo must be in $WORKSPACE/repo/" >&2
+      echo "       Run with --repair to auto-remove if the root .git is empty/corrupt." >&2
+      ERRORS=$(( ERRORS + 1 ))
+      continue
+    fi
   fi
 
-  # Soft warning: repo/ subdirectory doesn't exist yet (agent hasn't cloned yet)
+  # ── repo/ presence check ─────────────────────────────────────────────────────
   if [ ! -d "$WORKSPACE/repo" ]; then
-    echo "WARN  $agent: repo/ subdirectory not yet present ($WORKSPACE/repo)" >&2
-    WARNINGS=$(( WARNINGS + 1 ))
+    if [ "$REQUIRE_REPO" -eq 1 ]; then
+      echo "ERROR $agent: repo/ subdirectory missing — agents are not in a usable state ($WORKSPACE/repo)" >&2
+      ERRORS=$(( ERRORS + 1 ))
+    else
+      echo "WARN  $agent: repo/ not yet cloned ($WORKSPACE/repo) — expected before first task"
+      WARNINGS=$(( WARNINGS + 1 ))
+    fi
     continue
   fi
 
-  # repo/ must be a git repo
+  # ── repo/ must be a valid git repo ───────────────────────────────────────────
   if [ ! -d "$WORKSPACE/repo/.git" ]; then
-    echo "WARN  $agent: repo/ exists but is not a git repo ($WORKSPACE/repo)" >&2
-    WARNINGS=$(( WARNINGS + 1 ))
+    echo "ERROR $agent: repo/ exists but is not a git repo — possibly a failed clone ($WORKSPACE/repo)" >&2
+    ERRORS=$(( ERRORS + 1 ))
     continue
   fi
 
@@ -98,7 +124,7 @@ if [ "$ERRORS" -gt 0 ]; then
 fi
 
 if [ "$WARNINGS" -gt 0 ]; then
-  echo "Workspace layout validation passed with $WARNINGS warning(s) (repo/ not yet cloned — expected before first task)"
+  echo "Workspace layout validation passed with $WARNINGS warning(s) (repo/ not yet cloned)"
 else
   echo "Workspace layout validation passed"
 fi

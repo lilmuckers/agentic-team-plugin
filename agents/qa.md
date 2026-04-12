@@ -121,6 +121,9 @@ For features with user-facing elements that materially affect usability, QA must
 
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
+- send a callback report to Orchestrator via ACP immediately when the review is complete — approved, changes requested, or blocked; do not wait for a heartbeat or cron prompt
+- include in the callback: outcome, the `qa-approved` label action taken (applied or withheld/removed), key findings, and recommended next action (assign Security, route back to Builder, or proceed to merge gate)
+- validate the callback report with `scripts/validate-callback.py` before sending it
 - keep review attached to the PR
 - review against explicit acceptance criteria where possible
 - use line-anchored PR review comments for line-specific defects or concerns

@@ -11,6 +11,17 @@ HEADER_RE = re.compile(r'^> _posted by \*\*([A-Za-z0-9 /_-]+)\*\*_\s*$', re.MULT
 SEMANTIC_COMMIT_RE = re.compile(r'^(feat|fix|docs|test|chore|refactor|perf|build|ci|style|revert)(\([^)]+\))?: .+')
 GIT_NAME_RE = re.compile(r'^.+ \([A-Za-z0-9 /_-]+\)$')
 
+# Unfilled template placeholders — any of these in a posted artifact is a formatting failure
+PLACEHOLDER_RE = re.compile(
+    r'(\{\{[^}]+\}\}'          # {{PLACEHOLDER}}
+    r'|<(TODO|FILL|INSERT|REPLACE|PLACEHOLDER)[^>]*>'  # <TODO: ...>
+    r'|\[TODO[^\]]*\]'         # [TODO: ...]
+    r'|\[FILL[^\]]*\]'         # [FILL IN]
+    r'|__[A-Z_]{3,}__'        # __TASK_TITLE__
+    r')',
+    re.IGNORECASE,
+)
+
 
 def fail(msg: str):
     print(f"ERROR: {msg}", file=sys.stderr)
@@ -26,6 +37,11 @@ def validate_markdown_file(path: Path, require_header: bool):
         errors.append("unbalanced fenced code blocks")
     if not text.strip():
         errors.append("empty markdown body")
+    placeholders = PLACEHOLDER_RE.findall(text)
+    if placeholders:
+        # findall returns tuples when there are groups — flatten to non-empty strings
+        found = [p if isinstance(p, str) else next(s for s in p if s) for p in placeholders]
+        errors.append(f"contains unfilled template placeholders: {', '.join(found[:5])}")
     return errors
 
 

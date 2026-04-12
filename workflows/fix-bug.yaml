@@ -1,5 +1,5 @@
 name: fix-bug
-description: Route a bugfix through defect framing, implementation, regression protection, and QA verification.
+description: Route a bugfix through defect framing, implementation, regression protection, and QA verification. Every agent transition passes through Orchestrator.
 steps:
   - id: specify
     agent: spec
@@ -7,27 +7,33 @@ steps:
       - Bug report or defect issue exists.
       - Reproduction and expected behavior are captured or actively being clarified.
     postconditions:
-      - Bugfix issue includes acceptance criteria and test strategy.
-      - Security requirements and threat model are documented for security-scope bugs.
-      - Regression-test expectation or impossibility exception path is visible.
-    output: bugfix issue and clarified defect scope
+      - Bugfix issue includes acceptance criteria, test strategy, and a regression-test expectation or documented impossibility exception path.
+      - Security requirements documented for security-scope bugs.
+      - Spec sends a callback report to Orchestrator via ACP on completion.
+    output: bugfix issue, clarified defect scope, callback to orchestrator
+
   - id: security-design
     agent: security
     preconditions:
       - Spec output exists for security-scope bugs.
+      - Orchestrator has routed this step explicitly.
     postconditions:
       - Security-sensitive bug scope is reviewed before build.
-    output: security bug review
-  - id: orchestrate
+      - Security sends a callback report to Orchestrator via ACP on completion.
+    output: security bug review, callback to orchestrator
+
+  - id: orchestrate-to-build
     agent: orchestrator
     preconditions:
-      - Bugfix issue exists.
-      - Security review is complete for security-scope bugs.
-      - scripts/validate-issue-ready.py passes before Builder handoff.
+      - Spec callback received with outcome DONE or NEEDS_REVIEW.
+      - Security callback received for security-scope bugs.
+      - scripts/validate-issue-ready.py passes.
     postconditions:
-      - Task ledger entry is updated.
-      - Builder is routed with explicit callback expectations.
+      - Task ledger entry created.
+      - Builder receives a remediation handoff packet with explicit callback expectations.
+      - Orchestrator records that it is waiting for Builder callback.
     output: remediation handoff packet
+
   - id: build
     agent: builder
     preconditions:
@@ -35,33 +41,65 @@ steps:
       - Reproduction path and expected behavior are visible.
     postconditions:
       - Fix PR exists.
-      - Automated regression coverage is added, or a documented impossibility exception is surfaced to Spec.
-    output: fix PR and callback report
+      - Automated regression coverage added, or a documented impossibility exception surfaced to Spec.
+      - Builder sends a callback report to Orchestrator via ACP immediately — outcome NEEDS_REVIEW, artifact is the PR URL.
+    output: fix PR, callback to orchestrator
+
+  - id: orchestrate-to-qa
+    agent: orchestrator
+    preconditions:
+      - Builder callback received with outcome NEEDS_REVIEW.
+      - PR URL recorded in task ledger.
+    postconditions:
+      - Task ledger updated with PR reference.
+      - QA receives a review packet with the PR URL, regression coverage status, and callback expectations.
+      - Orchestrator records that it is waiting for QA callback.
+    output: QA review handoff packet
+
   - id: qa
     agent: qa
     preconditions:
       - PR exists and links back to the bugfix issue.
-      - Validation evidence and regression-test status are visible.
+      - Regression coverage status is visible.
+      - Orchestrator has routed this step explicitly.
     postconditions:
       - QA outcome is explicit.
       - Missing regression coverage without accepted exception is treated as blocked.
-    output: bugfix verification outcome
+      - QA sends a callback report to Orchestrator via ACP immediately on completion.
+    output: bugfix verification outcome, callback to orchestrator
+
+  - id: orchestrate-to-merge-or-rework
+    agent: orchestrator
+    preconditions:
+      - QA callback received.
+    postconditions:
+      - If approved: orchestrator-approved label applied and PR is mergeable.
+      - If changes requested or blocked: Builder or Spec receives a rework packet.
+      - Task ledger updated with final state.
+    output: merge approval or rework routing
+
 on_blocked:
   - Route unclear reproduction or behavior questions back to Spec through Orchestrator.
   - Block approval when regression automation is missing without an explicit accepted exception.
+
 on_failure:
-  - Surface failure to Orchestrator immediately.
+  - Surface failure to Orchestrator immediately via ACP callback with outcome FAILED.
   - Record the failing validation path and recommended next action.
+
 loops:
   - from: security-design
     to: specify
+    via: orchestrator
     trigger: Security requires bug contract or mitigation changes before build.
-  - from: qa
-    to: build
-    trigger: QA finds regressions, missing coverage, or correctness failures.
   - from: build
     to: specify
+    via: orchestrator
     trigger: Builder cannot determine intended behavior or needs a regression exception approved.
+  - from: qa
+    to: build
+    via: orchestrator
+    trigger: QA finds regressions, missing coverage, or correctness failures. Orchestrator creates a rework packet from QA findings.
   - from: specify
-    to: orchestrate
+    to: orchestrate-to-build
+    via: orchestrator
     trigger: Clarified bug contract or accepted exception is ready for routing.

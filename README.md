@@ -159,11 +159,32 @@ Example:
 scripts/onboard-project.sh musical-statues ../musical-statues
 ```
 
+The remote URL is auto-detected from `origin` in the repo. If the repo has no remote yet (e.g. you haven't pushed to GitHub), pass it explicitly:
+
+```bash
+scripts/onboard-project.sh musical-statues ../musical-statues \
+  --remote git@github.com:your-org/musical-statues.git
+```
+
 This will:
 - Create six project-scoped named agents in OpenClaw: `orchestrator-musical-statues`, `spec-musical-statues`, etc.
-- Deploy project-specific workspace files to each agent's workspace
+- Deploy project-specific workspace bootstrap files to each agent's workspace
+- Clone the project repo into `repo/` inside each agent's workspace (via `clone-agent-project-repo.sh`)
+- Validate workspace layout — error if any workspace has `.git` at its root
 - Install repo templates into the project repo: `SPEC.md`, `docs/delivery/release-state.md`, `.github/workflows/merge-gate.yml`, PR template, and issue templates
 - Set the repo-local git identity to the Orchestrator persona
+
+If the remote is not yet available (repo not pushed), pass `--no-clone` and run the clone step later:
+
+```bash
+scripts/onboard-project.sh musical-statues ../musical-statues --no-clone
+# later, once pushed:
+for agent in orchestrator spec security release-manager builder qa; do
+  scripts/clone-agent-project-repo.sh \
+    --project musical-statues --agent $agent \
+    --remote git@github.com:your-org/musical-statues.git
+done
+```
 
 To also bootstrap GitHub labels, branch protections, and wikis in one step:
 

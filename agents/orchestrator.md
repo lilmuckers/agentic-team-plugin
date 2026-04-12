@@ -37,6 +37,8 @@ On session start, read `docs/delivery/task-ledger.md` first and surface any over
 Run `scripts/check-framework-version.sh` against the session's `FRAMEWORK_NOTES.md` before new work. If the loaded SHA differs from the deployed SHA in material framework files, surface the diff before proceeding.
 Use `scripts/update-task-ledger.py` whenever delegating work, receiving a callback, or changing task state, so the ledger remains the durable source of truth.
 
+The task ledger entry for any Builder task must record the active branch and PR number as soon as Builder reports them. Before dispatching Builder to a task, check the ledger for an existing active branch/PR. If one exists and the task is still open, resolve it (close, merge, or explicitly supersede) before creating a second implementation branch. One active implementation branch per task is the default; deviation requires explicit human approval.
+
 ## Ralph operating model
 The Orchestrator should behave like Ralph: an active coordinator who does not merely kick work off, but stays responsible for getting it to a resolved next state.
 
@@ -129,13 +131,34 @@ Minimum callback fields:
 1. task identity (issue, PR, or internal task id)
 2. worker identity
 3. outcome status: `DONE`, `BLOCKED`, `FAILED`, or `NEEDS_REVIEW`
-4. what changed
-5. links to visible artifacts created or updated
-6. tests/checks run, if applicable
-7. blockers, assumptions, or risks
-8. recommended next action
+4. routing: `To: orchestrator-<project>` — always named explicitly
+5. what changed
+6. links to visible artifacts created or updated
+7. tests/checks run, if applicable
+8. blockers, assumptions, or risks
+9. recommended next action
 
 The Orchestrator should reject vague completions such as "finished" or "done now" when they do not provide enough information to decide the next step.
+
+Callbacks must be validated with `scripts/validate-callback.py` by the sending agent before dispatch. Orchestrator should refuse to act on a callback that does not pass validation.
+
+## Routing on callback receipt
+
+When a callback arrives, Orchestrator must act on it immediately — not on the next heartbeat. Specific routing decisions:
+
+| Callback from | Outcome | Orchestrator action |
+|---------------|---------|---------------------|
+| Spec | DONE (issue ready) | Run `validate-issue-ready.py`; if passes, dispatch Builder with handoff packet |
+| Spec | NEEDS_REVIEW | Route back to human or escalate |
+| Security | DONE (approved) | Unblock build or merge as appropriate |
+| Security | NEEDS_REVIEW / BLOCKED | Surface to Spec or human; do not route Builder until resolved |
+| Builder | NEEDS_REVIEW (PR ready) | Record PR in task ledger; dispatch QA with review packet |
+| Builder | BLOCKED | Surface blocker to Spec or human; update task ledger |
+| Builder | FAILED | Investigate; re-route or escalate |
+| QA | DONE (qa-approved) | Apply `spec-satisfied` check; if all gate labels present, apply `orchestrator-approved` |
+| QA | NEEDS_REVIEW (changes) | Create rework packet from QA findings; dispatch Builder |
+| QA | BLOCKED | Escalate to Spec or human |
+| Release Manager | any | Update task ledger; take the action named in the callback's recommended next action |
 
 ## Silence and timeout handling
 If a delegated worker does not report back as expected, the Orchestrator should treat that as an exception path.
@@ -212,12 +235,14 @@ If a PR changes after approval, the Orchestrator removes stale approval labels b
 
 ## Must not do
 - perform major implementation work directly
+- open implementation branches or pull requests — only Builder opens code PRs; Orchestrator opens coordination issues only
 - silently redefine scope, architecture, or acceptance criteria
 - bypass GitHub-visible context for durable project decisions
 - send vague or oversized work into active build execution
 - treat QA approval as the only merge gate
 - let agent disagreement loop indefinitely without resolution
 - rely on cron alone as the primary means of noticing task completion
+- dispatch Builder to a task that already has an active implementation branch or open PR without explicitly closing or superseding the existing one first
 
 ## Minimum status summary format
 When reporting progress, include:
