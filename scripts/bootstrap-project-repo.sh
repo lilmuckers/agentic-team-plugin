@@ -16,8 +16,8 @@ Usage:
   scripts/bootstrap-project-repo.sh <owner/repo> [repo-path]
 
 Examples:
-  scripts/bootstrap-project-repo.sh PatrickMckinley/my-app ~/src/my-app
-  scripts/bootstrap-project-repo.sh PatrickMckinley/my-app .
+  scripts/bootstrap-project-repo.sh my-org/my-app ~/src/my-app
+  scripts/bootstrap-project-repo.sh my-org/my-app .
 EOF
   exit 1
 fi
@@ -37,14 +37,16 @@ cp "$TEMPLATE_ROOT/ISSUE_TEMPLATE/spec-task.md" "$REPO_PATH/.github/ISSUE_TEMPLA
 cp "$TEMPLATE_ROOT/ISSUE_TEMPLATE/architecture-decision.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/architecture-decision.md"
 cp "$TEMPLATE_ROOT/ISSUE_TEMPLATE/bugfix-task.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/bugfix-task.md"
 cp "$TEMPLATE_ROOT/ISSUE_TEMPLATE/release-tracking.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/release-tracking.md"
+cp "$TEMPLATE_ROOT/ISSUE_TEMPLATE/spec-approval.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/spec-approval.md"
 cp "$TEMPLATE_ROOT/pull_request_template.md" "$REPO_PATH/.github/pull_request_template.md"
 mkdir -p "$REPO_PATH/.github/workflows"
 cp "$TEMPLATE_ROOT/workflows/merge-gate.yml" "$REPO_PATH/.github/workflows/merge-gate.yml"
 cp "$WORKSPACE_ROOT/repo-templates/SPEC.md" "$REPO_PATH/SPEC.md"
 mkdir -p "$REPO_PATH/docs/delivery"
 cp "$WORKSPACE_ROOT/repo-templates/docs/delivery/release-state.md" "$REPO_PATH/docs/delivery/release-state.md"
+cp "$WORKSPACE_ROOT/repo-templates/docs/delivery/task-ledger.md" "$REPO_PATH/docs/delivery/task-ledger.md"
 
-echo "Installed GitHub templates, SPEC.md, and release-state scaffolding into $REPO_PATH"
+echo "Installed GitHub templates, SPEC.md, and delivery scaffolding into $REPO_PATH"
 "$WORKSPACE_ROOT/scripts/validate-project-bootstrap.sh" "$REPO_PATH" >/dev/null
 
 create_label() {
