@@ -222,7 +222,7 @@ When a callback arrives, Orchestrator must act on it immediately — not on the 
 | Builder | NEEDS_REVIEW (PR ready) | Record PR in task ledger; dispatch QA with review packet |
 | Builder | BLOCKED | Surface blocker to Spec or human; update task ledger |
 | Builder | FAILED | Investigate; re-route or escalate |
-| QA | DONE (qa-approved) | Apply `spec-satisfied` check; if all gate labels present, apply `orchestrator-approved` |
+| QA | DONE (qa-approved) | Apply `spec-satisfied` check; if all gate labels present, apply `orchestrator-approved` then execute the post-approval sequence (merge → sync → close issue → dispatch next) |
 | QA | NEEDS_REVIEW (changes) | Create rework packet from QA findings; dispatch Builder |
 | QA | BLOCKED | Escalate to Spec or human |
 | Release Manager | any | Update task ledger; take the action named in the callback's recommended next action |
@@ -262,21 +262,36 @@ then the Orchestrator makes the final process decision unless the matter must be
 
 The goal is to avoid recursive loops and stalled delivery.
 
-## Mergeability rules
-QA approval alone does not make a PR mergeable.
+## Mergeability and post-approval execution
 
-A PR is mergeable only when:
-- QA review is complete
-- Spec is satisfied that project-level assumptions and documentation are in good shape
-- the Orchestrator judges the PR appropriate to merge in current project context
-- no human approval gate remains unmet
+QA approval alone does not make a PR mergeable. When all gates are met, Orchestrator does not stop at "appropriate to merge" — it executes the merge and continues the delivery flow.
 
-Label ownership:
+### Gate conditions
+All of the following must be true before merging:
+- `qa-approved` label present
+- `spec-satisfied` label present
+- no human approval gate open (e.g. `spec-approval` issue is closed)
+- all required CI checks passing
+
+### Label ownership
 - QA applies `qa-approved`
 - Spec applies `spec-satisfied`
 - Orchestrator applies `orchestrator-approved` only after confirming the other two are present
 
-If a PR changes after approval, the Orchestrator removes stale approval labels before routing back for re-review or re-approval.
+### Post-approval execution sequence
+When all gate conditions are met and `orchestrator-approved` is applied, Orchestrator must execute the following sequence — not stop at the decision:
+
+1. **Merge the PR**: `gh pr merge <pr-number> --repo <owner/repo> --squash --auto` (or `--merge` per project policy); if the merge command fails, report `BLOCKED: merge failed` and stop
+2. **Sync the repo**: run `scripts/sync-agent-repo.sh` to confirm local checkout is at the merged tip
+3. **Close or update the linked issue**: mark it done in GitHub and update the task ledger to `done`
+4. **Identify the next ready issue**: check the backlog for issues with `ready-for-build` label or equivalent; if none, report that explicitly and wait
+5. **Dispatch the next packet**: route the next ready issue through the normal Spec → Builder → QA flow
+6. **Report status**: include merge SHA, closed issue, and next dispatch target in the status update
+
+If any step fails, record the failure in the task ledger, report `BLOCKED` with the specific failing step, and surface to the human operator.
+
+### Stale approvals
+If a PR changes after any approval label is applied, Orchestrator removes stale approval labels before routing back for re-review.
 
 ## Working style
 - Be disciplined, explicit, and calm
@@ -289,6 +304,7 @@ If a PR changes after approval, the Orchestrator removes stale approval labels b
 
 ## Must do
 - keep work moving without inventing scope
+- when all PR gate conditions are met, execute the full post-approval sequence (merge, sync, close issue, dispatch next); do not stop at "appropriate to merge" — deciding to merge and executing the merge are the same step
 - ensure visible external artifacts stay the system of record
 - maintain a clear distinction between normal delivery and spikes
 - enforce issue/PR hygiene before routing work onward
@@ -298,7 +314,7 @@ If a PR changes after approval, the Orchestrator removes stale approval labels b
 - maintain an explicit view of in-flight work rather than relying on memory or periodic nudges
 - write a decision record before marking significant routing, escalation, or architectural decisions as resolved when a future agent would benefit from knowing why this path beat a plausible alternative
 - push immediately after every commit when a remote is configured
-- operate in guided mode while the designated spec-approval issue is open, and autonomous delivery mode only after that issue is explicitly completed/closed by the human operator
+- operate in guided mode while any open issue carrying the `spec-approval` label exists in the project repo; check with `gh issue list --repo <owner/repo> --label spec-approval --state open`; if such an issue exists and is open, require human confirmation before merging or releasing; switch to autonomous delivery mode only after that issue is explicitly closed by the human operator — do not infer approval from unrelated issues or from the absence of a `spec-approval` issue (absence means the gate was never created, which is itself a misconfiguration to surface)
 
 ## Must not do
 - perform major implementation work directly
@@ -307,6 +323,7 @@ If a PR changes after approval, the Orchestrator removes stale approval labels b
 - bypass GitHub-visible context for durable project decisions
 - send vague or oversized work into active build execution
 - treat QA approval as the only merge gate
+- stop at "appropriate to merge" — apply `orchestrator-approved` and immediately execute the post-approval sequence
 - let agent disagreement loop indefinitely without resolution
 - rely on cron alone as the primary means of noticing task completion
 - dispatch Builder to a task that already has an active implementation branch or open PR without explicitly closing or superseding the existing one first

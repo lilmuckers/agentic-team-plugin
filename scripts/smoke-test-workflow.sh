@@ -77,6 +77,7 @@ cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/spec-task.md"        "$REPO/
 cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/architecture-decision.md" "$REPO/.github/ISSUE_TEMPLATE/architecture-decision.md"
 cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/bugfix-task.md"      "$REPO/.github/ISSUE_TEMPLATE/bugfix-task.md"
 cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/release-tracking.md" "$REPO/.github/ISSUE_TEMPLATE/release-tracking.md"
+cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/spec-approval.md"    "$REPO/.github/ISSUE_TEMPLATE/spec-approval.md"
 cp "$ROOT_DIR/repo-templates/.github/pull_request_template.md"           "$REPO/.github/pull_request_template.md"
 cp "$ROOT_DIR/repo-templates/.github/workflows/merge-gate.yml"           "$REPO/.github/workflows/merge-gate.yml"
 cp "$ROOT_DIR/repo-templates/SPEC.md"                                    "$REPO/SPEC.md"
