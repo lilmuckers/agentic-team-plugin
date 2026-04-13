@@ -20,7 +20,7 @@ fi
 REPO_PATH="$1"
 AGENT_NAME="$2"
 ARCHETYPE="$3"
-ARCHETYPE_SLUG="${4:-$(printf '%s' "$ARCHETYPE" | tr '[:upper:]' '[:lower:]' | tr ' ' '-') }"
+ARCHETYPE_SLUG="${4:-$(printf '%s' "$ARCHETYPE" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')}"
 EMAIL="bot-${ARCHETYPE_SLUG}@${FRAMEWORK_OPERATOR_EMAIL_DOMAIN}"
 GIT_NAME="${AGENT_NAME} (${ARCHETYPE})"
 

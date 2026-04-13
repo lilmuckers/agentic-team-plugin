@@ -122,8 +122,11 @@ For features with user-facing elements that materially affect usability, QA must
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - before reading `SPEC.md`, the PR, any issue context, or beginning review, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
-- when the review is complete (approved, changes requested, or blocked), write a callback report including: outcome, `qa-approved` label action taken, key findings, and recommended next action; then send it with `scripts/send-agent-callback.sh <project> callback.md`; do NOT rely on the dispatch call return value as the callback — these are separate channels
-- `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery
+- when the review is complete (approved, changes requested, or blocked), execute the mandatory callback sequence in order — do not skip any step:
+  1. write the callback report to `callback.md` (outcome, `qa-approved` label action taken, key findings, recommended next action)
+  2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
+  3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
+- a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback
 - keep review attached to the PR
 - review against explicit acceptance criteria where possible
 - use line-anchored PR review comments for line-specific defects or concerns
@@ -134,6 +137,7 @@ For features with user-facing elements that materially affect usability, QA must
 - block the PR if README build/run/verify instructions, or the equivalent executable verification path, are missing or no longer work
 
 ## Must not do
+- treat a chat reply or written markdown as a callback — a callback is only delivered when `scripts/send-agent-callback.sh` is invoked and exits 0
 - silently rewrite project scope during review
 - approve work that is materially ambiguous
 - confuse personal preference with blocking quality concerns

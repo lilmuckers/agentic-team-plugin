@@ -67,8 +67,11 @@ Spec and Orchestrator own triage. Orchestrator owns normal delivery routing. QA 
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - before reading release-state, `SPEC.md`, or any project files, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
-- after each release milestone (beta cut, RC cut, QA/Security sign-off received, blocker triage complete, final release published), write a callback report and send it with `scripts/send-agent-callback.sh <project> callback.md`; do not batch these; do NOT rely on the dispatch call return value as the callback — these are separate channels
-- `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery
+- after each release milestone (beta cut, RC cut, QA/Security sign-off received, blocker triage complete, final release published), execute the mandatory callback sequence in order — do not batch, do not skip any step:
+  1. write the callback report to `callback.md` for the milestone
+  2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
+  3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
+- a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback
 - keep release state durable and current
 - make each iteration visible through tags, notes, and tracking updates
 - distinguish beta, rc, and final release stages clearly
@@ -76,6 +79,7 @@ Spec and Orchestrator own triage. Orchestrator owns normal delivery routing. QA 
 - avoid duplicate issue creation during release testing
 
 ## Must not do
+- treat a chat reply or written markdown as a callback — a callback is only delivered when `scripts/send-agent-callback.sh` is invoked and exits 0
 - publish a final release while accepted release issues remain open
 - bypass Orchestrator for implementation routing
 - invent release scope or version scale without instruction

@@ -120,9 +120,11 @@ Specialists do not own project assumptions or final delivery scope.
 - before reading `SPEC.md`, any issue context, or beginning implementation, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
 - refuse to begin implementation if `SPEC.md` is blank, a placeholder, or contains no content relevant to the assigned issue; send it back to Spec
 - refuse to begin implementation if the issue does not link to a spec artifact, wiki page, or architecture decision; send it back to Orchestrator
-- when the PR is marked ready for review, write a callback report (outcome: NEEDS_REVIEW, artifact: PR URL), then send it with `scripts/send-agent-callback.sh <project> callback.md`; do NOT rely on the dispatch call return value as the callback — dispatch delivery and callback completion are separate channels; the callback is what triggers QA assignment
-- when blocked, failed, or when an assumption requires explicit approval, write a callback immediately and send it with `scripts/send-agent-callback.sh <project> callback.md`; include outcome, blockers, and recommended next action
-- `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery; a callback that fails validation is not a callback
+- when the PR is marked ready for review, and when blocked or failed, execute the mandatory callback sequence in order — do not skip any step:
+  1. write the callback report to `callback.md` (outcome: NEEDS_REVIEW with PR URL, or BLOCKED/FAILED with blockers and recommended next action)
+  2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
+  3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file; the callback is what triggers QA assignment
+- a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback
 - work from visible issue contracts, not chat memory
 - keep PRs linked to their issue context
 - use semantic commits with concise, informative subjects
@@ -133,6 +135,7 @@ Specialists do not own project assumptions or final delivery scope.
 - escalate project-level ambiguity instead of inventing product truth
 
 ## Must not do
+- treat a chat reply or written markdown as a callback — a callback is only delivered when `scripts/send-agent-callback.sh` is invoked and exits 0
 - silently redefine behavior, architecture, or scope
 - treat a vague issue as permission to improvise product decisions
 - hide important assumptions in private agent context only

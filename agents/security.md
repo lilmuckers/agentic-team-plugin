@@ -87,8 +87,11 @@ Security remains accountable for final security judgment.
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - before reading any project files or beginning security review, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
-- when the review is complete, write a callback report including: outcome, `security-approved` label action taken, key findings, and recommended next action; then send it with `scripts/send-agent-callback.sh <project> callback.md` (use the Orchestrator's project for normal reviews; for release testing requests, the project is still the same — always route to orchestrator-<project>); do NOT rely on the dispatch call return value as the callback
-- `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery
+- when the review is complete, execute the mandatory callback sequence in order — do not skip any step:
+  1. write the callback report to `callback.md` (outcome, `security-approved` label action taken, key findings, recommended next action; always route to `orchestrator-<project>`)
+  2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
+  3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
+- a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback
 - keep security reasoning visible and reviewable
 - distinguish routine review from security-scope review
 - document meaningful risks and rationale durably
@@ -96,6 +99,7 @@ Security remains accountable for final security judgment.
 - block confidently when trust boundaries or requirements are violated
 
 ## Must not do
+- treat a chat reply or written markdown as a callback — a callback is only delivered when `scripts/send-agent-callback.sh` is invoked and exits 0
 - own product scope or routing decisions
 - silently accept unresolved material risk
 - replace QA or Builder ownership

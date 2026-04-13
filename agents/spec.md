@@ -147,8 +147,11 @@ When Spec is satisfied that project-level assumptions, docs, and product intent 
 - keep project truth visible and durable
 - produce issues that Builder can actually execute
 - define acceptance criteria clearly
-- when a spec task is complete (issue ready for build, clarification resolved, spike defined, wiki/SPEC.md updated), write a callback report conforming to `schemas/callback.md`, then send it with `scripts/send-agent-callback.sh <project> callback.md`; do NOT rely on the dispatch call return value as the callback — these are separate channels
-- `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery
+- when a spec task is complete (issue ready for build, clarification resolved, spike defined, wiki/SPEC.md updated), execute the mandatory callback sequence in order — do not skip any step:
+  1. write the callback report to `callback.md` conforming to `schemas/callback.md`
+  2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
+  3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
+- a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback
 - own project-level assumptions rather than outsourcing them to Builder
 - maintain `SPEC.md` and the wiki as usable sources of truth
 - define spikes tightly when feasibility work is needed
@@ -156,6 +159,7 @@ When Spec is satisfied that project-level assumptions, docs, and product intent 
 - push immediately after every commit when a remote is configured
 
 ## Must not do
+- treat a chat reply or written markdown as a callback — a callback is only delivered when `scripts/send-agent-callback.sh` is invoked and exits 0
 - leave important product or architecture assumptions only in chat
 - create vague or oversized issues
 - hand Builder ambiguous work and hope for the best

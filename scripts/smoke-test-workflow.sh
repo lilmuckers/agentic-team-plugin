@@ -81,6 +81,7 @@ cp "$ROOT_DIR/repo-templates/.github/pull_request_template.md"           "$REPO/
 cp "$ROOT_DIR/repo-templates/.github/workflows/merge-gate.yml"           "$REPO/.github/workflows/merge-gate.yml"
 cp "$ROOT_DIR/repo-templates/SPEC.md"                                    "$REPO/SPEC.md"
 cp "$ROOT_DIR/repo-templates/docs/delivery/release-state.md"             "$REPO/docs/delivery/release-state.md"
+cp "$ROOT_DIR/repo-templates/docs/delivery/task-ledger.md"               "$REPO/docs/delivery/task-ledger.md"
 
 # minimal docker-first files
 cat > "$REPO/docker-compose.yml" <<'YAML'
@@ -89,10 +90,6 @@ services:
   app:
     image: alpine
 YAML
-cat > "$REPO/.devcontainer/devcontainer.json" <<'JSON' 2>/dev/null || (mkdir -p "$REPO/.devcontainer" && cat > "$REPO/.devcontainer/devcontainer.json" <<'JSON'
-{ "name": "smoke-test" }
-JSON
-)
 mkdir -p "$REPO/.devcontainer"
 echo '{ "name": "smoke-test" }' > "$REPO/.devcontainer/devcontainer.json"
 
@@ -137,7 +134,7 @@ run_check "validate-docker-first-project" \
 
 # 3. README contract validation
 run_check "validate-readme-contract" \
-  "$ROOT_DIR/scripts/validate-readme-contract.sh" "$REPO/README.md"
+  "$ROOT_DIR/scripts/validate-readme-contract.sh" "$REPO"
 
 # 4. task ledger — write an entry then validate
 TASK_JSON='{"task":"smoke-test-task","state":"in_progress","current_action":"running smoke test","next_action":"verify output","history":[]}'
@@ -245,6 +242,134 @@ MD
 
 run_check "validate-callback" \
   python3 "$ROOT_DIR/scripts/validate-callback.py" "$CALLBACK_FILE"
+
+# 9b. callback validation — missing required section is rejected
+BAD_CALLBACK_FILE="$TMPDIR_BASE/bad-callback.md"
+cat > "$BAD_CALLBACK_FILE" <<'MD'
+## Task
+
+- Task ID: smoke-test-task
+
+## Agent
+
+- Agent: qa-smoke
+
+## Outcome
+
+NEEDS_REVIEW
+
+## Routing
+
+- To: orchestrator-smoke
+- Via: ACP
+
+## Changed
+
+- Posted QA review comment on PR #7
+
+## Artifacts
+
+- PR #7 comment
+
+## Tests
+
+- Manual review performed
+
+## Blockers
+
+- None
+
+MD
+# Missing ## Next Action section — validator must reject this
+if python3 "$ROOT_DIR/scripts/validate-callback.py" "$BAD_CALLBACK_FILE" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  validate-callback should reject callback missing ## Next Action")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  validate-callback rejects callback missing required section")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 9c. callback validation — no Routing To: line is rejected
+NO_ROUTING_CALLBACK="$TMPDIR_BASE/no-routing-callback.md"
+cat > "$NO_ROUTING_CALLBACK" <<'MD'
+## Task
+
+- Task ID: smoke-test-task
+- Title: Smoke test
+
+## Agent
+
+- Agent: qa-smoke
+- Session: smoke
+
+## Outcome
+
+DONE
+
+## Routing
+
+- Via: ACP
+
+## Changed
+
+- Did stuff
+
+## Artifacts
+
+- None
+
+## Tests
+
+- None
+
+## Blockers
+
+- None
+
+## Next Action
+
+- Orchestrator to proceed
+MD
+if python3 "$ROOT_DIR/scripts/validate-callback.py" "$NO_ROUTING_CALLBACK" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  validate-callback should reject callback with no Routing To: line")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  validate-callback rejects callback with no Routing To: line")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 9d. send-agent-callback: missing required args → exits non-zero (validates arg handling)
+if "$ROOT_DIR/scripts/send-agent-callback.sh" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  send-agent-callback.sh should require <project> and <callback-file>")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  send-agent-callback.sh rejects missing required args")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 9e. send-agent-callback: bad callback file → validation fails before openclaw is invoked
+# (send-agent-callback.sh calls validate-callback.py first; if that fails it exits 1 without
+# touching openclaw — we can test this without openclaw being installed)
+if "$ROOT_DIR/scripts/send-agent-callback.sh" smoke "$BAD_CALLBACK_FILE" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  send-agent-callback.sh should exit non-zero when callback is invalid")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  send-agent-callback.sh fails fast on invalid callback (validation before transport)")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 9f. send-agent-callback: well-formed callback reaches the transport step
+# (expected to fail at the openclaw call — but must NOT fail at validation)
+# We detect this by checking stderr for 'validation failed' vs anything else.
+SEND_STDERR="$TMPDIR_BASE/send-stderr.txt"
+"$ROOT_DIR/scripts/send-agent-callback.sh" smoke "$CALLBACK_FILE" 2>"$SEND_STDERR" || true
+if grep -q "validation failed" "$SEND_STDERR" 2>/dev/null; then
+  RESULTS+=("FAIL  send-agent-callback.sh failed at validation for a well-formed callback (should reach transport step)")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  send-agent-callback.sh passes validation for well-formed callback (fails at transport as expected in CI)")
+  PASS=$(( PASS + 1 ))
+fi
 
 # 10. workspace layout: openclaw-style root .git (no matching remote) → exits 0, repo/ missing = warn only
 WL_OPENCLAW_ROOT="$TMPDIR_BASE/wl-openclaw"
