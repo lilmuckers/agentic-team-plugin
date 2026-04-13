@@ -281,12 +281,13 @@ All of the following must be true before merging:
 ### Post-approval execution sequence
 When all gate conditions are met and `orchestrator-approved` is applied, Orchestrator must execute the following sequence — not stop at the decision:
 
-1. **Merge the PR**: `gh pr merge <pr-number> --repo <owner/repo> --squash --auto` (or `--merge` per project policy); if the merge command fails, report `BLOCKED: merge failed` and stop
-2. **Sync the repo**: run `scripts/sync-agent-repo.sh` to confirm local checkout is at the merged tip
-3. **Close or update the linked issue**: mark it done in GitHub and update the task ledger to `done`
-4. **Identify the next ready issue**: check the backlog for issues with `ready-for-build` label or equivalent; if none, report that explicitly and wait
-5. **Dispatch the next packet**: route the next ready issue through the normal Spec → Builder → QA flow
-6. **Report status**: include merge SHA, closed issue, and next dispatch target in the status update
+1. **Merge the PR immediately**: `gh pr merge <pr-number> --repo <owner/repo> --squash` (or `--merge` per project policy); do **not** use `--auto` — all gate conditions are confirmed at this point so merge must happen now, not when CI re-runs; if the merge command fails, report `BLOCKED: merge failed` and stop
+2. **Verify the merge landed**: `gh pr view <pr-number> --repo <owner/repo> --json state --jq '.state'` must return `MERGED`; if it returns anything else, report `BLOCKED: merge did not land` and stop
+3. **Sync the repo**: run `scripts/sync-agent-repo.sh` to confirm local checkout is at the merged tip
+4. **Close or update the linked issue**: mark it done in GitHub and update the task ledger to `done`
+5. **Identify the next ready issue**: from open issues labeled `ready-for-build`, choose the highest-priority by this order: (a) explicitly sequenced in a Spec delivery note, (b) lowest issue number among `ready-for-build` + `spec-satisfied` issues, (c) lowest issue number among any `ready-for-build` issue; if none, report that explicitly and wait
+6. **Dispatch the next packet**: route the chosen issue through the normal Spec → Builder → QA flow
+7. **Report status**: include merge SHA, closed issue, and next dispatch target in the status update
 
 If any step fails, record the failure in the task ledger, report `BLOCKED` with the specific failing step, and surface to the human operator.
 

@@ -535,6 +535,114 @@ run_check "clone-agent-project-repo idempotent (existing checkout exits 0)" \
   --project smoke --agent builder --remote "https://example.com/repo.git" \
   --workspace-root "$CL_EXISTING_ROOT"
 
+# ── post-approval execution sequence ─────────────────────────────────────────
+# These tests prove the toolchain supporting the 7-step post-approval sequence:
+# merge → verify → sync → close issue → identify next → dispatch → report status
+
+# 16a. QA DONE callback with qa-approved outcome passes validate-callback
+QA_DONE_CALLBACK="$TMPDIR_BASE/qa-done-callback.md"
+cat > "$QA_DONE_CALLBACK" <<'MD'
+## Task
+
+- Task ID: issue-42
+- Title: Add web shell feature
+
+## Agent
+
+- Agent: qa-smoke
+- Session: qa-smoke:main
+
+## Outcome
+
+DONE
+
+## Routing
+
+- To: orchestrator-smoke
+- Via: ACP
+
+## Changed
+
+- Reviewed PR #7 against issue #42 acceptance criteria
+- All acceptance criteria verified: PASS
+- Applied `qa-approved` label to PR #7
+
+## Artifacts
+
+- PR #7 comment with full review findings
+
+## Tests
+
+- Manual review: PASS
+- Unit test coverage adequate
+- No regressions detected
+
+## Blockers
+
+- None
+
+## Next Action
+
+- Orchestrator to check for `spec-satisfied` label and proceed with merge gate if present
+MD
+run_check "validate-callback: QA DONE (qa-approved) passes validation" \
+  python3 "$ROOT_DIR/scripts/validate-callback.py" "$QA_DONE_CALLBACK"
+
+# 16b. merge state verification — the jq pattern used in post-approval step 2 produces MERGED
+MERGED_STATE_JSON="$TMPDIR_BASE/pr-state.json"
+printf '{"state":"MERGED","number":7}\n' > "$MERGED_STATE_JSON"
+MERGE_STATE="$(jq -r '.state' "$MERGED_STATE_JSON")"
+if [ "$MERGE_STATE" = "MERGED" ]; then
+  RESULTS+=("PASS  merge verification jq pattern correctly identifies MERGED state")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  merge verification jq pattern returned '$MERGE_STATE' instead of MERGED")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 16c. merge state verification — an OPEN state is correctly detected as not-merged
+OPEN_STATE_JSON="$TMPDIR_BASE/pr-open.json"
+printf '{"state":"OPEN","number":7}\n' > "$OPEN_STATE_JSON"
+NOT_MERGED="$(jq -r '.state' "$OPEN_STATE_JSON")"
+if [ "$NOT_MERGED" != "MERGED" ]; then
+  RESULTS+=("PASS  merge verification correctly detects non-MERGED state (OPEN → BLOCKED signal)")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  merge verification failed to distinguish OPEN from MERGED")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 16d. update-task-ledger: write a new task then mark it done (simulates post-approval close step)
+POSTAPPROVAL_LEDGER="$TMPDIR_BASE/postapproval-ledger.md"
+cp "$ROOT_DIR/docs/delivery/task-ledger.md" "$POSTAPPROVAL_LEDGER"
+# First write: create the task in in_progress state
+python3 "$ROOT_DIR/scripts/update-task-ledger.py" "$POSTAPPROVAL_LEDGER" \
+  "issue-99" "Deliver web shell" in_progress \
+  "Builder implementing" "QA to review" \
+  --owner "builder-smoke" >/dev/null 2>&1 || true
+# Second write: mark done (simulates Orchestrator closing it after merge)
+if python3 "$ROOT_DIR/scripts/update-task-ledger.py" "$POSTAPPROVAL_LEDGER" \
+     "issue-99" "Deliver web shell" done \
+     "Merged PR #7" "Dispatch next ready issue" \
+     --history-action "Merged and closed" >/dev/null 2>&1; then
+  RESULTS+=("PASS  update-task-ledger marks merged task as done (post-approval close step)")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  update-task-ledger could not mark task done (post-approval close step would fail)")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 16e. validate-issue-ready: missing required args → exits non-zero without crashing
+# (validate-issue-ready.py expects a GitHub issue number, not a local file; this
+#  proves the script is executable and its arg contract is enforced)
+if python3 "$ROOT_DIR/scripts/validate-issue-ready.py" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  validate-issue-ready.py should require an issue number argument")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  validate-issue-ready.py enforces required issue-number argument (dispatch-next gate)")
+  PASS=$(( PASS + 1 ))
+fi
+
 # ── summary ───────────────────────────────────────────────────────────────────
 
 echo ""

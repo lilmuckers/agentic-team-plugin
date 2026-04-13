@@ -81,12 +81,64 @@ create_label "qa-approved" "0E8A16" "QA has completed review and approved the PR
 create_label "spec-satisfied" "1D76DB" "Spec confirms project-level assumptions, docs, and intent are satisfied"
 create_label "orchestrator-approved" "5319E7" "Orchestrator confirms merge-gate conditions are met and merge is appropriate now"
 create_label "security-approved" "B60205" "Security confirms security-scope requirements are satisfied"
+create_label "spec-approval" "FBCA04" "Spec-approval gate: Orchestrator stays in guided mode until this issue is closed by the human operator"
 
 echo "Created or updated standard labels in $REPO"
+
+# ── spec-approval gate issue ───────────────────────────────────────────────────
+# Create the spec-approval gate issue if one does not already exist.
+# Orchestrator requires this issue to exist (open or closed) — absence is a
+# misconfiguration, not implicit approval.
+
+EXISTING_SPEC_APPROVAL=$(gh issue list --repo "$REPO" --label spec-approval --state all --json number --jq '.[0].number' 2>/dev/null || true)
+if [ -n "$EXISTING_SPEC_APPROVAL" ]; then
+  echo "spec-approval gate issue already exists: #$EXISTING_SPEC_APPROVAL (skipping creation)"
+else
+  REPO_NAME="$(basename "$REPO")"
+  SPEC_APPROVAL_NUMBER=$(gh issue create \
+    --repo "$REPO" \
+    --title "spec-approval: $REPO_NAME" \
+    --label "spec-approval" \
+    --body "$(cat <<'ISSUE_BODY'
+## Purpose
+
+This issue is the spec-approval gate for this project.
+
+While this issue is **open**, the Orchestrator operates in **guided mode**:
+- work may be dispatched to Spec and Builder
+- but merge and release decisions require human confirmation
+
+When the human operator closes this issue, the Orchestrator may proceed in **autonomous delivery mode**.
+
+## Spec approval checklist
+
+- [ ] \`SPEC.md\` reflects the agreed project definition
+- [ ] wiki pages are created and linked
+- [ ] initial backlog issues are created and scoped
+- [ ] acceptance criteria are visible and buildable
+- [ ] Orchestrator has been briefed on the approved delivery scope
+
+## Instructions for the operator
+
+Close this issue when you are satisfied that:
+1. the project spec is correct
+2. the initial issues are ready to build
+3. the swarm is correctly configured
+
+Do not close this issue to unblock a stuck run — only close it when spec-level approval has genuinely been given.
+ISSUE_BODY
+)" \
+    --json number --jq '.number')
+  echo "Created spec-approval gate issue: #$SPEC_APPROVAL_NUMBER"
+  echo "IMPORTANT: Orchestrator will stay in guided mode until you close issue #$SPEC_APPROVAL_NUMBER"
+fi
+
+echo ""
 echo "Bootstrap complete. Next steps:"
 echo "  1. Commit the copied .github templates in $REPO_PATH"
 echo "  2. Confirm branch protection requires .github/workflows/merge-gate.yml in $REPO"
-echo "  3. Create initial project docs/spec"
-echo "  4. For application repos, add docker-compose.yml and .devcontainer/devcontainer.json"
-echo "  5. Create starter issues"
-echo "  6. Configure per-agent git identities with scripts/set-agent-git-identity.sh as needed"
+echo "  3. Review and close the spec-approval gate issue (#${SPEC_APPROVAL_NUMBER:-$EXISTING_SPEC_APPROVAL}) when the project spec is approved"
+echo "  4. Create initial project docs/spec"
+echo "  5. For application repos, add docker-compose.yml and .devcontainer/devcontainer.json"
+echo "  6. Create starter issues"
+echo "  7. Configure per-agent git identities with scripts/set-agent-git-identity.sh as needed"

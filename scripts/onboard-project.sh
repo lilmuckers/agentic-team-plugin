@@ -155,6 +155,7 @@ if [ -f "$REPO_PATH/.github/pull_request_template.md" ] \
   && [ -f "$REPO_PATH/.github/workflows/merge-gate.yml" ] \
   && [ -f "$REPO_PATH/SPEC.md" ] \
   && [ -f "$REPO_PATH/.github/ISSUE_TEMPLATE/release-tracking.md" ] \
+  && [ -f "$REPO_PATH/.github/ISSUE_TEMPLATE/spec-approval.md" ] \
   && [ -f "$REPO_PATH/docs/delivery/release-state.md" ] \
   && [ -f "$REPO_PATH/docs/delivery/task-ledger.md" ]; then
   echo "Repo templates already appear installed in $REPO_PATH"
@@ -164,6 +165,7 @@ else
   run cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/architecture-decision.md" "$REPO_PATH/.github/ISSUE_TEMPLATE/architecture-decision.md"
   run cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/bugfix-task.md"          "$REPO_PATH/.github/ISSUE_TEMPLATE/bugfix-task.md"
   run cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/release-tracking.md"     "$REPO_PATH/.github/ISSUE_TEMPLATE/release-tracking.md"
+  run cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/spec-approval.md"        "$REPO_PATH/.github/ISSUE_TEMPLATE/spec-approval.md"
   run cp "$ROOT_DIR/repo-templates/.github/pull_request_template.md"               "$REPO_PATH/.github/pull_request_template.md"
   run cp "$ROOT_DIR/repo-templates/.github/workflows/merge-gate.yml"               "$REPO_PATH/.github/workflows/merge-gate.yml"
   run cp "$ROOT_DIR/repo-templates/SPEC.md"                                        "$REPO_PATH/SPEC.md"
