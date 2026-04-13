@@ -95,3 +95,4 @@ scripts/*
 !scripts/clone-agent-project-repo.sh
 !scripts/dispatch-named-agent.sh
 !scripts/send-agent-callback.sh
+!scripts/sync-agent-repo.sh
