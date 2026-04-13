@@ -243,7 +243,94 @@ MD
 run_check "validate-callback" \
   python3 "$ROOT_DIR/scripts/validate-callback.py" "$CALLBACK_FILE"
 
-# 9b. callback validation — missing required section is rejected
+# 9b. QA scope grounding — clean review citing only PR files passes
+QA_PR_FILES="README.md app.js index.html styles.css"
+QA_CLEAN_REVIEW="$TMPDIR_BASE/qa-review-clean.md"
+cat > "$QA_CLEAN_REVIEW" <<'MD'
+## Changed files reviewed
+
+- README.md
+- app.js
+- index.html
+- styles.css
+
+## Outcome
+
+NEEDS_REVIEW
+
+## Findings
+
+The PR introduces a basic web shell. The `app.js` entry point is minimal and
+serves `index.html`. `styles.css` provides baseline layout. `README.md` has
+been updated with build and run instructions.
+
+No scope drift observed. All changes are consistent with the PR intent.
+
+## Recommended next action
+
+Builder to address the minor issues before re-review.
+MD
+run_check "validate-qa-scope (clean review — only PR files cited)" \
+  python3 "$ROOT_DIR/scripts/validate-qa-scope.py" "$QA_CLEAN_REVIEW" \
+  --pr-files $QA_PR_FILES
+
+# 9c. QA scope grounding — review citing context files as PR changes is rejected
+# This replicates the exact lapwing failure: QA read SPEC.md, task-ledger.md,
+# and release-state.md as context but then cited them as changed by the PR.
+QA_BAD_REVIEW="$TMPDIR_BASE/qa-review-scope-drift.md"
+cat > "$QA_BAD_REVIEW" <<'MD'
+## Changed files reviewed
+
+- README.md
+- app.js
+- index.html
+- styles.css
+- SPEC.md
+- docs/delivery/task-ledger.md
+- docs/delivery/release-state.md
+
+## Outcome
+
+NEEDS_REVIEW
+
+## Findings
+
+This PR appears to have scope drift. In addition to the web shell files, it
+also rewrites `SPEC.md`, `docs/delivery/task-ledger.md`, and
+`docs/delivery/release-state.md`. These are unrelated to the stated PR intent.
+
+Builder should limit the PR to the web shell changes only.
+MD
+if python3 "$ROOT_DIR/scripts/validate-qa-scope.py" "$QA_BAD_REVIEW" \
+    --pr-files $QA_PR_FILES >/dev/null 2>&1; then
+  RESULTS+=("FAIL  validate-qa-scope should reject review citing context files as PR changes (lapwing pattern)")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  validate-qa-scope rejects review that misattributes context files as PR changes (lapwing pattern)")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 9d. QA scope grounding — review missing the required section is rejected (exit 2)
+QA_NO_SECTION_REVIEW="$TMPDIR_BASE/qa-review-no-section.md"
+cat > "$QA_NO_SECTION_REVIEW" <<'MD'
+## Outcome
+
+NEEDS_REVIEW
+
+## Findings
+
+The PR looks fine overall but has some scope drift in the delivery docs.
+MD
+if python3 "$ROOT_DIR/scripts/validate-qa-scope.py" "$QA_NO_SECTION_REVIEW" \
+    --pr-files $QA_PR_FILES >/dev/null 2>&1; then
+  RESULTS+=("FAIL  validate-qa-scope should require the 'Changed files reviewed' section")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  validate-qa-scope rejects review missing required 'Changed files reviewed' section")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 9e. callback validation — missing required section is rejected
 BAD_CALLBACK_FILE="$TMPDIR_BASE/bad-callback.md"
 cat > "$BAD_CALLBACK_FILE" <<'MD'
 ## Task

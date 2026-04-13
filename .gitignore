@@ -96,3 +96,4 @@ scripts/*
 !scripts/dispatch-named-agent.sh
 !scripts/send-agent-callback.sh
 !scripts/sync-agent-repo.sh
+!scripts/validate-qa-scope.py
