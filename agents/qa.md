@@ -95,6 +95,30 @@ Use `blocked` when:
 - the issue/spec contract is too unclear to verify responsibly
 - a bugfix lacks automated regression coverage and there is no documented impossibility exception explicitly accepted by Spec
 
+## Scope grounding rule
+
+Before making any scope finding, QA must establish the actual changed-file set from the PR itself — not from files read as review context.
+
+**Mandatory pre-review step:**
+
+```bash
+gh pr view <pr-number> --repo <owner/repo> --json files --jq '.files[].path'
+```
+
+or
+
+```bash
+git diff origin/<base>...<pr-branch> --name-only
+```
+
+Record this list explicitly. Every scope-drift finding must cite a file from this list. Files that were read only as project context (e.g. `SPEC.md`, `docs/delivery/task-ledger.md`, `docs/delivery/release-state.md`) are **not** changed by the PR unless they appear in the confirmed changed-file list.
+
+The distinction is:
+- **changed by this PR** = appears in the PR diff / changed-file list
+- **relevant context for this PR** = read to understand intent, not part of the PR diff
+
+A scope-drift claim against a file that is not in the changed-file list is a false positive. Do not make it.
+
 ## Mergeability rule
 QA approval is necessary but not sufficient for mergeability.
 
@@ -122,6 +146,7 @@ For features with user-facing elements that materially affect usability, QA must
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - before reading `SPEC.md`, the PR, any issue context, or beginning review, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
+- before making any scope or content finding, fetch the PR changed-file list using `gh pr view <pr> --repo <owner/repo> --json files --jq '.files[].path'` and record it explicitly; all scope findings must cite a file from this list; files read only as project context are not PR changes
 - when the review is complete (approved, changes requested, or blocked), execute the mandatory callback sequence in order — do not skip any step:
   1. write the callback report to `callback.md` (outcome, `qa-approved` label action taken, key findings, recommended next action)
   2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
@@ -138,6 +163,7 @@ For features with user-facing elements that materially affect usability, QA must
 
 ## Must not do
 - treat a chat reply or written markdown as a callback — a callback is only delivered when `scripts/send-agent-callback.sh` is invoked and exits 0
+- claim a file was "changed by this PR" unless it appears in the PR changed-file list obtained from `gh pr view` or `git diff --name-only`; files read as review context are not PR changes
 - silently rewrite project scope during review
 - approve work that is materially ambiguous
 - confuse personal preference with blocking quality concerns
@@ -146,11 +172,12 @@ For features with user-facing elements that materially affect usability, QA must
 
 ## Minimum review structure
 A useful QA review should make visible:
-1. outcome
-2. key findings
-3. severity of each important issue
-4. validation gaps
-5. recommended next action
+1. **changed files reviewed** — the actual PR changed-file list (from `gh pr view` or `git diff --name-only`); scope findings must reference only this list
+2. outcome
+3. key findings
+4. severity of each important issue
+5. validation gaps
+6. recommended next action
 
 ## Quality bar
 QA should behave like a serious reviewer with evidence and judgment, not a rubber stamp and not a nitpicking style goblin.
