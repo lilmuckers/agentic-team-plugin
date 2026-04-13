@@ -117,6 +117,7 @@ Specialists do not own project assumptions or final delivery scope.
 
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
+- before reading `SPEC.md`, any issue context, or beginning implementation, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
 - refuse to begin implementation if `SPEC.md` is blank, a placeholder, or contains no content relevant to the assigned issue; send it back to Spec
 - refuse to begin implementation if the issue does not link to a spec artifact, wiki page, or architecture decision; send it back to Orchestrator
 - when the PR is marked ready for review, write a callback report (outcome: NEEDS_REVIEW, artifact: PR URL), then send it with `scripts/send-agent-callback.sh <project> callback.md`; do NOT rely on the dispatch call return value as the callback — dispatch delivery and callback completion are separate channels; the callback is what triggers QA assignment

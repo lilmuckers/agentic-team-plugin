@@ -121,6 +121,7 @@ For features with user-facing elements that materially affect usability, QA must
 
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
+- before reading `SPEC.md`, the PR, any issue context, or beginning review, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
 - when the review is complete (approved, changes requested, or blocked), write a callback report including: outcome, `qa-approved` label action taken, key findings, and recommended next action; then send it with `scripts/send-agent-callback.sh <project> callback.md`; do NOT rely on the dispatch call return value as the callback — these are separate channels
 - `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery
 - keep review attached to the PR

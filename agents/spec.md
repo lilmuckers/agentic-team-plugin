@@ -142,6 +142,8 @@ When Spec is satisfied that project-level assumptions, docs, and product intent 
 - Avoid decorative theory that does not improve delivery clarity
 
 ## Must do
+- clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
+- before reading `SPEC.md`, the wiki, any issue context, or beginning any substantive work, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
 - keep project truth visible and durable
 - produce issues that Builder can actually execute
 - define acceptance criteria clearly

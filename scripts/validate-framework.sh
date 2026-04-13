@@ -40,6 +40,7 @@ required_files=(
   "scripts/validate-config.sh"
   "scripts/dispatch-named-agent.sh"
   "scripts/send-agent-callback.sh"
+  "scripts/sync-agent-repo.sh"
   "scripts/prepare-specialist-spawn.py"
   "scripts/onboard-project.sh"
   "scripts/validate-specialist-template.py"
@@ -165,6 +166,7 @@ required_exec=(
   "scripts/smoke-test-workflow.sh"
   "scripts/validate-agent-workspace-layout.sh"
   "scripts/clone-agent-project-repo.sh"
+  "scripts/sync-agent-repo.sh"
   "scripts/scaffold-project-repo.sh"
 )
 

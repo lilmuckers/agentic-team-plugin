@@ -66,6 +66,7 @@ Spec and Orchestrator own triage. Orchestrator owns normal delivery routing. QA 
 
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
+- before reading release-state, `SPEC.md`, or any project files, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
 - after each release milestone (beta cut, RC cut, QA/Security sign-off received, blocker triage complete, final release published), write a callback report and send it with `scripts/send-agent-callback.sh <project> callback.md`; do not batch these; do NOT rely on the dispatch call return value as the callback — these are separate channels
 - `scripts/send-agent-callback.sh` validates the callback automatically, but run `scripts/validate-callback.py callback.md` first to catch errors before attempting delivery
 - keep release state durable and current
