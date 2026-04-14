@@ -106,11 +106,27 @@ run() {
 if [ "$DISABLE" -eq 1 ]; then
   echo "Removing watchdog cron: $CRON_NAME"
   if [ "$DRY_RUN" -eq 1 ]; then
-    echo "[dry-run] would run: openclaw cron delete $CRON_NAME"
+    echo "[dry-run] would look up $CRON_NAME in cron list, then run: openclaw cron rm <uuid>"
   else
-    openclaw cron delete "$CRON_NAME" 2>/dev/null \
-      && echo "Watchdog cron removed: $CRON_NAME" \
-      || echo "No cron named '$CRON_NAME' found (already removed or never created)"
+    DISABLE_ID="$(openclaw cron list --json 2>/dev/null \
+      | python3 -c "
+import json, sys
+try:
+    data = json.loads(sys.stdin.read())
+    for job in data.get('jobs', []):
+        if job.get('name') == sys.argv[1]:
+            print(job['id'])
+            break
+except Exception:
+    pass
+" "$CRON_NAME")"
+    if [ -n "$DISABLE_ID" ]; then
+      openclaw cron rm "$DISABLE_ID" 2>/dev/null \
+        && echo "Watchdog cron removed: $CRON_NAME (id: $DISABLE_ID)" \
+        || echo "WARNING: cron rm returned non-zero for id $DISABLE_ID" >&2
+    else
+      echo "No cron named '$CRON_NAME' found (already removed or never created)"
+    fi
   fi
   exit 0
 fi
@@ -180,32 +196,74 @@ WATCHDOG_EOF
 )"
 
 # ── install cron ──────────────────────────────────────────────────────────────
+#
+# CLI shape for OpenClaw 2026.4.8:
+#   openclaw cron add --name <name> --cron <expr> --agent <agent-id> \
+#                     --message <msg> --thinking <level>
+#   openclaw cron rm <uuid>          # takes UUID, not name
+#   openclaw cron list --json        # returns { jobs: [...] }
+#
+# Idempotency: look up existing job by name in list output, remove by UUID,
+# then recreate. This guarantees the cron message and schedule are always
+# current after a framework update.
 
-# Remove any existing job with this name first (idempotent).
+cron_id_by_name() {
+  # Print the UUID of the cron job with the given name, or nothing if absent.
+  openclaw cron list --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+    data = json.loads(sys.stdin.read())
+    for job in data.get('jobs', []):
+        if job.get('name') == sys.argv[1]:
+            print(job['id'])
+            break
+except Exception:
+    pass
+" "$1"
+}
+
 if [ "$DRY_RUN" -eq 1 ]; then
-  echo "[dry-run] would run: openclaw cron delete $CRON_NAME (idempotent; ok if absent)"
-else
-  openclaw cron delete "$CRON_NAME" 2>/dev/null || true
+  echo "[dry-run] would look up existing cron by name: $CRON_NAME"
+  echo "[dry-run] would run: openclaw cron rm <uuid> (if exists)"
+  echo "[dry-run] would run: openclaw cron add --name $CRON_NAME --cron \"$CADENCE\" --agent $AGENT_ID --message <watchdog-message> --thinking low"
+  echo "Installing watchdog cron: $CRON_NAME"
+  echo "  Target agent: $AGENT_ID"
+  echo "  Schedule:     $CADENCE"
+  echo "Watchdog cron would be installed for project: $PROJECT (dry-run)"
+  exit 0
+fi
+
+# Remove any existing job with this name (idempotent).
+EXISTING_ID="$(cron_id_by_name "$CRON_NAME")"
+if [ -n "$EXISTING_ID" ]; then
+  echo "Removing existing watchdog cron: $CRON_NAME (id: $EXISTING_ID)"
+  if ! openclaw cron rm "$EXISTING_ID" 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get('removed') else 1)" 2>/dev/null; then
+    echo "WARNING: failed to remove existing cron $EXISTING_ID; will attempt to create anyway" >&2
+  fi
 fi
 
 echo "Installing watchdog cron: $CRON_NAME"
 echo "  Target agent: $AGENT_ID"
 echo "  Schedule:     $CADENCE"
 
-if [ "$DRY_RUN" -eq 1 ]; then
-  echo "[dry-run] would run: openclaw cron add --name $CRON_NAME --schedule \"$CADENCE\" --agent $AGENT_ID --message <watchdog-message> --thinking low"
-  echo "Watchdog cron would be installed for project: $PROJECT (dry-run)"
-  exit 0
-fi
-
-openclaw cron add \
+ADD_OUTPUT="$(openclaw cron add \
   --name "$CRON_NAME" \
-  --schedule "$CADENCE" \
+  --cron "$CADENCE" \
   --agent "$AGENT_ID" \
   --message "$WATCHDOG_MESSAGE" \
-  --thinking low
+  --thinking low \
+  --json 2>&1)"
 
-echo "Watchdog cron installed: $CRON_NAME"
+ADD_EXIT=$?
+if [ $ADD_EXIT -ne 0 ]; then
+  echo "ERROR: failed to install watchdog cron for $PROJECT (exit $ADD_EXIT)" >&2
+  echo "$ADD_OUTPUT" >&2
+  exit 1
+fi
+
+NEW_ID="$(printf '%s' "$ADD_OUTPUT" | python3 -c "import json,sys; d=json.loads(sys.stdin.read()); print(d.get('id','?'))" 2>/dev/null || true)"
+echo "Watchdog cron installed: $CRON_NAME (id: $NEW_ID)"
 echo "  Orchestrator ($AGENT_ID) will receive watchdog nudges on schedule: $CADENCE"
 echo "  To verify: openclaw cron list | grep $CRON_NAME"
 echo "  To remove: scripts/install-project-watchdog.sh $PROJECT --disable"
