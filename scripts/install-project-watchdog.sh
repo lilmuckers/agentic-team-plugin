@@ -154,44 +154,73 @@ Steps:
    - 1: ledger error — surface to operator immediately
    - 2: overdue entries found — continue to step 2
 
-2. For each overdue task in the JSON output, check visible GitHub state first:
+2. For each overdue task, apply this classification decision tree in order:
+
+   STEP A — Check for explicit blocker in visible GitHub artifacts:
      gh issue view <task-id> --repo <owner/repo>
-     gh pr list --repo <owner/repo> --search 'head:<expected-branch>' (if a PR was expected)
+     gh pr view <pr-number> --repo <owner/repo> (if a PR number is in the ledger)
+   If the issue or PR shows an explicit blocker comment, label, or reported dependency:
+     → classify as BLOCKED (step D)
 
-   Classify the worker state and act:
+   STEP B — Check for completion artifact:
+     gh pr list --repo <owner/repo> --search 'head:<expected-branch>'
+     git log or recent commits if a branch name is known
+   If a merged PR or closed issue confirms work is done:
+     → classify as DONE-BUT-MISSED-CALLBACK (step E)
+   If recent activity (commit, PR open, comment) shows active progress:
+     → classify as IN-PROGRESS (step F)
 
-   a. DONE-BUT-MISSED-CALLBACK
-      Visible artifact confirms work is complete but no callback arrived.
-      Action: accept the implicit callback, update the task ledger to done, route the next step.
+   STEP C — Default rule for overdue owner-assigned tasks:
+   If the ledger has a named owner (builder-<project>, spec-<project>, etc.)
+   and no explicit blocker was found in step A
+   and no completion or active-progress artifact was found in step B:
 
-   b. IN-PROGRESS
-      Recent commit, PR activity, or comment trail shows the worker is still progressing.
-      Action: update ledger current_action with what you observed; extend expected_callback_at
-      by 30 minutes; no nudge needed yet.
+     → classify as STALLED
 
-   c. STALLED
-      No visible progress since the expected callback time. The worker may still be running
-      but is silent. This is NOT a true blocker — do not mark it blocked.
-      Action: dispatch a nudge to the owning agent via scripts/dispatch-named-agent.sh;
-      update ledger state to stalled and record the watchdog note in current_action.
-      If STALLED recurs on the next watchdog pass with still no visible progress, escalate
-      to the human operator and mark it blocked at that point instead.
+   Absence of visible artifact does NOT mean unknown. If a named agent owns
+   the task and has not reported back, the correct assumption is stall, not
+   an unresolvable situation. The watchdog exists precisely for this case.
 
-   d. BLOCKED
-      Worker reported an explicit external blocker in a comment or PR but the ledger was
-      not updated, OR two consecutive watchdog passes both showed STALLED.
-      Action: surface the blocker or repeated stall to the human operator; update the
-      ledger state to blocked with the specific reason; do not reassign without operator direction.
+   Only use UNKNOWN when the ledger entry itself is malformed, missing an
+   owner, or self-contradictory so that there is no safe agent to nudge.
 
-   e. UNKNOWN
-      No visible artifact, no callback, no evidence of progress.
-      Action: surface to the human operator with full task details from the ledger;
-      do not reassign silently.
+3. Act on each classification:
 
-3. After acting on each overdue task, update the ledger using scripts/update-task-ledger.py
+   D. BLOCKED
+      Evidence: explicit blocker reported in a GitHub artifact.
+      Action: surface to operator; update ledger to blocked with specific reason;
+      do not reassign without operator direction.
+
+   E. DONE-BUT-MISSED-CALLBACK
+      Evidence: merged PR or closed issue, but no callback received.
+      Action: accept implicit completion; update ledger to done; route next step.
+
+   F. IN-PROGRESS
+      Evidence: recent commit, open PR, or issue comment since last watchdog pass.
+      Action: update ledger current_action with what you observed; extend
+      expected_callback_at by 30 minutes; no nudge needed.
+
+   G. STALLED (the default for overdue owner-assigned tasks)
+      Evidence: named owner, overdue, no explicit blocker, no completion artifact.
+      This is the most common watchdog case — a worker that dispatched correctly
+      but has gone silent. It is NOT a confirmed blocker.
+      Action:
+        1. Dispatch a nudge to the owning agent via scripts/dispatch-named-agent.sh
+        2. Update ledger state to stalled; record current_action = "Watchdog nudge sent <date>"
+        3. Extend expected_callback_at by 30 minutes
+      On the next watchdog pass, if state is still stalled with no visible progress:
+        → escalate to operator and mark ledger blocked
+
+   H. UNKNOWN
+      Evidence: ledger entry is malformed, owner is missing or unresolvable,
+      or the entry is self-contradictory so there is no safe agent to nudge.
+      Action: surface to operator with the raw ledger entry; do not guess.
+
+4. After acting on each overdue task, update the ledger using scripts/update-task-ledger.py
    to reflect your assessment.
 
 Remember: this is a watchdog, not a controller. Callbacks remain the authoritative completion signal.
+The default response to a silent worker is to nudge, not to block or escalate.
 WATCHDOG_EOF
 )"
 
@@ -226,7 +255,7 @@ except Exception:
 if [ "$DRY_RUN" -eq 1 ]; then
   echo "[dry-run] would look up existing cron by name: $CRON_NAME"
   echo "[dry-run] would run: openclaw cron rm <uuid> (if exists)"
-  echo "[dry-run] would run: openclaw cron add --name $CRON_NAME --cron \"$CADENCE\" --agent $AGENT_ID --message <watchdog-message> --thinking low"
+  echo "[dry-run] would run: openclaw cron add --name $CRON_NAME --cron \"$CADENCE\" --agent $AGENT_ID --message <watchdog-message> --thinking low --channel none"
   echo "Installing watchdog cron: $CRON_NAME"
   echo "  Target agent: $AGENT_ID"
   echo "  Schedule:     $CADENCE"
@@ -253,6 +282,7 @@ ADD_OUTPUT="$(openclaw cron add \
   --agent "$AGENT_ID" \
   --message "$WATCHDOG_MESSAGE" \
   --thinking low \
+  --channel none \
   --json 2>&1)"
 
 ADD_EXIT=$?

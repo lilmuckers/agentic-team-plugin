@@ -247,15 +247,21 @@ A periodic watchdog cron (`<project>-orchestrator-watchdog`) is installed at onb
    gh pr list --repo <owner/repo> --search "head:<expected-branch>"
    ```
 
-3. **Classify the worker state and act**:
+3. **Classify the worker state and act** — apply in this order:
 
-   | Observed state | Evidence | Action |
+   First, check for an explicit blocker in the GitHub artifact (issue comment, label, PR body). If found → BLOCKED.
+
+   Then, check for a completion artifact (merged PR, closed issue, recent commit). If found → DONE-BUT-MISSED-CALLBACK or IN-PROGRESS.
+
+   If neither applies and the ledger has a named owner → **default to STALLED**. Absence of visible artifact is not grounds for UNKNOWN. The watchdog exists precisely for this case.
+
+   | State | Evidence | Action |
    |---|---|---|
-   | DONE-BUT-MISSED-CALLBACK | Visible artifact shows completion, no callback arrived | Accept implicit callback; mark ledger `done`; route next step |
-   | IN-PROGRESS | Recent commit, PR activity, or comment trail since last check | Update ledger `current_action`; extend `expected_callback_at` by 30 min |
-   | STALLED | No visible progress since expected callback time; no explicit blocker reported | Dispatch nudge to owning agent; mark ledger `stalled` with watchdog note; **do not mark `blocked`** |
-   | BLOCKED | Worker explicitly reported a blocker in an artifact, or two consecutive watchdog passes both showed STALLED | Surface to operator; mark ledger `blocked` with specific reason |
-   | UNKNOWN | No artifact, no callback, no evidence of progress | Surface to operator with full task details; do not reassign silently |
+   | DONE-BUT-MISSED-CALLBACK | Merged PR or closed issue confirms work done, no callback | Accept implicit completion; mark ledger `done`; route next step |
+   | IN-PROGRESS | Recent commit, open PR, or comment shows active work | Update ledger `current_action`; extend `expected_callback_at` 30 min; no nudge |
+   | **STALLED** (default) | Named owner, overdue, no explicit blocker, no completion artifact | Dispatch nudge to owning agent; mark ledger `stalled`; extend deadline 30 min; **do not mark `blocked`** |
+   | BLOCKED | Explicit blocker reported in GitHub artifact, OR task was `stalled` on previous pass and is still stalled | Surface to operator; mark ledger `blocked` with specific reason |
+   | UNKNOWN | Ledger entry is malformed, owner is missing/unresolvable, or entry is self-contradictory | Surface raw ledger entry to operator; do not guess a target |
 
 4. **Update the task ledger** after each decision using `scripts/update-task-ledger.py`.
 

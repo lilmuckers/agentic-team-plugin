@@ -76,6 +76,18 @@ Without `expected_callback_at`, the overdue detector skips that task. Tasks with
 | 1 | Ledger error | Surface to operator immediately |
 | 2 | Overdue entries found (JSON on stdout) | Inspect each entry, classify, act |
 
+## Classification default rule
+
+For overdue entries, Orchestrator applies this priority order:
+
+1. Explicit blocker in GitHub artifact → `BLOCKED`
+2. Completion artifact (merged PR, closed issue) → `DONE-BUT-MISSED-CALLBACK`
+3. Active progress (recent commit, open PR, comment) → `IN-PROGRESS`
+4. Named owner, no blocker, no artifact → **`STALLED`** (default)
+5. Malformed entry, missing/unresolvable owner → `UNKNOWN`
+
+Absence of visible artifact is **not** grounds for `UNKNOWN`. If a named agent owns the task and the only evidence is silence, classify as `STALLED` and nudge the owner. `UNKNOWN` is reserved for entries where the ledger itself cannot identify a safe nudge target.
+
 ## Active-hours scheduling (optional)
 
 To reduce overnight noise, set a schedule that runs only during business hours. For example, UTC business hours:
