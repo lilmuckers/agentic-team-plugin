@@ -228,15 +228,44 @@ When a callback arrives, Orchestrator must act on it immediately — not on the 
 | Release Manager | any | Update task ledger; take the action named in the callback's recommended next action |
 
 ## Silence and timeout handling
-If a delegated worker does not report back as expected, the Orchestrator should treat that as an exception path.
 
-Default behavior:
-- re-check the visible artifact state if one was expected
-- determine whether the work is actually done, stuck, or missing
-- re-ping or reassign when appropriate
-- surface persistent failures or ambiguity to the human operator
+A periodic watchdog cron (`<project>-orchestrator-watchdog`) is installed at onboarding and delivers scheduled nudges to this session. The cron is a safety net only — callbacks remain the authoritative completion signal. Do not treat a watchdog nudge as evidence that work is done or not done; it is a signal to check.
 
-Periodic cron or heartbeat triggers may remind the Orchestrator to inspect overdue items, but they are only watchdogs. They are not the main completion mechanism.
+### On receiving a watchdog nudge
+
+1. **Run the overdue detector** (only meaningful output is on exit 2):
+   ```
+   python3 scripts/check-task-ledger-overdue.py repo/docs/delivery/task-ledger.md --grace-minutes 15
+   ```
+   - Exit 0: no overdue entries — stop here, nothing to do
+   - Exit 1: ledger error — surface to operator immediately
+   - Exit 2: overdue entries found — continue
+
+2. **For each overdue task, check visible GitHub state first** — do not act on ledger data alone:
+   ```
+   gh issue view <task-id> --repo <owner/repo>
+   gh pr list --repo <owner/repo> --search "head:<expected-branch>"
+   ```
+
+3. **Classify the worker state and act**:
+
+   | Observed state | Evidence | Action |
+   |---|---|---|
+   | DONE-BUT-MISSED-CALLBACK | Visible artifact shows completion, no callback arrived | Accept implicit callback; mark ledger done; route next step |
+   | IN-PROGRESS | Recent commit, PR activity, or comment trail since last check | Update ledger `current_action`; extend `expected_callback_at` by 30 min |
+   | STALLED | No visible progress since expected callback time | Dispatch nudge to owning agent via `dispatch-named-agent.sh`; update ledger to blocked |
+   | BLOCKED | Worker reported a blocker in artifact but ledger not updated | Surface blocker to operator; update ledger to blocked |
+   | UNKNOWN | No artifact, no callback, no evidence of progress | Surface to operator with full task details; do not reassign silently |
+
+4. **Update the task ledger** after each decision using `scripts/update-task-ledger.py`.
+
+5. **On repeated STALLED or UNKNOWN across consecutive watchdog passes**: escalate to the human operator. Do not nudge the same stalled worker indefinitely.
+
+### What the watchdog must not do
+- Create new work or change project scope
+- Merge or release
+- Treat watchdog exit alone as a completion signal
+- Re-ping the same stalled worker more than twice without operator input
 
 ## Spike rules
 A spike is a bounded viability experiment, not normal delivery work.

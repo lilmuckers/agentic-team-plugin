@@ -13,6 +13,8 @@ Options:
   --dry-run             Print actions without executing them
   --no-smoke-test       Skip the swarm smoke test at the end
   --no-clone            Skip cloning the project repo into agent workspaces (use if remote not yet available)
+  --no-watchdog         Skip installing the Orchestrator watchdog cron
+  --watchdog-cadence <cron>  Override watchdog cron schedule (default: "*/30 * * * *")
 EOF
 }
 
@@ -29,17 +31,21 @@ WITH_GITHUB_SETUP=0
 DRY_RUN=0
 SMOKE_TEST=1
 DO_CLONE=1
+INSTALL_WATCHDOG=1
+WATCHDOG_CADENCE="*/30 * * * *"
 POSITIONAL=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --with-github-setup) WITH_GITHUB_SETUP=1 ;;
-    --dry-run)           DRY_RUN=1 ;;
-    --no-smoke-test)     SMOKE_TEST=0 ;;
-    --no-clone)          DO_CLONE=0 ;;
-    --remote)            shift; REMOTE="$1" ;;
-    --branch)            shift; BRANCH="$1" ;;
-    *)                   POSITIONAL+=("$1") ;;
+    --with-github-setup)   WITH_GITHUB_SETUP=1 ;;
+    --dry-run)             DRY_RUN=1 ;;
+    --no-smoke-test)       SMOKE_TEST=0 ;;
+    --no-clone)            DO_CLONE=0 ;;
+    --no-watchdog)         INSTALL_WATCHDOG=0 ;;
+    --remote)              shift; REMOTE="$1" ;;
+    --branch)              shift; BRANCH="$1" ;;
+    --watchdog-cadence)    shift; WATCHDOG_CADENCE="$1" ;;
+    *)                     POSITIONAL+=("$1") ;;
   esac
   shift
 done
@@ -194,6 +200,25 @@ echo ""
 echo "Project onboarding complete for $PROJECT"
 echo "Default repo-local git identity set to $FRAMEWORK_AGENT_PERSONA_ORCHESTRATOR (Orchestrator); switch archetypes per task as needed."
 echo ""
+
+# ── watchdog cron ─────────────────────────────────────────────────────────────
+# Install one Orchestrator-only watchdog cron per project. Only the Orchestrator
+# is watchdogged — Spec, Security, Release Manager, Builder, and QA are not.
+
+if [ "$INSTALL_WATCHDOG" -eq 1 ]; then
+  WATCHDOG_ARGS=("$PROJECT" --cadence "$WATCHDOG_CADENCE")
+  [ "$DRY_RUN" -eq 1 ] && WATCHDOG_ARGS+=(--dry-run)
+  echo ""
+  echo "Installing Orchestrator watchdog cron..."
+  if ! "$ROOT_DIR/scripts/install-project-watchdog.sh" "${WATCHDOG_ARGS[@]}"; then
+    echo "WARNING: watchdog cron installation failed. Orchestrator will not receive periodic nudges." >&2
+    echo "         Re-run: scripts/install-project-watchdog.sh $PROJECT" >&2
+    echo "         or use --no-watchdog to skip this step." >&2
+  fi
+else
+  echo ""
+  echo "Skipping watchdog cron (--no-watchdog). Run scripts/install-project-watchdog.sh $PROJECT when ready."
+fi
 
 # ── smoke test ────────────────────────────────────────────────────────────────
 

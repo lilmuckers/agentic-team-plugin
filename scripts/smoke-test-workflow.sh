@@ -535,6 +535,91 @@ run_check "clone-agent-project-repo idempotent (existing checkout exits 0)" \
   --project smoke --agent builder --remote "https://example.com/repo.git" \
   --workspace-root "$CL_EXISTING_ROOT"
 
+# ── watchdog cron ─────────────────────────────────────────────────────────────
+
+# 16. install-project-watchdog: missing required args → exits non-zero
+if "$ROOT_DIR/scripts/install-project-watchdog.sh" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  install-project-watchdog.sh should require <project> argument")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  install-project-watchdog.sh enforces required <project> argument")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 17. install-project-watchdog: unknown option → exits non-zero
+if "$ROOT_DIR/scripts/install-project-watchdog.sh" smoke --bogus-flag >/dev/null 2>&1; then
+  RESULTS+=("FAIL  install-project-watchdog.sh should reject unknown options")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  install-project-watchdog.sh rejects unknown options")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 18. install-project-watchdog: dry-run mode exits 0 and prints expected output
+WD_DRY_OUT="$TMPDIR_BASE/watchdog-dry.txt"
+if "$ROOT_DIR/scripts/install-project-watchdog.sh" smoke --dry-run >"$WD_DRY_OUT" 2>&1; then
+  if grep -q "orchestrator-smoke" "$WD_DRY_OUT" && grep -q "dry-run" "$WD_DRY_OUT"; then
+    RESULTS+=("PASS  install-project-watchdog.sh dry-run exits 0 and identifies correct agent")
+    PASS=$(( PASS + 1 ))
+  else
+    RESULTS+=("FAIL  install-project-watchdog.sh dry-run output missing expected agent id or dry-run marker")
+    FAIL=$(( FAIL + 1 ))
+  fi
+else
+  RESULTS+=("FAIL  install-project-watchdog.sh dry-run exited non-zero")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 19. install-project-watchdog: --disable dry-run exits 0
+if "$ROOT_DIR/scripts/install-project-watchdog.sh" smoke --disable --dry-run >/dev/null 2>&1; then
+  RESULTS+=("PASS  install-project-watchdog.sh --disable --dry-run exits 0")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  install-project-watchdog.sh --disable --dry-run exited non-zero")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 20. check-task-ledger-overdue: no overdue entries exits 0 (use a ledger with no tasks)
+EMPTY_LEDGER="$TMPDIR_BASE/empty-ledger.md"
+printf '# Task Ledger\n\nNo tasks yet.\n' > "$EMPTY_LEDGER"
+if python3 "$ROOT_DIR/scripts/check-task-ledger-overdue.py" "$EMPTY_LEDGER" >/dev/null 2>&1; then
+  RESULTS+=("PASS  check-task-ledger-overdue exits 0 for ledger with no overdue entries")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  check-task-ledger-overdue unexpectedly exited non-zero for empty ledger")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 21. check-task-ledger-overdue: overdue entry exits 2 with JSON
+OVERDUE_LEDGER="$TMPDIR_BASE/overdue-ledger.md"
+cat > "$OVERDUE_LEDGER" <<'MD'
+# Task Ledger
+
+## Task issue-77 - Stalled feature
+
+```json
+{
+  "task": "issue-77",
+  "state": "in_progress",
+  "owner": "builder-smoke",
+  "expected_callback_at": "2020-01-01T00:00:00Z",
+  "current_action": "Builder implementing",
+  "next_action": "QA review"
+}
+```
+MD
+OVERDUE_EXIT=0
+OVERDUE_OUT="$TMPDIR_BASE/overdue-out.txt"
+python3 "$ROOT_DIR/scripts/check-task-ledger-overdue.py" "$OVERDUE_LEDGER" \
+  >"$OVERDUE_OUT" 2>&1 || OVERDUE_EXIT=$?
+if [ "$OVERDUE_EXIT" -eq 2 ] && grep -q '"task"' "$OVERDUE_OUT"; then
+  RESULTS+=("PASS  check-task-ledger-overdue exits 2 and emits JSON for overdue task")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  check-task-ledger-overdue did not exit 2 or emit JSON for overdue task (exit=$OVERDUE_EXIT)")
+  FAIL=$(( FAIL + 1 ))
+fi
+
 # ── post-approval execution sequence ─────────────────────────────────────────
 # These tests prove the toolchain supporting the 7-step post-approval sequence:
 # merge → verify → sync → close issue → identify next → dispatch → report status

@@ -97,3 +97,4 @@ scripts/*
 !scripts/send-agent-callback.sh
 !scripts/sync-agent-repo.sh
 !scripts/validate-qa-scope.py
+!scripts/install-project-watchdog.sh

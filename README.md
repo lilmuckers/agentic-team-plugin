@@ -103,19 +103,26 @@ This:
 
 After this runs, the six archetype workspaces (`workspace-orchestrator`, `workspace-spec`, `workspace-security`, `workspace-release-manager`, `workspace-builder`, `workspace-qa`) are populated under your OpenClaw workspace root.
 
-### 2.2 Set up the OpenClaw watchdog cron
+### 2.2 Watchdog cron
 
-Register a native OpenClaw cron job to keep persistent agents ticking:
+`scripts/onboard-project.sh` installs one Orchestrator-only watchdog cron per project automatically. No manual setup is needed.
 
+Only `orchestrator-<project>` is watchdogged. Spec, Security, Release Manager, Builder, and QA are not given separate crons — the Orchestrator owns all follow-through coordination and nudges other agents when needed.
+
+To install or update the watchdog manually:
+
+```bash
+scripts/install-project-watchdog.sh <project>                            # default 30-min cadence
+scripts/install-project-watchdog.sh <project> --cadence "*/15 * * * *"  # faster cadence
+scripts/install-project-watchdog.sh <project> --disable                  # remove it
 ```
-openclaw cron add --schedule "*/30 * * * *" \
-  --agent orchestrator \
-  --message "Heartbeat: review the task ledger and update current_action if anything has changed."
+
+Verify it is installed:
+```bash
+openclaw cron list | grep <project>-orchestrator-watchdog
 ```
 
-Repeat for `spec`, `security`, and `release-manager`. Builder and QA are ephemeral — they are spawned per task, not scheduled.
-
-The 30-minute cadence is the recommended baseline. Adjust per project load.
+The watchdog is a safety net for missed callbacks and stalled sessions — not the primary completion mechanism. See `docs/delivery/openclaw-cron-watchdog.md` for full details.
 
 ### 2.3 Session topology
 

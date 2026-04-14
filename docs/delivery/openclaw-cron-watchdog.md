@@ -1,70 +1,91 @@
-# OpenClaw Cron Watchdog
+# Orchestrator Watchdog Cron
 
-Use native OpenClaw cron to detect overdue callbacks from the task ledger and nudge the persistent Orchestrator session.
+One watchdog cron job is installed per project at onboarding time, targeting only the project Orchestrator. No separate crons are created for Spec, Security, Release Manager, Builder, or QA — those agents are either ephemeral or receive their nudges from the Orchestrator itself.
 
-This is a watchdog only. Normal completion still depends on explicit callbacks.
+## What it does
 
-## Inputs
+The watchdog delivers a periodic nudge to `orchestrator-<project>` instructing it to:
 
-- Ledger file: `docs/delivery/task-ledger.md`
-- Overdue detector: `scripts/check-task-ledger-overdue.py`
-- Target session: `session:<project>-orchestrator`
+1. Run `scripts/check-task-ledger-overdue.py` to find in-flight tasks with overdue callbacks
+2. Check visible GitHub artifact state for each overdue task
+3. Classify the worker state (done-but-missed-callback / in-progress / stalled / blocked / unknown)
+4. Take the appropriate action (accept implicit callback / extend window / nudge worker / escalate)
+5. Update the task ledger to reflect the assessment
 
-This stays routed to Orchestrator even when the overdue owner is Security or Release Manager. Orchestrator owns watchdog follow-through across top-level roles.
+The watchdog is **not** the primary completion mechanism. Explicit callbacks from workers via `scripts/send-agent-callback.sh` remain authoritative. The cron exists only to catch missed callbacks, stalled sessions, and overdue in-flight work.
 
-## Ledger expectation
+## Installation
 
-When Orchestrator delegates work that expects a callback, record:
+`scripts/onboard-project.sh` installs the watchdog automatically unless `--no-watchdog` is passed. To install or update manually:
+
+```bash
+scripts/install-project-watchdog.sh <project>
+scripts/install-project-watchdog.sh <project> --cadence "*/15 * * * *"
+```
+
+To verify the cron is installed:
+```bash
+openclaw cron list | grep <project>-orchestrator-watchdog
+```
+
+To remove it:
+```bash
+scripts/install-project-watchdog.sh <project> --disable
+```
+
+## Cron properties
+
+| Property | Value |
+|----------|-------|
+| Cron name | `<project>-orchestrator-watchdog` |
+| Target agent | `orchestrator-<project>` |
+| Default schedule | `*/30 * * * *` (every 30 minutes) |
+| Thinking level | `low` (watchdog check, not implementation) |
+
+The cron name is project-scoped so multiple projects can coexist in the same OpenClaw instance without collision.
+
+## Idempotency
+
+`install-project-watchdog.sh` removes any existing cron with the same name before recreating it. Re-running onboarding or changing the cadence does not accumulate duplicate jobs.
+
+## Task ledger integration
+
+When Orchestrator delegates work that expects a callback, it should record:
 
 - `owner` — the accountable named agent
 - `expected_callback_at` — the latest acceptable callback timestamp in UTC
 
-Example update:
-
+Example:
 ```bash
-scripts/update-task-ledger.py docs/delivery/task-ledger.md ISSUE-42 "Implement login" in_progress \
+scripts/update-task-ledger.py repo/docs/delivery/task-ledger.md \
+  ISSUE-42 "Implement login" in_progress \
   "Builder implementing login flow" \
   "QA review after PR is opened" \
-  --owner builder-my-project \
-  --expected-callback-at 2026-04-09T14:30:00Z \
+  --owner builder-<project> \
+  --expected-callback-at 2026-04-14T14:30:00Z \
   --history-action "Delegated to Builder"
 ```
 
-## Suggested cron cadence
+Without `expected_callback_at`, the overdue detector skips that task. Tasks without a callback deadline are not watchdogged.
 
-Every 30 minutes during active delivery hours.
+## Overdue detector exit codes
 
-## Suggested OpenClaw cron action
+| Exit | Meaning | Orchestrator action |
+|------|---------|---------------------|
+| 0 | No overdue entries | Stop — nothing to do |
+| 1 | Ledger error | Surface to operator immediately |
+| 2 | Overdue entries found (JSON on stdout) | Inspect each entry, classify, act |
 
-Run a command equivalent to:
+## Active-hours scheduling (optional)
+
+To reduce overnight noise, set a schedule that runs only during business hours. For example, UTC business hours:
 
 ```bash
-python3 /data/.openclaw/workspace/scripts/check-task-ledger-overdue.py \
-  /data/.openclaw/workspace/docs/delivery/task-ledger.md \
-  --grace-minutes 15
+scripts/install-project-watchdog.sh <project> --cadence "*/30 8-20 * * 1-5"
 ```
 
-Interpretation:
-- exit `0` — no overdue entries
-- exit `2` — overdue entries found; send the JSON payload to the Orchestrator session as the watchdog nudge
-- exit `1` — configuration or ledger error; surface to the operator
+Adjust the hours and days to match your operator timezone (set in `config/framework.yaml`).
 
-## Nudge payload guidance
+## Repeated stalls
 
-When overdue work is found, the cron-triggered message to Orchestrator should include:
-
-1. task id
-2. owning agent
-3. state
-4. expected callback timestamp
-5. overdue duration in minutes
-6. current action / next action from the ledger
-
-## Orchestrator follow-through
-
-On receiving a watchdog nudge, Orchestrator should:
-
-1. inspect the linked visible artifact state first
-2. determine whether the work is actually done, blocked, or missing
-3. re-ping or reassign if needed
-4. surface persistent ambiguity or failure to the human
+If the same task appears as STALLED or UNKNOWN across consecutive watchdog passes, Orchestrator must escalate to the human operator rather than re-pinging the worker indefinitely. Two consecutive nudges without progress is the threshold for escalation.
