@@ -121,7 +121,8 @@ fi
 # It instructs Orchestrator to run the overdue detector and follow up on any
 # stalled work. It must not create new tasks or change scope.
 
-WATCHDOG_MESSAGE="Watchdog heartbeat for project: ${PROJECT}.
+WATCHDOG_MESSAGE="$(cat <<WATCHDOG_EOF
+Watchdog heartbeat for project: ${PROJECT}.
 
 This is an automated check — not a new request. Inspect in-flight work for missed callbacks or stalls.
 
@@ -139,39 +140,44 @@ Steps:
 
 2. For each overdue task in the JSON output, check visible GitHub state first:
      gh issue view <task-id> --repo <owner/repo>
-     gh pr list --repo <owner/repo> --search \"head:<expected-branch>\" (if a PR was expected)
+     gh pr list --repo <owner/repo> --search 'head:<expected-branch>' (if a PR was expected)
 
    Classify the worker state and act:
 
    a. DONE-BUT-MISSED-CALLBACK
       Visible artifact confirms work is complete but no callback arrived.
-      → Accept the implicit callback, update the task ledger to done, route the next step.
+      Action: accept the implicit callback, update the task ledger to done, route the next step.
 
    b. IN-PROGRESS
       Recent commit, PR activity, or comment trail shows the worker is still progressing.
-      → Update ledger current_action with what you observed.
-      → Extend expected_callback_at by 30 minutes.
-      → No nudge needed yet.
+      Action: update ledger current_action with what you observed; extend expected_callback_at
+      by 30 minutes; no nudge needed yet.
 
    c. STALLED
-      No visible progress since the expected callback time.
-      → Dispatch a nudge to the owning agent:
-        scripts/dispatch-named-agent.sh ${PROJECT} <archetype> <nudge-task-file>
-      → Update ledger: state = blocked, reason = watchdog stall detected.
+      No visible progress since the expected callback time. The worker may still be running
+      but is silent. This is NOT a true blocker — do not mark it blocked.
+      Action: dispatch a nudge to the owning agent via scripts/dispatch-named-agent.sh;
+      update ledger state to stalled and record the watchdog note in current_action.
+      If STALLED recurs on the next watchdog pass with still no visible progress, escalate
+      to the human operator and mark it blocked at that point instead.
 
    d. BLOCKED
-      Worker reported a blocker in a comment or PR but the ledger was not updated.
-      → Surface the blocker to the human operator.
-      → Update the ledger to reflect the blockage.
+      Worker reported an explicit external blocker in a comment or PR but the ledger was
+      not updated, OR two consecutive watchdog passes both showed STALLED.
+      Action: surface the blocker or repeated stall to the human operator; update the
+      ledger state to blocked with the specific reason; do not reassign without operator direction.
 
    e. UNKNOWN
       No visible artifact, no callback, no evidence of progress.
-      → Surface to the human operator with full task details from the ledger.
-      → Do not reassign silently.
+      Action: surface to the human operator with full task details from the ledger;
+      do not reassign silently.
 
-3. After acting on each overdue task, update scripts/update-task-ledger.py to reflect your assessment.
+3. After acting on each overdue task, update the ledger using scripts/update-task-ledger.py
+   to reflect your assessment.
 
-Remember: this is a watchdog, not a controller. Callbacks remain the authoritative completion signal."
+Remember: this is a watchdog, not a controller. Callbacks remain the authoritative completion signal.
+WATCHDOG_EOF
+)"
 
 # ── install cron ──────────────────────────────────────────────────────────────
 

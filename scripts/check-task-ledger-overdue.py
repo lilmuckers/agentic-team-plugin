@@ -8,7 +8,7 @@ from pathlib import Path
 
 ENTRY_RE = re.compile(r"^##\s+Task\s+(.+?)\s*$", re.MULTILINE)
 JSON_BLOCK_RE = re.compile(r"```json\n(.*?)\n```", re.DOTALL)
-ACTIVE_STATES = {"queued", "in_progress", "blocked", "needs_review"}
+ACTIVE_STATES = {"queued", "in_progress", "stalled", "blocked", "needs_review"}
 
 
 def parse_iso8601(value: str) -> datetime:

@@ -7,7 +7,7 @@ import re
 
 ENTRY_RE = re.compile(r"(^##\s+Task\s+.+?$)(.*?)(?=^##\s+Task\s+.+?$|\Z)", re.MULTILINE | re.DOTALL)
 JSON_BLOCK_RE = re.compile(r"```json\n(.*?)\n```", re.DOTALL)
-ALLOWED_STATES = {"queued", "in_progress", "blocked", "needs_review", "done"}
+ALLOWED_STATES = {"queued", "in_progress", "stalled", "blocked", "needs_review", "done"}
 
 
 def render_entry(task_id: str, title: str, payload: dict) -> str:

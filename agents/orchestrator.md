@@ -251,15 +251,15 @@ A periodic watchdog cron (`<project>-orchestrator-watchdog`) is installed at onb
 
    | Observed state | Evidence | Action |
    |---|---|---|
-   | DONE-BUT-MISSED-CALLBACK | Visible artifact shows completion, no callback arrived | Accept implicit callback; mark ledger done; route next step |
+   | DONE-BUT-MISSED-CALLBACK | Visible artifact shows completion, no callback arrived | Accept implicit callback; mark ledger `done`; route next step |
    | IN-PROGRESS | Recent commit, PR activity, or comment trail since last check | Update ledger `current_action`; extend `expected_callback_at` by 30 min |
-   | STALLED | No visible progress since expected callback time | Dispatch nudge to owning agent via `dispatch-named-agent.sh`; update ledger to blocked |
-   | BLOCKED | Worker reported a blocker in artifact but ledger not updated | Surface blocker to operator; update ledger to blocked |
+   | STALLED | No visible progress since expected callback time; no explicit blocker reported | Dispatch nudge to owning agent; mark ledger `stalled` with watchdog note; **do not mark `blocked`** |
+   | BLOCKED | Worker explicitly reported a blocker in an artifact, or two consecutive watchdog passes both showed STALLED | Surface to operator; mark ledger `blocked` with specific reason |
    | UNKNOWN | No artifact, no callback, no evidence of progress | Surface to operator with full task details; do not reassign silently |
 
 4. **Update the task ledger** after each decision using `scripts/update-task-ledger.py`.
 
-5. **On repeated STALLED or UNKNOWN across consecutive watchdog passes**: escalate to the human operator. Do not nudge the same stalled worker indefinitely.
+5. **On repeated STALLED across consecutive watchdog passes**: after two consecutive passes showing STALLED with no visible progress, stop nudging, mark the task `blocked`, and escalate to the human operator. Do not nudge the same worker a third time without operator input.
 
 ### What the watchdog must not do
 - Create new work or change project scope

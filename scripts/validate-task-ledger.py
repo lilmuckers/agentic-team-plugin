@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 REQUIRED_FIELDS = {"task", "state", "current_action", "next_action", "history"}
-ALLOWED_STATES = {"queued", "in_progress", "blocked", "needs_review", "done"}
+ALLOWED_STATES = {"queued", "in_progress", "stalled", "blocked", "needs_review", "done"}
 ENTRY_HEADING_RE = re.compile(r"^##\s+Task\s+(.+?)\s*$", re.MULTILINE)
 JSON_BLOCK_RE = re.compile(r"```json\n(.*?)\n```", re.DOTALL)
 
