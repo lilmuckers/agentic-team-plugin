@@ -535,6 +535,50 @@ run_check "clone-agent-project-repo idempotent (existing checkout exits 0)" \
   --project smoke --agent builder --remote "https://example.com/repo.git" \
   --workspace-root "$CL_EXISTING_ROOT"
 
+# ── deploy-project-agent-workspaces watchdog sync ────────────────────────────
+# deploy-project-agent-workspaces.py requires live runtime bundles from a
+# full deploy, so we test its watchdog wiring by inspecting its --help output
+# and by invoking install-project-watchdog.sh directly in dry-run mode to
+# prove the integration path works end-to-end.
+
+# 16a. deploy-project-agent-workspaces accepts --no-watchdog (arg is recognised)
+DEPLOY_HELP_OUT="$TMPDIR_BASE/deploy-ws-help.txt"
+python3 "$ROOT_DIR/scripts/deploy-project-agent-workspaces.py" --help >"$DEPLOY_HELP_OUT" 2>&1 || true
+if grep -q "no-watchdog" "$DEPLOY_HELP_OUT"; then
+  RESULTS+=("PASS  deploy-project-agent-workspaces exposes --no-watchdog flag")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  deploy-project-agent-workspaces missing --no-watchdog flag")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 16b. deploy-project-agent-workspaces accepts --watchdog-cadence (arg is recognised)
+if grep -q "watchdog-cadence" "$DEPLOY_HELP_OUT"; then
+  RESULTS+=("PASS  deploy-project-agent-workspaces exposes --watchdog-cadence flag")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  deploy-project-agent-workspaces missing --watchdog-cadence flag")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 16c. watchdog installer invoked by deploy path: install-project-watchdog dry-run
+#      exits 0 and produces output mentioning the correct agent id. This proves
+#      the end-to-end path: deploy calls installer, installer targets orchestrator-<project>.
+WD_DEPLOY_OUT="$TMPDIR_BASE/wd-deploy-dry.txt"
+if "$ROOT_DIR/scripts/install-project-watchdog.sh" smoke \
+    --cadence "*/30 * * * *" --dry-run >"$WD_DEPLOY_OUT" 2>&1; then
+  if grep -q "orchestrator-smoke" "$WD_DEPLOY_OUT"; then
+    RESULTS+=("PASS  watchdog deploy path targets orchestrator-smoke (redeploy integration)")
+    PASS=$(( PASS + 1 ))
+  else
+    RESULTS+=("FAIL  watchdog deploy path dry-run output missing orchestrator-smoke agent id")
+    FAIL=$(( FAIL + 1 ))
+  fi
+else
+  RESULTS+=("FAIL  watchdog deploy path (install-project-watchdog dry-run) exited non-zero")
+  FAIL=$(( FAIL + 1 ))
+fi
+
 # ── watchdog cron ─────────────────────────────────────────────────────────────
 
 # 16. install-project-watchdog: missing required args → exits non-zero

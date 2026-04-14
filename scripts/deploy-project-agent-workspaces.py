@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
@@ -82,6 +83,8 @@ def main():
     parser.add_argument('--project', required=True)
     parser.add_argument('--workspace-root', default=config.workspace_root)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--no-watchdog', action='store_true', help='Skip watchdog cron sync')
+    parser.add_argument('--watchdog-cadence', default='', help='Override watchdog cron schedule (default: "*/30 * * * *")')
     args = parser.parse_args()
 
     project = args.project.strip().lower().replace(' ', '-').replace('_', '-')
@@ -112,6 +115,42 @@ def main():
         for name, content in files.items():
             workspace.joinpath(name).write_text(content)
         print(f'Deployed project-scoped workspace bootstrap into {workspace}')
+
+    # ── watchdog cron sync ────────────────────────────────────────────────────
+    # Re-run install-project-watchdog.sh on every project deploy so the cron
+    # stays in sync with current framework expectations. The script is idempotent
+    # (delete-then-recreate), so this never creates duplicates.
+
+    if not args.no_watchdog:
+        root = Path(__file__).resolve().parent.parent
+        installer = root / 'scripts' / 'install-project-watchdog.sh'
+
+        cmd = [str(installer), project]
+        if args.watchdog_cadence:
+            cmd += ['--cadence', args.watchdog_cadence]
+        if args.dry_run:
+            cmd.append('--dry-run')
+
+        if args.dry_run:
+            print(f'[dry-run] would run: {" ".join(cmd)}')
+        else:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode == 0:
+                # Print the last non-empty line from the installer as a concise status.
+                lines = [l for l in result.stdout.splitlines() if l.strip()]
+                status = lines[-1] if lines else 'watchdog installed'
+                print(f'Watchdog cron synced for {project}: {status}')
+            else:
+                print(
+                    f'WARNING: watchdog cron sync failed for project {project} '
+                    f'(exit {result.returncode}). '
+                    f'Re-run: scripts/install-project-watchdog.sh {project}',
+                    file=sys.stderr,
+                )
+                if result.stderr.strip():
+                    print(result.stderr.strip(), file=sys.stderr)
+    else:
+        print(f'Watchdog cron sync skipped for {project} (--no-watchdog)')
 
 
 if __name__ == '__main__':

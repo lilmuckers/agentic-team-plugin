@@ -165,6 +165,30 @@ printf '%s %s\n' "$SHA" "$TS" > "$STAMP_FILE"
 "$NAMED_AGENT_DEPLOY"
 "$WORKSPACE_BOOTSTRAP_DEPLOY" --force
 
+# ── project workspace redeploy (idempotent) ───────────────────────────────────
+# Discover active projects from workspace dirs named workspace-orchestrator-<project>.
+# For each discovered project, redeploy managed bootstrap files AND sync the
+# watchdog cron so cron semantics stay current after a framework update.
+# Projects with no orchestrator workspace are skipped (not yet onboarded).
+
+DEPLOY_PROJECT_WORKSPACES="$ROOT_DIR/scripts/deploy-project-agent-workspaces.py"
+if [ -d "$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT" ]; then
+  while IFS= read -r -d '' ws_dir; do
+    ws_name="$(basename "$ws_dir")"
+    # Extract project slug: workspace-orchestrator-<project>
+    project_slug="${ws_name#workspace-orchestrator-}"
+    if [ -z "$project_slug" ] || [ "$project_slug" = "$ws_name" ]; then
+      continue
+    fi
+    echo "Re-deploying project workspace and watchdog cron for: $project_slug"
+    if ! python3 "$DEPLOY_PROJECT_WORKSPACES" --project "$project_slug"; then
+      echo "WARNING: project workspace redeploy failed for $project_slug" >&2
+    fi
+  done < <(find "$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT" -maxdepth 1 -type d -name 'workspace-orchestrator-*' -print0 2>/dev/null)
+else
+  echo "OpenClaw workspace root not found ($FRAMEWORK_OPENCLAW_WORKSPACE_ROOT); skipping project workspace redeploy."
+fi
+
 cat > "$META_FILE" <<EOF
 sha=$SHA
 branch=$BRANCH
