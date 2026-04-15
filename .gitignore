@@ -98,3 +98,4 @@ scripts/*
 !scripts/sync-agent-repo.sh
 !scripts/validate-qa-scope.py
 !scripts/install-project-watchdog.sh
+!scripts/prime-named-agent-sessions.sh

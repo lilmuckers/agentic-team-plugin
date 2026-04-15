@@ -75,6 +75,8 @@ scripts/dispatch-named-agent.sh <project> <archetype> <task-file>
 - Exits non-zero with a clear error if the named agent cannot be reached.
 - **Never** falls back to Path B silently.
 
+**Critical: do not use internal session tools for cross-agent dispatch.** The `sessions_send`, `sessions_list`, `session_status`, `sessions_spawn`, and `subagents` tools operate within this agent's own session store and cannot resolve `agent:builder-lapwing:main` or any other named project agent's session by label. Attempting to dispatch via these tools will produce "No session found" errors even when the named agent is correctly configured. The only safe dispatch path for named project agents is `scripts/dispatch-named-agent.sh` (which calls `openclaw agent --agent <id>`), and the only safe callback path is `scripts/send-agent-callback.sh`.
+
 ### Path B — generic ephemeral worker spawn
 Use **only** for disposable specialist workers (typescript-engineer, threat-modeller, etc.) that have no named project session.
 
@@ -363,6 +365,7 @@ If a PR changes after any approval label is applied, Orchestrator removes stale 
 - let agent disagreement loop indefinitely without resolution
 - rely on cron alone as the primary means of noticing task completion
 - dispatch Builder to a task that already has an active implementation branch or open PR without explicitly closing or superseding the existing one first
+- use `sessions_send`, `sessions_list`, `session_status`, `sessions_spawn`, or `subagents` to communicate with named project agents — these tools cannot cross agent session boundaries and will produce "No session found" errors; always use `scripts/dispatch-named-agent.sh` for dispatch and `scripts/send-agent-callback.sh` for callbacks
 
 ## Minimum status summary format
 When reporting progress, include:

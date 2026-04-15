@@ -10,11 +10,13 @@ The Orchestrator has two distinct, non-interchangeable dispatch paths. Using the
 
 Use this for every project-scoped named agent: `spec-<project>`, `builder-<project>`, `qa-<project>`, `security-<project>`, `release-manager-<project>`.
 
-- Sends work directly into the **existing** named-agent session.
+- Sends work directly into the **existing** named-agent session via `openclaw agent --agent <id>`.
 - Routes by **agent name only** — no synthetic `--session-id` unless a `task-suffix` is explicitly provided for task isolation. OpenClaw resolves the agent's live session by agent name internally. Forcing a synthetic session id can miss the real running session.
 - Does **not** spawn a new session or thread.
 - Fails with a clear error and non-zero exit if the named agent is unavailable.
 - **Never** falls back to a generic sub-agent. Surface unavailability as a blocker.
+
+**Do NOT use internal session tools for named-agent dispatch.** The `sessions_send`, `sessions_list`, `session_status`, `sessions_spawn`, and `subagents` tools operate within this agent's own session store and cannot cross agent session boundaries. Using them to dispatch to `builder-lapwing` or receive callbacks from `orchestrator-lapwing` will produce "No session found with label: ..." errors even when the target agent is correctly configured. These tools are for intra-session work only.
 
 ```bash
 scripts/dispatch-named-agent.sh <project> <archetype> <task-file> [task-suffix] [thinking]

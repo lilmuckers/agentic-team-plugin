@@ -171,6 +171,7 @@ required_exec=(
   "scripts/sync-agent-repo.sh"
   "scripts/scaffold-project-repo.sh"
   "scripts/install-project-watchdog.sh"
+  "scripts/prime-named-agent-sessions.sh"
 )
 
 for rel in "${required_exec[@]}"; do

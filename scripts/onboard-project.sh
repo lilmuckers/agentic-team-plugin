@@ -201,6 +201,20 @@ echo "Project onboarding complete for $PROJECT"
 echo "Default repo-local git identity set to $FRAMEWORK_AGENT_PERSONA_ORCHESTRATOR (Orchestrator); switch archetypes per task as needed."
 echo ""
 
+# ── prime named-agent sessions ────────────────────────────────────────────────
+# Establish agent:X-<project>:main sessions for all six named agents so that
+# internal session tooling can resolve them. Dispatch via dispatch-named-agent.sh
+# always works regardless, but priming removes "No session found" errors if an
+# agent tries to use internal session tools.
+
+echo ""
+echo "Priming named-agent sessions..."
+PRIME_ARGS=("$PROJECT")
+[ "$DRY_RUN" -eq 1 ] && PRIME_ARGS+=(--dry-run)
+if ! "$ROOT_DIR/scripts/prime-named-agent-sessions.sh" "${PRIME_ARGS[@]}"; then
+  echo "WARNING: session priming failed for some agents. Dispatch will still work via dispatch-named-agent.sh." >&2
+fi
+
 # ── watchdog cron ─────────────────────────────────────────────────────────────
 # Install one Orchestrator-only watchdog cron per project. Only the Orchestrator
 # is watchdogged — Spec, Security, Release Manager, Builder, and QA are not.

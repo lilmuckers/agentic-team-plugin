@@ -85,6 +85,7 @@ def main():
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--no-watchdog', action='store_true', help='Skip watchdog cron sync')
     parser.add_argument('--watchdog-cadence', default='', help='Override watchdog cron schedule (default: "*/30 * * * *")')
+    parser.add_argument('--no-prime', action='store_true', help='Skip named-agent session priming')
     args = parser.parse_args()
 
     project = args.project.strip().lower().replace(' ', '-').replace('_', '-')
@@ -151,6 +152,36 @@ def main():
                     print(result.stderr.strip(), file=sys.stderr)
     else:
         print(f'Watchdog cron sync skipped for {project} (--no-watchdog)')
+
+    # ── session priming ───────────────────────────────────────────────────────
+    # Establish agent:<id>:main sessions for all named project agents so that
+    # internal session tools can resolve them. Dispatch via dispatch-named-agent.sh
+    # always works regardless, but priming removes "No session found" errors.
+
+    if not args.no_prime:
+        primer = root / 'scripts' / 'prime-named-agent-sessions.sh'
+
+        cmd = [str(primer), project]
+        if args.dry_run:
+            cmd.append('--dry-run')
+
+        if args.dry_run:
+            print(f'[dry-run] would run: {" ".join(cmd)}')
+        else:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode == 0:
+                lines = [l for l in result.stdout.splitlines() if l.strip()]
+                status = lines[-1] if lines else 'sessions primed'
+                print(f'Named-agent sessions primed for {project}: {status}')
+            else:
+                print(
+                    f'WARNING: session priming failed for project {project} '
+                    f'(exit {result.returncode}). '
+                    f'Dispatch via dispatch-named-agent.sh still works.',
+                    file=sys.stderr,
+                )
+    else:
+        print(f'Session priming skipped for {project} (--no-prime)')
 
 
 if __name__ == '__main__':

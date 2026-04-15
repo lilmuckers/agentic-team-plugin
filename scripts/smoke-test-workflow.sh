@@ -535,6 +535,49 @@ run_check "clone-agent-project-repo idempotent (existing checkout exits 0)" \
   --project smoke --agent builder --remote "https://example.com/repo.git" \
   --workspace-root "$CL_EXISTING_ROOT"
 
+# ── named-agent session priming ───────────────────────────────────────────────
+
+# 16a. prime-named-agent-sessions: missing required args → exits non-zero
+if "$ROOT_DIR/scripts/prime-named-agent-sessions.sh" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  prime-named-agent-sessions.sh should require <project> argument")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  prime-named-agent-sessions.sh enforces required <project> argument")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 16b. prime-named-agent-sessions: dry-run exits 0 and mentions all six agent ids
+PRIME_DRY_OUT="$TMPDIR_BASE/prime-dry.txt"
+if "$ROOT_DIR/scripts/prime-named-agent-sessions.sh" smoke --dry-run >"$PRIME_DRY_OUT" 2>&1; then
+  MISSING_AGENTS=0
+  for arch in orchestrator spec security release-manager builder qa; do
+    if ! grep -q "${arch}-smoke" "$PRIME_DRY_OUT"; then
+      MISSING_AGENTS=$(( MISSING_AGENTS + 1 ))
+    fi
+  done
+  if [ "$MISSING_AGENTS" -eq 0 ]; then
+    RESULTS+=("PASS  prime-named-agent-sessions.sh dry-run covers all six agent ids")
+    PASS=$(( PASS + 1 ))
+  else
+    RESULTS+=("FAIL  prime-named-agent-sessions.sh dry-run missing $MISSING_AGENTS agent id(s)")
+    FAIL=$(( FAIL + 1 ))
+  fi
+else
+  RESULTS+=("FAIL  prime-named-agent-sessions.sh --dry-run exited non-zero")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 16c. deploy-project-agent-workspaces exposes --no-prime flag
+DEPLOY_HELP_PRIME="$TMPDIR_BASE/deploy-help-prime.txt"
+python3 "$ROOT_DIR/scripts/deploy-project-agent-workspaces.py" --help >"$DEPLOY_HELP_PRIME" 2>&1 || true
+if grep -q "no-prime" "$DEPLOY_HELP_PRIME"; then
+  RESULTS+=("PASS  deploy-project-agent-workspaces exposes --no-prime flag")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  deploy-project-agent-workspaces missing --no-prime flag")
+  FAIL=$(( FAIL + 1 ))
+fi
+
 # ── deploy-project-agent-workspaces watchdog sync ────────────────────────────
 # deploy-project-agent-workspaces.py requires live runtime bundles from a
 # full deploy, so we test its watchdog wiring by inspecting its --help output
