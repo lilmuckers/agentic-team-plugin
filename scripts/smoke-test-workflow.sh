@@ -815,6 +815,38 @@ else
   PASS=$(( PASS + 1 ))
 fi
 
+# ── orchestrator release-manager role boundary ────────────────────────────────
+
+# 17a. orchestrator.md must contain a "Route to Release Manager when" section
+if grep -q "Route to Release Manager when" "$ROOT_DIR/agents/orchestrator.md"; then
+  RESULTS+=("PASS  orchestrator.md contains 'Route to Release Manager when' routing section")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  orchestrator.md missing 'Route to Release Manager when' routing section (role boundary not defined)")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 17b. orchestrator.md must-not-do section explicitly forbids performing release duties directly
+if grep -q "perform release-manager duties directly" "$ROOT_DIR/agents/orchestrator.md"; then
+  RESULTS+=("PASS  orchestrator.md must-not-do forbids performing release-manager duties directly")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  orchestrator.md must-not-do missing release-manager bypass prohibition")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 17c. prepare-release workflow must name release-manager as first and last agent
+RELEASE_AGENTS="$(grep '^ *agent:' "$ROOT_DIR/workflows/prepare-release.yaml" | awk '{print $2}')"
+FIRST_AGENT="$(echo "$RELEASE_AGENTS" | head -1)"
+LAST_AGENT="$(echo "$RELEASE_AGENTS" | tail -1)"
+if [ "$FIRST_AGENT" = "release-manager" ] && [ "$LAST_AGENT" = "release-manager" ]; then
+  RESULTS+=("PASS  prepare-release.yaml: release-manager is first and last agent in workflow")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  prepare-release.yaml: expected release-manager as first/last agent (got first=$FIRST_AGENT last=$LAST_AGENT)")
+  FAIL=$(( FAIL + 1 ))
+fi
+
 # ── summary ───────────────────────────────────────────────────────────────────
 
 echo ""

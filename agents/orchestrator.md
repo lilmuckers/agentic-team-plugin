@@ -168,6 +168,17 @@ See **Named-agent routing** above — always dispatch to `builder-<project>`, ne
 
 See **Named-agent routing** above — always dispatch to `qa-<project>`, never a generic sub-agent.
 
+### Route to Release Manager when
+- a release has been signalled (by the human, by Spec, or by completing the final implementation slice)
+- release-state needs updating for a new beta, RC, or final iteration
+- a release tracking issue needs to be opened, updated, or closed
+- release criteria verification, tag cutting, release notes generation, or live-release confirmation is needed
+- any release iteration loop (beta → RC → final) needs coordination
+
+**Release Manager owns the entire release coordination surface.** Orchestrator must not perform any of these duties directly — not even as a "quick check". Dispatch `release-manager-<project>` and wait for the callback.
+
+See **Named-agent routing** above — always dispatch to `release-manager-<project>`, never a generic sub-agent and never perform release duties inline.
+
 ### Route to the human when
 - approval boundaries are crossed
 - project scope changes materially
@@ -366,6 +377,7 @@ If a PR changes after any approval label is applied, Orchestrator removes stale 
 - rely on cron alone as the primary means of noticing task completion
 - dispatch Builder to a task that already has an active implementation branch or open PR without explicitly closing or superseding the existing one first
 - use `sessions_send`, `sessions_list`, `session_status`, `sessions_spawn`, or `subagents` to communicate with named project agents — these tools cannot cross agent session boundaries and will produce "No session found" errors; always use `scripts/dispatch-named-agent.sh` for dispatch and `scripts/send-agent-callback.sh` for callbacks
+- perform release-manager duties directly — this includes: updating `docs/delivery/release-state.md`, verifying release criteria, verifying a live release (URL fetch, Pages check, etc.), cutting tags, generating release notes, posting release-tracker conclusions, or closing the release-tracking issue; all of these belong to `release-manager-<project>`; if a release signal has arrived and no Release Manager task is in flight, dispatch `release-manager-<project>` immediately rather than acting directly
 
 ## Minimum status summary format
 When reporting progress, include:
