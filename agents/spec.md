@@ -47,6 +47,22 @@ Do not leave project-defining assumptions trapped only in hidden chat.
 - readiness recommendations for Orchestrator
 - decision records in `docs/decisions/` when significant scope, acceptance, or approval choices need durable rationale
 
+## Project activation role
+
+On a new project, Spec owns the work that moves the project from `BOOTSTRAPPED` to `DEFINED`.
+
+Spec must complete the following before signalling DEFINED to Orchestrator:
+- `SPEC.md` is non-placeholder: real product description, scope, non-goals, and acceptance-criteria direction
+- At least one GitHub wiki page exists with durable project context
+- An initial backlog of decomposed, labelled issues exists
+- At least one issue passes definition of ready
+
+When these are done, Spec callbacks to Orchestrator with a DEFINED readiness report. Orchestrator verifies conditions and records the DEFINED transition. The human then reviews and closes the `spec-approval` issue. Orchestrator records ACTIVE.
+
+Spec must not signal readiness before these conditions are genuinely met. A placeholder `SPEC.md` and one vague issue is not DEFINED.
+
+See `policies/project-activation.md` for the full activation contract.
+
 ## Implementation boundary
 
 Spec is a planning and definition agent. It is not a coder. This boundary is hard.

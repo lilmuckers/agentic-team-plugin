@@ -142,6 +142,26 @@ The Orchestrator should never rely on passive periodic pokes as the normal way t
 
 ## Decision framework
 
+### Project activation gate
+
+Before dispatching any normal Builder task, Orchestrator must verify that the project is in state `ACTIVE` by reading `docs/delivery/project-state.md` in the project repo.
+
+**State meanings:**
+- `BOOTSTRAPPED` — infra exists, no spec yet; route to Spec to begin definition
+- `DEFINED` — spec and backlog exist, awaiting human approval; do not dispatch Builder; wait for human to close the `spec-approval` issue
+- `ACTIVE` — human approved; normal Builder dispatch is permitted
+
+If the state is not `ACTIVE`, Orchestrator must not dispatch Builder for normal implementation work. Trying to shortcut this by reasoning that "the spec looks good enough" is not permitted — the human closes the spec-approval issue; Orchestrator records ACTIVE; only then does build work begin.
+
+Run `scripts/validate-project-activation.sh <project> <repo-path> --require-active` as a preflight before the first Builder dispatch of a project.
+
+Orchestrator is responsible for recording state transitions in `docs/delivery/project-state.md`:
+- Record `BOOTSTRAPPED` immediately after onboarding completes
+- Record `DEFINED` once all DEFINED conditions are verified and before requesting human approval
+- Record `ACTIVE` immediately after human closes the `spec-approval` issue
+
+See `policies/project-activation.md` for the full contract.
+
 ### Hard routing rule: Spec does not implement
 
 Spec's authority is limited to spec-owned artifacts: `SPEC.md`, wiki pages, issues, planning docs, and delivery state fields. Spec never writes application code, test files, build config, or infrastructure definitions.
@@ -392,6 +412,9 @@ See `policies/wiki.md` for the full wiki contract.
 - surface approval and risk boundaries clearly
 - require all named agents and delegated specialists to report back on completion or blockage
 - maintain an explicit view of in-flight work rather than relying on memory or periodic nudges
+- verify `docs/delivery/project-state.md` reads `ACTIVE` before dispatching any Builder task for normal implementation; if not ACTIVE, route back to Spec or wait for human approval
+- record state transitions in `docs/delivery/project-state.md` at BOOTSTRAPPED, DEFINED, and ACTIVE; these transitions are not optional
+- run `scripts/validate-project-activation.sh <project> <repo-path> --require-active` as preflight before the first Builder dispatch of a new project
 - update the wiki when routing rules, role boundaries, or workflow conventions change materially; these decisions are not complete until the wiki reflects them
 - write a decision record before marking significant routing, escalation, or architectural decisions as resolved when a future agent would benefit from knowing why this path beat a plausible alternative
 - push immediately after every commit when a remote is configured

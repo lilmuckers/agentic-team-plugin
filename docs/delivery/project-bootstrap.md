@@ -11,6 +11,20 @@ The goal is to ensure every new project starts with:
 - documented assumptions
 - reviewable delivery workflow
 
+## Project activation states
+
+A project passes through three explicit states. These are gates, not descriptions.
+
+| State | Meaning | Builder may start? |
+|-------|---------|-------------------|
+| `BOOTSTRAPPED` | Infra, agents, and repo templates exist. No spec yet. | No |
+| `DEFINED` | Spec, wiki, backlog, and at least one ready issue exist. Awaiting human approval. | No (spike only if explicitly approved) |
+| `ACTIVE` | Human closed spec-approval issue. Orchestrator recorded activation. | Yes |
+
+The canonical contract is in `policies/project-activation.md`.
+The visible artifact is `docs/delivery/project-state.md` in the project repo.
+The validation tool is `scripts/validate-project-activation.sh`.
+
 ## Bootstrap principle
 
 A new project should not begin with implementation first.
@@ -142,16 +156,26 @@ If a wiki is used, keep the repo docs and wiki responsibilities clear.
 
 ## Project readiness checklist
 
-A project is considered bootstrapped when:
-- [ ] Repository exists
-- [ ] GitHub templates installed
-- [ ] Standard labels created
-- [ ] Initial project docs created
-- [ ] Initial spec exists
-- [ ] Initial assumptions documented
-- [ ] Initial backlog exists
-- [ ] Human review of spec/backlog completed
-- [ ] At least one issue meets definition of ready
+See `policies/project-activation.md` for the authoritative checklist. Summary:
+
+**BOOTSTRAPPED** (recorded by Orchestrator after `onboard-project.sh`):
+- [ ] Repository exists and templates installed
+- [ ] Six named agents exist and passed identity smoke test
+- [ ] Each agent workspace has a `repo/` subdirectory clone
+- [ ] `docs/delivery/project-state.md` exists
+
+**DEFINED** (recorded by Orchestrator after Spec signals readiness):
+- [ ] `SPEC.md` is non-placeholder
+- [ ] At least one wiki page with durable project context
+- [ ] Initial decomposed backlog exists
+- [ ] At least one issue passes `scripts/validate-issue-ready.py`
+- [ ] Human has closed the `spec-approval` issue
+
+**ACTIVE** (recorded by Orchestrator immediately after human approval):
+- [ ] All DEFINED conditions met
+- [ ] `docs/delivery/project-state.md` records `ACTIVE`
+
+Validate at any point: `scripts/validate-project-activation.sh <project> <repo-path>`
 
 ## Responsibilities during bootstrap
 

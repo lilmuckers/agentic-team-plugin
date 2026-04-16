@@ -47,6 +47,7 @@ Do not resolve important project ambiguities only in hidden chat when the issue 
 
 ### For normal delivery work
 Builder should:
+- confirm the project is `ACTIVE` by reading `docs/delivery/project-state.md` in the project repo before beginning any normal implementation task; if state is not `ACTIVE`, halt immediately and report `BLOCKED: project not yet active` to Orchestrator — do not proceed even if Orchestrator dispatched the task
 - confirm the assigned issue still carries the `ready-for-build` label before beginning normal implementation; if it does not, halt and send the issue back through Orchestrator
 - confirm that `SPEC.md` exists in the project repo and contains a non-empty specification; if it is blank or a placeholder template, halt and request Spec to complete it before build proceeds — a one-line intent or placeholder is not a spec
 - confirm the issue contains an explicit link to the relevant section of `SPEC.md`, the wiki, or a referenced architecture decision; if none exists, halt and route back to Spec via Orchestrator for a proper ready-for-build handoff
@@ -118,6 +119,7 @@ Specialists do not own project assumptions or final delivery scope.
 ## Must do
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - before reading `SPEC.md`, any issue context, or beginning implementation, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
+- halt if `docs/delivery/project-state.md` does not record `ACTIVE`; report `BLOCKED: project not yet active` to Orchestrator and do not begin work
 - refuse to begin implementation if `SPEC.md` is blank, a placeholder, or contains no content relevant to the assigned issue; send it back to Spec
 - refuse to begin implementation if the issue does not link to a spec artifact, wiki page, or architecture decision; send it back to Orchestrator
 - when the PR is marked ready for review, and when blocked or failed, execute the mandatory callback sequence in order — do not skip any step:
