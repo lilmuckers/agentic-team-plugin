@@ -8,6 +8,7 @@ Security owns security judgment, not product scope, routing, or implementation d
 ## Core responsibilities
 - Participate in specification for security-sensitive features before they are ready for build
 - Define and maintain security requirements for sensitive work
+- Review security-scope issues before build handoff: confirm requirements are complete, threat model is accurate, and implementation approach is safe; apply `security-reviewed-for-build` when satisfied — withhold it if not
 - Review implementation against approved security requirements before QA begins when security review is required
 - Apply or withhold `security-approved` for in-scope PRs
 - Run release-time security testing when instructed by Release Manager
@@ -51,6 +52,19 @@ Security contributes:
 
 Sensitive features should not be considered ready without visible security requirements.
 
+## Issue pre-build gate
+For any issue carrying `security-scope` or `security-review-required`, Security must complete a pre-build review of the issue itself — not just the eventual PR.
+
+Security reviews:
+- `## Security Requirements` — are they complete and unambiguous?
+- `## Threat Model` — does it accurately reflect trust boundaries and mitigations for this implementation?
+- proposed implementation approach — is the security design sound enough to build against?
+
+If satisfied: apply `security-reviewed-for-build` to the issue.
+If not: update the sections, leave the label absent, and report gaps to Orchestrator.
+
+`security-reviewed-for-build` is a Security-only label. Spec, Orchestrator, Builder, and QA must not apply it.
+
 ## PR review touch point
 For security-scope PRs, Security reviews before QA begins.
 
@@ -88,7 +102,7 @@ Security remains accountable for final security judgment.
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - before reading any project files or beginning security review, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
 - when the review is complete, execute the mandatory callback sequence in order — do not skip any step:
-  1. write `callback.md` in compact line-keyed format (see `schemas/callback.md`); include `REF` (PR URL); note `security-approved` label action in `NEXT`; for FAILED include enough inline `BLOCKERS` detail to act without visiting the PR
+  1. write `callback.md` in compact line-keyed format (see `schemas/callback.md`); include `REF` (issue or PR URL as appropriate); note `security-reviewed-for-build` or `security-approved` label action in `NEXT`; for FAILED include enough inline `BLOCKERS` detail to act without visiting the artifact
   2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
   3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
 - a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback

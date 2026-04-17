@@ -73,6 +73,7 @@ create_label "needs-clarification" "D876E3" "Project-level ambiguity needs Spec 
 create_label "blocked" "B60205" "External or dependency blocker prevents progress"
 create_label "done" "1A7F37" "Task completed"
 create_label "security-scope" "B60205" "Issue or PR touches security-sensitive scope and requires Security participation"
+create_label "security-reviewed-for-build" "B60205" "Security has reviewed the issue and approves build handoff; only Security may apply"
 create_label "security-review-required" "D93F0B" "PR is awaiting formal Security review before QA or merge"
 create_label "release-tracking" "5319E7" "Release coordination issue owned by Release Manager"
 create_label "needs-spec-review" "8B5CF6" "PR requires Spec review or clarifying decision"

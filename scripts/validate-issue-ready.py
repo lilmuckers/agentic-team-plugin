@@ -261,7 +261,7 @@ def check_spike(labels: set, sections: dict, body: str) -> list:
     return errors
 
 
-def check_security_scope(sections: dict) -> list:
+def check_security_scope(labels: set, sections: dict) -> list:
     errors = []
 
     if not non_placeholder_lines(sections.get("security requirements", "")):
@@ -275,6 +275,13 @@ def check_security_scope(sections: dict) -> list:
         errors.append(
             "security-scope issue is missing non-empty '## Threat Model' — "
             "Security must document trust boundaries and mitigations"
+        )
+
+    if "security-reviewed-for-build" not in labels:
+        errors.append(
+            "security-scope issue is missing 'security-reviewed-for-build' label — "
+            "Security must review the issue and apply this label before build handoff; "
+            "non-empty sections alone do not constitute Security sign-off"
         )
 
     return errors
@@ -364,7 +371,7 @@ def main():
             errors.extend(check_spike(labels, sections, body))
 
         if labels.intersection(SECURITY_SCOPE_LABELS):
-            errors.extend(check_security_scope(sections))
+            errors.extend(check_security_scope(labels, sections))
 
         errors.extend(check_blockers(sections, args.repo))
 

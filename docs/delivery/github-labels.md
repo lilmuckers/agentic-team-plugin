@@ -11,6 +11,7 @@
 - `blocked` — external or dependency blocker prevents progress
 - `done` — task completed
 - `security-scope` — issue or PR touches security-sensitive scope and requires Security participation
+- `security-reviewed-for-build` — Security has reviewed the issue (requirements, threat model, scope) and approves build handoff; only Security may apply this label
 - `security-review-required` — PR is awaiting formal Security review before QA / merge
 - `release-tracking` — release coordination issue owned by Release Manager
 

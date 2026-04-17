@@ -170,7 +170,19 @@ Security must be engaged **before build handoff** when an issue:
 - changes deployment, infrastructure, or access-control configuration
 - is explicitly labeled `security-scope`
 
-Security involvement during spec is not optional for these cases. An issue carrying `security-scope` that does not have completed security requirements and a threat model cannot pass `validate-issue-ready.py`.
+Security involvement during spec is not optional for these cases.
+
+### Security pre-build gate
+
+An issue carrying `security-scope` or `security-review-required` cannot pass `validate-issue-ready.py` unless **all three** of the following are true:
+
+1. `## Security Requirements` section is non-empty
+2. `## Threat Model` section is non-empty
+3. `security-reviewed-for-build` label is present
+
+The label is the explicit Security sign-off. Non-empty sections alone do not constitute review — Spec can author those sections, but only Security may apply `security-reviewed-for-build`.
+
+Security applies this label after reviewing the issue scope, confirming the requirements are complete and the threat model is accurate for the proposed implementation. If Security finds gaps, it updates the sections and withholds the label until satisfied.
 
 ---
 
