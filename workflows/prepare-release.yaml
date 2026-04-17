@@ -1,70 +1,213 @@
 name: prepare-release
-description: Assess release readiness from merged work, quality state, and documented scope before recommending release.
+description: >
+  Coordinate one full release iteration (beta → rc → final) from a valid release
+  request to a published GitHub release.
+
+# ── Trigger authority ────────────────────────────────────────────────────────
+#
+# A release starts ONLY when ONE of these two conditions is true:
+#
+#   1. The human explicitly requests release preparation (direct instruction or
+#      explicit instruction to Orchestrator).
+#
+#   2. Orchestrator opens a release tracking issue based on a pre-agreed
+#      release condition (e.g. "release when spec slice X is merged") and
+#      records the trigger basis in the issue.
+#
+# All other signals are RECOMMENDATIONS, not triggers:
+#
+#   - Spec recommends scope readiness and proposed version scale.
+#     Spec does NOT initiate release coordination.
+#
+#   - Final implementation slice completion creates a release recommendation
+#     in the task ledger (Orchestrator notes "scope complete, release
+#     recommended").  It does NOT automatically start Release Manager.
+#
+#   - Release Manager starts active coordination ONLY after Orchestrator has
+#     opened the release tracking issue under the rule above.
+#
+# Tie-break for version sizing:
+#   If Spec and Orchestrator disagree on major/minor/patch scale,
+#   Orchestrator makes the final call and records the rationale in the
+#   release tracking issue.  Release Manager applies the decision
+#   mechanically and does not re-open the debate.
+#
+# ── Human approval gate ──────────────────────────────────────────────────────
+#
+# Final release publication (not beta or rc) always requires explicit human
+# approval.  Release Manager must request this approval explicitly.
+# Orchestrator must not approve on the human's behalf.
+# "No objection" is not approval.  Silence is not approval.
+
 steps:
-  - id: coordinate-release
+  - id: open-release-request
+    agent: orchestrator
+    preconditions:
+      - Valid release trigger exists (human instruction OR pre-agreed condition met
+        with recorded basis).
+      - No release tracking issue is currently open for this version.
+    actions:
+      - Open the release tracking issue using the release-tracking template.
+      - Record trigger source, scope basis, and proposed version scale in the issue.
+      - Dispatch release-manager-<project> with the release tracking issue URL.
+    postconditions:
+      - Release tracking issue is open and contains trigger source, scope basis,
+        and proposed version scale.
+      - Release Manager has been dispatched.
+    output: release tracking issue URL
+
+  - id: initialise-release
     agent: release-manager
     preconditions:
-      - Release signal or candidate scope exists.
+      - Release tracking issue exists with trigger source and proposed version.
+      - No existing release tag for this version exists on the remote.
+    actions:
+      - Read release tracking issue and confirm trigger is valid under the policy.
+      - Calculate next version from release-state.md and confirmed scale.
+      - Update release-state.md with planned version and beta1 intent.
+      - Callback to Orchestrator with version confirmed and beta1 plan.
     postconditions:
-      - Release tracking issue and release state are updated.
-      - Planned beta/rc/final iteration is explicit.
-    output: release tracking state
-  - id: scope
+      - release-state.md reflects the planned version.
+      - Orchestrator has received the initialisation callback.
+    output: confirmed version and beta1 plan
+
+  - id: scope-review
     agent: spec
     preconditions:
-      - Release tracking state exists.
-      - Candidate merged changes for the release are known.
-      - Project docs and decision records are available for review.
+      - Release tracking issue exists.
+      - Candidate merged changes are known (via git log or release tracking issue).
+    actions:
+      - Review merged changes against SPEC.md and project definition.
+      - Produce a release scope summary: what is included, what is excluded, version
+        scale rationale, and any user-visible behavior changes.
+      - Note any durable release knowledge that should later be written to the wiki.
     postconditions:
-      - Release scope summary exists.
-      - Any user-facing release notes inputs are documented.
+      - Release scope summary is written to the release tracking issue.
     output: release scope summary
-  - id: readiness
-    agent: qa
-    preconditions:
-      - Scope summary exists.
-      - CI, test, and regression signals are available.
-    postconditions:
-      - Release risk assessment is explicit.
-      - Blocking quality concerns are listed if present.
-    output: release risk assessment
-  - id: security
-    agent: security
-    preconditions:
-      - Release tracking state exists.
-      - Scope summary exists.
-    postconditions:
-      - Release security assessment is explicit.
-      - Blocking security concerns are listed if present.
-    output: release security assessment
-  - id: coordinate
+
+  - id: cut-beta
     agent: release-manager
     preconditions:
-      - Scope summary, QA readiness output, and Security output exist.
-      - Outstanding blockers are known.
+      - Scope summary exists.
+    actions:
+      - Run scripts/cut-release-tag.sh for betaN.
+      - Run scripts/generate-release-notes.sh (delta + cumulative sections).
+      - Update release tracking issue with beta tag and release notes link.
+      - Trigger QA and Security release testing.
     postconditions:
-      - Next beta/rc/final release action is explicit.
-      - Human escalation is surfaced when risk or scope requires judgment.
-    output: release coordination update
+      - Beta tag and GitHub pre-release exist.
+      - QA and Security have been dispatched for release testing.
+    output: beta pre-release URL
+
+  - id: release-testing
+    agent: qa
+    preconditions:
+      - Beta tag exists.
+      - Scope summary exists.
+    actions:
+      - Run release-wide QA: regression coverage, acceptance criteria review,
+        edge cases, README and docs accuracy.
+      - Produce release risk assessment: blocking vs non-blocking findings.
+    postconditions:
+      - QA release findings are written to the release tracking issue.
+    output: release risk assessment
+
+  - id: security-testing
+    agent: security
+    preconditions:
+      - Beta tag exists.
+      - Scope summary exists.
+    actions:
+      - Run release-wide security review: threat model, dependency audit, attack
+        surface review across exposed interfaces.
+      - Produce security release assessment: blocking vs non-blocking findings.
+    postconditions:
+      - Security release findings are written to the release tracking issue.
+    output: security release assessment
+
+  - id: triage
+    agent: orchestrator
+    preconditions:
+      - QA and Security release findings exist.
+    actions:
+      - Present findings to Spec for product-scope triage (accepted / deferred / out-of-scope).
+      - Record triage outcome in the release tracking issue.
+      - Route accepted issues back through the normal delivery flow.
+      - Determine whether another iteration is needed or proceed to RC.
+    postconditions:
+      - All findings are triaged and recorded.
+      - Next step is explicit: another beta iteration or promote to RC.
+    output: triage outcome
+
+  - id: cut-rc
+    agent: release-manager
+    preconditions:
+      - All beta blocking issues are resolved or explicitly deferred.
+      - Triage outcome records no blocking issues.
+    actions:
+      - Run scripts/cut-release-tag.sh for rc1.
+      - Trigger QA and Security for RC testing.
+    postconditions:
+      - RC tag and GitHub pre-release exist.
+    output: rc pre-release URL
+
+  - id: request-final-approval
+    agent: release-manager
+    preconditions:
+      - All RC blocking issues are resolved or explicitly deferred.
+    actions:
+      - Post explicit release approval request to human on the release tracking issue.
+      - Wait for human to reply with explicit approval.
+      - Do not proceed until approval is recorded.
+    postconditions:
+      - Human has replied with explicit final-release approval on the release tracking issue.
+    output: human approval confirmation
+
+  - id: publish-final
+    agent: release-manager
+    preconditions:
+      - Human has given explicit final-release approval (not inferred from silence).
+      - No open accepted release issues remain.
+    actions:
+      - Run scripts/cut-release-tag.sh for the final version.
+      - Run scripts/generate-release-notes.sh (single cumulative section).
+      - Publish GitHub release (not pre-release).
+      - Update release-state.md to final state.
+      - Write wiki release summary page.
+      - Close the release tracking issue.
+      - Callback to Orchestrator with release complete.
+    postconditions:
+      - Final release is published on GitHub.
+      - Wiki release summary page exists.
+      - Release tracking issue is closed.
+      - Orchestrator has received the completion callback.
+    output: final release URL
+
 on_blocked:
-  - Hold release progression until missing validation, documentation, or scope clarity is resolved.
+  - Hold release progression until the blocker is resolved.
   - Surface blockers explicitly to the human when they affect timing or risk.
+  - Do not proceed to the next iteration while blocking issues remain open.
+
 on_failure:
-  - Stop release coordination and record the failure reason in a visible artifact.
-  - Route the blocking work back into the normal delivery workflow.
+  - Stop release coordination and record the failure reason in the release tracking issue.
+  - Route blocking work back into the normal delivery workflow via Orchestrator.
+
 loops:
-  - from: coordinate
-    to: coordinate-release
-    trigger: Another beta or rc iteration is needed.
-  - from: readiness
-    to: scope
-    trigger: QA finds missing documentation or unclear release contents.
-  - from: coordinate
-    to: readiness
-    trigger: Release Manager needs refreshed risk assessment after late changes.
-  - from: coordinate
-    to: security
+  - from: triage
+    to: cut-beta
+    trigger: Accepted issues are fixed and another beta iteration is needed.
+  - from: triage
+    to: cut-rc
+    trigger: Beta triage is clean; promote to RC.
+  - from: triage
+    to: release-testing
+    trigger: Release Manager needs refreshed QA assessment after late changes.
+  - from: triage
+    to: security-testing
     trigger: Release Manager needs refreshed security assessment after late changes.
-  - from: coordinate
-    to: scope
-    trigger: Release candidate changes and the scope summary must be updated.
+  - from: triage
+    to: scope-review
+    trigger: Scope changes and the scope summary must be updated.
+  - from: cut-rc
+    to: triage
+    trigger: RC testing finds new issues requiring triage.

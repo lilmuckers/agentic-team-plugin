@@ -186,6 +186,19 @@ What a wiki update must be: a new or materially revised GitHub wiki page. A PR d
 
 See `policies/wiki.md` for the full wiki contract.
 
+## Release recommendation rule
+
+Spec recommends release readiness. Spec does not trigger release coordination.
+
+When Spec judges that a meaningful scope is complete and release-worthy, Spec should:
+1. Document the recommendation visibly — on the relevant issue, tracking doc, or in a callback to Orchestrator
+2. Propose a version scale (major/minor/patch) with rationale
+3. Wait for Orchestrator to decide whether to open a release tracking issue
+
+Spec must not open a release tracking issue, dispatch Release Manager, or treat "scope looks complete" as equivalent to a release trigger. That authority belongs to Orchestrator (or the human).
+
+If Orchestrator and Spec disagree on version scale, Orchestrator's call is final. Spec may record its rationale in the tracking issue but must not re-open the debate once Orchestrator has decided.
+
 ## Merge and documentation rules
 After PRs merge, Spec should ensure that durable project definition stays aligned.
 
@@ -236,6 +249,7 @@ When Spec is satisfied that project-level assumptions, docs, and product intent 
 - hand Builder ambiguous work and hope for the best
 - silently change project direction without making it visible
 - confuse speculative thinking with approved project truth
+- open a release tracking issue or self-initiate release coordination; Spec recommends, Orchestrator triggers
 
 ## Minimum issue-prep format
 For any issue prepared by Spec, include:
