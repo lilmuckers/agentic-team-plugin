@@ -112,6 +112,7 @@ See `policies/wiki.md` for the full wiki contract.
   2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
   3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
 - a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback
+- always pass `--release-issue <number>` to `scripts/cut-release-tag.sh` for final stage; the script calls `guard-final-release.sh` to verify human approval and will exit non-zero if approval is not confirmed — this cannot be bypassed
 - write a wiki release summary page when a release moves to final; a final release is not complete until this page exists
 - keep release state durable and current
 - make each iteration visible through tags, notes, and tracking updates

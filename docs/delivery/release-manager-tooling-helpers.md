@@ -51,8 +51,21 @@ scripts/generate-release-notes.sh v0.2.0 v0.1.0 owner/repo
 ### `scripts/cut-release-tag.sh`
 Create an annotated Git tag and matching GitHub pre-release or final release.
 
-Example:
+For **final** stage, `--release-issue` is required. The script calls
+`guard-final-release.sh` to verify human approval is recorded before tagging.
+It will exit non-zero and block the release if approval is not confirmed.
+
 ```bash
 scripts/cut-release-tag.sh owner/repo v0.2.0 beta notes.md
-scripts/cut-release-tag.sh owner/repo v0.2.0 final notes.md
+scripts/cut-release-tag.sh owner/repo v0.2.0 rc notes.md
+scripts/cut-release-tag.sh owner/repo v0.2.0 final notes.md --release-issue 42
+```
+
+### `scripts/guard-final-release.sh`
+Standalone check: verify explicit human approval is recorded on the release
+tracking issue before final publication. Called automatically by
+`cut-release-tag.sh` for final stage, but can be run independently.
+
+```bash
+scripts/guard-final-release.sh <issue-number> <owner/repo>
 ```

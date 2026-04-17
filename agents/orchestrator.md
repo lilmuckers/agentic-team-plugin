@@ -440,7 +440,8 @@ Orchestrator does not approve final publication on behalf of the human. Only the
 - maintain an explicit view of in-flight work rather than relying on memory or periodic nudges
 - verify `docs/delivery/project-state.md` reads `ACTIVE` before dispatching any Builder task for normal implementation; if not ACTIVE, route back to Spec or wait for human approval
 - record state transitions in `docs/delivery/project-state.md` at BOOTSTRAPPED, DEFINED, and ACTIVE; these transitions are not optional
-- run `scripts/validate-project-activation.sh <project> <repo-path> --require-active` as preflight before the first Builder dispatch of a new project
+- always pass `--repo-path <repo-path>` when dispatching builder; `dispatch-named-agent.sh` enforces the ACTIVE gate and will block dispatch if the project is not ACTIVE — this cannot be bypassed
+- always pass `--release-issue <number> --release-repo <owner/repo>` when dispatching release-manager; `dispatch-named-agent.sh` validates the tracking issue before dispatch
 - update the wiki when routing rules, role boundaries, or workflow conventions change materially; these decisions are not complete until the wiki reflects them
 - write a decision record before marking significant routing, escalation, or architectural decisions as resolved when a future agent would benefit from knowing why this path beat a plausible alternative
 - push immediately after every commit when a remote is configured

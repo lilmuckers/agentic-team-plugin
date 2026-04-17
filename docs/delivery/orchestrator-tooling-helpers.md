@@ -29,13 +29,23 @@ Use this for every project-scoped named agent: `spec-<project>`, `builder-<proje
 **Do NOT use internal session tools for named-agent dispatch.** The `sessions_send`, `sessions_list`, `session_status`, `sessions_spawn`, and `subagents` tools operate within this agent's own session store and cannot cross agent session boundaries. Using them to dispatch to `builder-lapwing` or receive callbacks from `orchestrator-lapwing` will produce "No session found with label: ..." errors even when the target agent is correctly configured. These tools are for intra-session work only.
 
 ```bash
-scripts/dispatch-named-agent.sh <project> <archetype> <task-file> [task-suffix] [thinking]
+scripts/dispatch-named-agent.sh <project> <archetype> <task-file> [options]
 
-# Examples:
+# spec, qa, security — no gate flags required
 scripts/dispatch-named-agent.sh merlin spec issue-5.md
-scripts/dispatch-named-agent.sh merlin builder issue-5.md issue-5
-scripts/dispatch-named-agent.sh merlin qa pr-review.md pr-42 low
+scripts/dispatch-named-agent.sh merlin qa pr-review.md --task-suffix pr-42 --thinking low
+
+# builder — --repo-path required; project must be ACTIVE or dispatch is blocked
+scripts/dispatch-named-agent.sh merlin builder issue-5.md \
+  --repo-path ../merlin --task-suffix issue-5
+
+# release-manager — --release-issue and --release-repo required;
+# tracking issue must have valid trigger, version, scale, scope basis
+scripts/dispatch-named-agent.sh merlin release-manager release-task.md \
+  --release-issue 42 --release-repo org/merlin
 ```
+
+These gates are enforced in the script — they cannot be bypassed by prompt instruction.
 
 Decision rule: if a named project agent for the target role exists, always use Path A. The named agent routing hard rule applies before anything else. Do not use Path C for a role that has a project-scoped named agent.
 
