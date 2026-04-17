@@ -1,6 +1,15 @@
 # Release Manager Tooling Helpers
 
-These tools are for the Release Manager only.
+## Git identity and posting
+
+```bash
+scripts/set-agent-git-identity.sh <repo-path> <name> ReleaseManager
+scripts/post-agent-comment.sh <owner/repo> issue <issue-number> ReleaseManager <comment.md>
+scripts/update-agent-wiki-page.sh <wiki-repo-path> <PageName> ReleaseManager <page.md>
+scripts/lint-agent-markdown.py <file.md>
+```
+
+## Release-specific tools
 
 ### `scripts/update-release-state.py`
 Update the `## Current Release` JSON block in `docs/delivery/release-state.md`.

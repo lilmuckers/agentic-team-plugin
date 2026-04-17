@@ -280,9 +280,3 @@ scripts/lint-agent-markdown.py comment.md pr.md wiki.md
 - use the issue/PR creation helpers to reduce formatting and labeling drift across agents
 - use validation/linting helpers before posting or committing when consistency matters
 
-## Likely future helpers
-
-- archetype bootstrap helpers
-- label validation helpers for existing issues and PRs
-- standardized draft-to-ready PR transition helpers
-- wrappers that combine render + validate + post in one step

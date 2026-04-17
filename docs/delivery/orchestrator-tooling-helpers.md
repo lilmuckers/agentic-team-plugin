@@ -1,6 +1,16 @@
 # Orchestrator Tooling Helpers
 
-These tools are for the Orchestrator only. Other agents do not read or write the task ledger and do not need these scripts.
+## Git identity and posting
+
+```bash
+scripts/set-agent-git-identity.sh <repo-path> <name> Orchestrator
+scripts/post-agent-comment.sh <owner/repo> issue <issue-number> Orchestrator <comment.md>
+scripts/create-agent-issue.sh <owner/repo> "<title>" Orchestrator <type-label> <routing-label> <body.md>
+scripts/validate-issue-ready.py <issue-number> --repo <owner/repo>
+scripts/validate-agent-artifacts.py --comment-file <comment.md>
+scripts/lint-agent-markdown.py <file.md>
+scripts/validate-project-activation.sh <project-slug> <repo-path> [--require-active]
+```
 
 ## Dispatch mechanisms
 
