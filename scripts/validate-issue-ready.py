@@ -20,15 +20,8 @@ import subprocess
 import sys
 
 ISSUE_TYPE_LABELS = {"feature", "bug", "change", "chore", "spike"}
-ROUTING_LABELS = {
-    "spec-needed",
-    "architecture-needed",
-    "ready-for-build",
-    "in-build",
-    "in-review",
-    "needs-clarification",
-    "blocked",
-}
+PRIMARY_WORKFLOW_LABELS = {"spec-needed", "ready-for-build", "in-build", "in-review", "done"}
+MODIFIER_LABELS = {"architecture-needed", "needs-clarification", "blocked"}
 SECURITY_SCOPE_LABELS = {"security-scope", "security-review-required"}
 SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 ISSUE_REF_RE = re.compile(r"#(\d+)")
@@ -82,10 +75,26 @@ def check_common(labels: set, sections: dict, body: str, issue_type: str) -> lis
     """Checks that apply to all types."""
     errors = []
 
-    if not labels.intersection(ROUTING_LABELS):
+    primary = labels.intersection(PRIMARY_WORKFLOW_LABELS)
+
+    if not primary:
         errors.append(
-            "missing routing/workflow label (expected one of: " + ", ".join(sorted(ROUTING_LABELS)) + ")"
+            "missing primary workflow label (expected exactly one of: "
+            + ", ".join(sorted(PRIMARY_WORKFLOW_LABELS)) + ")"
         )
+    elif len(primary) > 1:
+        errors.append(
+            "multiple primary workflow labels present ("
+            + ", ".join(sorted(primary))
+            + ") — exactly one allowed; these are mutually exclusive states"
+        )
+    elif "done" in primary:
+        active_modifiers = labels.intersection(MODIFIER_LABELS)
+        if active_modifiers:
+            errors.append(
+                "'done' is a terminal state and must not carry modifiers ("
+                + ", ".join(sorted(active_modifiers)) + ")"
+            )
 
     # Spikes use a separate routing path — ready-for-build is not applicable
     if issue_type != "spike" and "ready-for-build" not in labels:

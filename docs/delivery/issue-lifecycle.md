@@ -34,7 +34,17 @@ Spikes are not delivery work. They are bounded investigations with a stated ques
 
 ## State model
 
-Every issue moves through these states via its workflow label. Only one state label should be set at a time.
+### Primary workflow states
+
+Exactly one primary state label must be set at a time. These are mutually exclusive.
+
+| Label | Meaning |
+|-------|---------|
+| `spec-needed` | Awaiting Spec elaboration |
+| `ready-for-build` | Spec complete; awaiting Builder dispatch |
+| `in-build` | Builder actively working |
+| `in-review` | PR raised; awaiting QA and review |
+| `done` | Merged and closed |
 
 ```
 [created]
@@ -59,8 +69,28 @@ in-review ──────── changes-requested ─────────
 done (issue closed)
 ```
 
-`needs-clarification` and `blocked` can be applied at any state and suspend forward progress.
-`architecture-needed` is a sub-state of `spec-needed` for issues requiring design exploration before acceptance criteria can be written.
+### Modifier labels
+
+Modifiers may be applied alongside any non-`done` primary state. They suspend or annotate without replacing the primary state.
+
+| Label | Meaning |
+|-------|---------|
+| `architecture-needed` | Design exploration required before ACs can be written; typically paired with `spec-needed` |
+| `needs-clarification` | Waiting for an answer before work can resume; suspends forward progress |
+| `blocked` | Blocked on an external dependency; suspends forward progress |
+
+### Valid and invalid combinations
+
+Valid:
+- `spec-needed` alone
+- `spec-needed` + `architecture-needed`
+- `ready-for-build` + `blocked`
+- `in-build` + `needs-clarification`
+
+Invalid (rejected by `validate-issue-ready.py`):
+- Two primary states together (`ready-for-build` + `in-build`, `in-build` + `in-review`, etc.)
+- Zero primary states
+- `done` + any modifier (terminal state; modifiers have no meaning once closed)
 
 ---
 
