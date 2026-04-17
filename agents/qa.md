@@ -148,7 +148,7 @@ For features with user-facing elements that materially affect usability, QA must
 - before reading `SPEC.md`, the PR, any issue context, or beginning review, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
 - before making any scope or content finding, fetch the PR changed-file list using `gh pr view <pr> --repo <owner/repo> --json files --jq '.files[].path'` and record it explicitly; all scope findings must cite a file from this list; files read only as project context are not PR changes
 - when the review is complete (approved, changes requested, or blocked), execute the mandatory callback sequence in order — do not skip any step:
-  1. write the callback report to `callback.md` (outcome, `qa-approved` label action taken, key findings, recommended next action)
+  1. write `callback.md` in compact line-keyed format (see `schemas/callback.md`); for DONE/FAILED include `REF` (PR URL); note `qa-approved` label action in `NEXT`; for FAILED include enough inline `BLOCKERS` detail to act without visiting the PR
   2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
   3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
 - a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback

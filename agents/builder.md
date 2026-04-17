@@ -123,7 +123,7 @@ Specialists do not own project assumptions or final delivery scope.
 - refuse to begin implementation if `SPEC.md` is blank, a placeholder, or contains no content relevant to the assigned issue; send it back to Spec
 - refuse to begin implementation if the issue does not link to a spec artifact, wiki page, or architecture decision; send it back to Orchestrator
 - when the PR is marked ready for review, and when blocked or failed, execute the mandatory callback sequence in order — do not skip any step:
-  1. write the callback report to `callback.md` (outcome: NEEDS_REVIEW with PR URL, or BLOCKED/FAILED with blockers and recommended next action)
+  1. write `callback.md` in compact line-keyed format (see `schemas/callback.md`); for NEEDS_REVIEW include `REF` (PR URL) and `CHECKS`; for BLOCKED/FAILED include enough inline `BLOCKERS` detail to act without visiting another artifact
   2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
   3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file; the callback is what triggers QA assignment
 - a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback

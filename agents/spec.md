@@ -226,7 +226,7 @@ When Spec is satisfied that project-level assumptions, docs, and product intent 
 - produce issues that Builder can actually execute
 - define acceptance criteria clearly
 - when a spec task is complete (issue ready for build, clarification resolved, spike defined, wiki/SPEC.md updated), execute the mandatory callback sequence in order — do not skip any step:
-  1. write the callback report to `callback.md` conforming to `schemas/callback.md`
+  1. write `callback.md` in compact line-keyed format (see `schemas/callback.md`); include `REF` (issue URL); for BLOCKED include enough inline `BLOCKERS` detail to act without visiting another artifact
   2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
   3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
 - a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback

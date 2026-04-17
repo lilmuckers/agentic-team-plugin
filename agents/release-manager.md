@@ -108,7 +108,7 @@ See `policies/wiki.md` for the full wiki contract.
 - clone the project repo into a named subdirectory of your workspace (e.g. `repo/`), never at the workspace root; workspace files (agent config, boot manifests, soul files) must not be inside the git working tree or they will be committed into the project repo
 - before reading release-state, `SPEC.md`, or any project files, run `scripts/sync-agent-repo.sh` to sync `repo/` to the current remote tip; treat your local checkout as stale by default; if sync fails or reports BLOCKED, stop and report `BLOCKED` — do not proceed on stale local state
 - after each release milestone (beta cut, RC cut, QA/Security sign-off received, blocker triage complete, final release published), execute the mandatory callback sequence in order — do not batch, do not skip any step:
-  1. write the callback report to `callback.md` for the milestone
+  1. write `callback.md` in compact line-keyed format (see `schemas/callback.md`); include `REF` (tag URL, pre-release URL, or tracking issue URL); for BLOCKED include enough inline `BLOCKERS` detail to act without visiting another artifact
   2. `scripts/validate-callback.py callback.md` — fix any errors before proceeding
   3. `scripts/send-agent-callback.sh <project> callback.md` — if this exits non-zero, report `BLOCKED: callback delivery failed` and preserve the callback file
 - a callback is only complete when step 3 exits 0; writing markdown or summarising in chat does not constitute a callback
