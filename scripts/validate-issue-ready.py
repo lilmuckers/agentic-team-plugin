@@ -9,7 +9,19 @@ Type-aware checks:
   chore    — spec artifact NOT required; acceptance criteria and test strategy required
   spike    — different path: question, success/failure criteria; no spec artifact, no test strategy
 
-Security-scope checks apply to any type carrying security-scope or security-review-required labels.
+Workflow label checks (check_common):
+  exactly one primary workflow label required (spec-needed / ready-for-build / in-build /
+  in-review / done); modifiers (architecture-needed, needs-clarification, blocked) are
+  additive; done + modifier is invalid.
+
+Security-scope checks apply to any type carrying security-scope or security-review-required
+labels: non-empty Security Requirements, non-empty Threat Model, and security-reviewed-for-build
+label all required.
+
+Scope note: this script validates issue readiness and label-state integrity together because
+both are checked before Builder dispatch. If workflow-label rules grow substantially beyond
+the current primary/modifier model, consider splitting into validate-issue-workflow.py.
+Until then, keeping them here avoids requiring two script invocations per issue.
 
 Exit 0 = ready.  Exit 1 = not ready (errors printed to stderr).
 """

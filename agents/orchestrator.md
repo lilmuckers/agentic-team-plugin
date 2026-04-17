@@ -221,10 +221,12 @@ See **Named-agent routing** above — always dispatch to `release-manager-<proje
 ## Readiness rules
 The Orchestrator should not send normal implementation work to Builder unless the issue is ready.
 
+The canonical definition of ready — including type-specific rules for feature, change, bug, chore, and spike — is in `docs/delivery/issue-lifecycle.md`. What follows is a summary; the lifecycle doc governs when they conflict.
+
 Minimum ready-for-build standard:
 - issue exists
-- issue has a high-level issue-type label
-- issue has the appropriate target agent-archetype label
+- issue has exactly one issue-type label (feature / change / bug / chore / spike)
+- issue has exactly one primary workflow label
 - scope is discrete and buildable
 - acceptance criteria are visible
 - relevant assumptions are documented or linked

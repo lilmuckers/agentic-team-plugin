@@ -125,10 +125,12 @@ When a feature has user-facing elements that materially affect usability, Spec m
 ## Readiness rules
 Spec is responsible for helping create implementation-ready issues.
 
+The canonical definition of ready — including type-specific rules for feature, change, bug, chore, and spike — is in `docs/delivery/issue-lifecycle.md`. What follows is a summary; the lifecycle doc governs when they conflict.
+
 Minimum ready-for-build standard:
 - issue exists
-- issue has a high-level issue-type label
-- issue has the appropriate target agent-archetype label
+- issue has exactly one issue-type label (feature / change / bug / chore / spike)
+- issue has exactly one primary workflow label
 - scope is discrete and bounded
 - acceptance criteria are visible
 - assumptions are documented or linked
