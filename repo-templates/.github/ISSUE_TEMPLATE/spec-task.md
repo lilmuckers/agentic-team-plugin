@@ -22,9 +22,15 @@ labels: [spec-needed]
 
 ## Acceptance Criteria
 
-- [ ] 
-- [ ] 
-- [ ] 
+- [ ]
+- [ ]
+- [ ]
+
+## Test Strategy
+
+<!-- How will correctness be verified? Include unit, integration, and regression expectations. -->
+
+-
 
 ## Assumptions
 

@@ -101,3 +101,4 @@ scripts/*
 !scripts/prime-named-agent-sessions.sh
 !scripts/validate-project-activation.sh
 !scripts/guard-final-release.sh
+!scripts/validate-release-request.py

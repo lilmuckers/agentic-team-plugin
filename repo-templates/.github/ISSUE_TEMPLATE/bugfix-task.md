@@ -24,6 +24,12 @@ labels: [spec-needed]
 - [ ] Fix resolves the reported behavior
 - [ ] Automated regression coverage is added, or Builder documents why automation is impossible and Spec explicitly accepts that exception
 
+## Test Strategy
+
+<!-- How will regression coverage be implemented? If automation is impossible, state why here for Spec to accept. -->
+
+-
+
 ## Assumptions
 
 - 
