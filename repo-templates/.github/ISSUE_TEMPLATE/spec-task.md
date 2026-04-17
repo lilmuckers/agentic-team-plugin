@@ -1,7 +1,7 @@
 ---
 name: Spec / Backlog Task
 about: Create or refine a buildable backlog item with assumptions and acceptance criteria
-labels: [spec-needed]
+labels: [feature, spec-needed]
 ---
 
 ## Summary

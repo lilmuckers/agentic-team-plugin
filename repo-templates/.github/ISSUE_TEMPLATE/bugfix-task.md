@@ -1,7 +1,7 @@
 ---
 name: Bugfix Task
 about: Create a bugfix issue with reproduction, impact, and acceptance criteria
-labels: [spec-needed]
+labels: [bug, spec-needed]
 ---
 
 ## Summary
