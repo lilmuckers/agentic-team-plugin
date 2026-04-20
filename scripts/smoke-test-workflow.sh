@@ -73,11 +73,14 @@ mkdir -p \
   "$REPO/.github/workflows" \
   "$REPO/docs/delivery"
 
-cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/spec-task.md"        "$REPO/.github/ISSUE_TEMPLATE/spec-task.md"
+cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/feature-task.md"        "$REPO/.github/ISSUE_TEMPLATE/feature-task.md"
+cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/change-task.md"         "$REPO/.github/ISSUE_TEMPLATE/change-task.md"
+cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/bugfix-task.md"         "$REPO/.github/ISSUE_TEMPLATE/bugfix-task.md"
+cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/spike-task.md"          "$REPO/.github/ISSUE_TEMPLATE/spike-task.md"
+cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/chore-task.md"          "$REPO/.github/ISSUE_TEMPLATE/chore-task.md"
 cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/architecture-decision.md" "$REPO/.github/ISSUE_TEMPLATE/architecture-decision.md"
-cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/bugfix-task.md"      "$REPO/.github/ISSUE_TEMPLATE/bugfix-task.md"
-cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/release-tracking.md" "$REPO/.github/ISSUE_TEMPLATE/release-tracking.md"
-cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/spec-approval.md"    "$REPO/.github/ISSUE_TEMPLATE/spec-approval.md"
+cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/release-tracking.md"    "$REPO/.github/ISSUE_TEMPLATE/release-tracking.md"
+cp "$ROOT_DIR/repo-templates/.github/ISSUE_TEMPLATE/spec-approval.md"       "$REPO/.github/ISSUE_TEMPLATE/spec-approval.md"
 cp "$ROOT_DIR/repo-templates/.github/pull_request_template.md"           "$REPO/.github/pull_request_template.md"
 cp "$ROOT_DIR/repo-templates/.github/workflows/merge-gate.yml"           "$REPO/.github/workflows/merge-gate.yml"
 cp "$ROOT_DIR/repo-templates/SPEC.md"                                    "$REPO/SPEC.md"
@@ -200,45 +203,14 @@ fi
 # 9. callback validation — write a minimal callback file and validate it
 CALLBACK_FILE="$TMPDIR_BASE/callback.md"
 cat > "$CALLBACK_FILE" <<'MD'
-## Task
-
-- Task ID: smoke-test-task
-- Title: Smoke test scaffold
-
-## Agent
-
-- Agent: builder-smoke
-- Session: smoke-smoke-builder-smoke-test
-
-## Outcome
-
-DONE
-
-## Routing
-
-- To: orchestrator-smoke
-- Via: ACP
-
-## Changed
-
-- Created smoke test scaffold
-
-## Artifacts
-
-- None
-
-## Tests
-
-- validate-project-bootstrap passed
-- validate-task-ledger passed
-
-## Blockers
-
-- None
-
-## Next Action
-
-- Orchestrator to assign for QA review
+FROM: builder-smoke
+TO: orchestrator-smoke
+TASK: smoke-test-task
+STATUS: DONE
+REF: https://github.com/example/repo/pull/1
+CHECKS: validate-project-bootstrap passed; validate-task-ledger passed
+BLOCKERS: none
+NEXT: Orchestrator to assign for QA review
 MD
 
 run_check "validate-callback" \
@@ -331,98 +303,41 @@ else
   PASS=$(( PASS + 1 ))
 fi
 
-# 9e. callback validation — missing required section is rejected
+# 9e. callback validation — missing required key is rejected
 BAD_CALLBACK_FILE="$TMPDIR_BASE/bad-callback.md"
 cat > "$BAD_CALLBACK_FILE" <<'MD'
-## Task
-
-- Task ID: smoke-test-task
-
-## Agent
-
-- Agent: qa-smoke
-
-## Outcome
-
-NEEDS_REVIEW
-
-## Routing
-
-- To: orchestrator-smoke
-- Via: ACP
-
-## Changed
-
-- Posted QA review comment on PR #7
-
-## Artifacts
-
-- PR #7 comment
-
-## Tests
-
-- Manual review performed
-
-## Blockers
-
-- None
-
+FROM: qa-smoke
+TO: orchestrator-smoke
+TASK: smoke-test-task
+STATUS: NEEDS_REVIEW
+REF: https://github.com/example/repo/pull/7
+CHECKS: manual review performed
 MD
-# Missing ## Next Action section — validator must reject this
+# Missing BLOCKERS and NEXT keys — validator must reject this
 if python3 "$ROOT_DIR/scripts/validate-callback.py" "$BAD_CALLBACK_FILE" >/dev/null 2>&1; then
-  RESULTS+=("FAIL  validate-callback should reject callback missing ## Next Action")
+  RESULTS+=("FAIL  validate-callback should reject callback missing required keys")
   FAIL=$(( FAIL + 1 ))
 else
-  RESULTS+=("PASS  validate-callback rejects callback missing required section")
+  RESULTS+=("PASS  validate-callback rejects callback missing required keys")
   PASS=$(( PASS + 1 ))
 fi
 
-# 9c. callback validation — no Routing To: line is rejected
+# 9c. callback validation — missing TO key is rejected
 NO_ROUTING_CALLBACK="$TMPDIR_BASE/no-routing-callback.md"
 cat > "$NO_ROUTING_CALLBACK" <<'MD'
-## Task
-
-- Task ID: smoke-test-task
-- Title: Smoke test
-
-## Agent
-
-- Agent: qa-smoke
-- Session: smoke
-
-## Outcome
-
-DONE
-
-## Routing
-
-- Via: ACP
-
-## Changed
-
-- Did stuff
-
-## Artifacts
-
-- None
-
-## Tests
-
-- None
-
-## Blockers
-
-- None
-
-## Next Action
-
-- Orchestrator to proceed
+FROM: qa-smoke
+TASK: smoke-test-task
+STATUS: DONE
+REF: https://github.com/example/repo/pull/7
+CHECKS: all good
+BLOCKERS: none
+NEXT: Orchestrator to proceed
 MD
 if python3 "$ROOT_DIR/scripts/validate-callback.py" "$NO_ROUTING_CALLBACK" >/dev/null 2>&1; then
-  RESULTS+=("FAIL  validate-callback should reject callback with no Routing To: line")
+  RESULTS+=("FAIL  validate-callback should reject callback with missing TO key")
   FAIL=$(( FAIL + 1 ))
 else
-  RESULTS+=("PASS  validate-callback rejects callback with no Routing To: line")
+  RESULTS+=("PASS  validate-callback rejects callback with missing TO key")
   PASS=$(( PASS + 1 ))
 fi
 
@@ -714,48 +629,14 @@ fi
 # 16a. QA DONE callback with qa-approved outcome passes validate-callback
 QA_DONE_CALLBACK="$TMPDIR_BASE/qa-done-callback.md"
 cat > "$QA_DONE_CALLBACK" <<'MD'
-## Task
-
-- Task ID: issue-42
-- Title: Add web shell feature
-
-## Agent
-
-- Agent: qa-smoke
-- Session: qa-smoke:main
-
-## Outcome
-
-DONE
-
-## Routing
-
-- To: orchestrator-smoke
-- Via: ACP
-
-## Changed
-
-- Reviewed PR #7 against issue #42 acceptance criteria
-- All acceptance criteria verified: PASS
-- Applied `qa-approved` label to PR #7
-
-## Artifacts
-
-- PR #7 comment with full review findings
-
-## Tests
-
-- Manual review: PASS
-- Unit test coverage adequate
-- No regressions detected
-
-## Blockers
-
-- None
-
-## Next Action
-
-- Orchestrator to check for `spec-satisfied` label and proceed with merge gate if present
+FROM: qa-smoke
+TO: orchestrator-smoke
+TASK: issue-42
+STATUS: DONE
+REF: https://github.com/example/repo/pull/7
+CHECKS: all ACs verified PASS; qa-approved applied to PR #7
+BLOCKERS: none
+NEXT: Orchestrator to check for spec-satisfied label and proceed with merge gate if present
 MD
 run_check "validate-callback: QA DONE (qa-approved) passes validation" \
   python3 "$ROOT_DIR/scripts/validate-callback.py" "$QA_DONE_CALLBACK"
@@ -835,16 +716,76 @@ else
   FAIL=$(( FAIL + 1 ))
 fi
 
-# 17c. prepare-release workflow must name release-manager as first and last agent
+# 17c. prepare-release workflow must name release-manager as last agent and include orchestrator
+# (orchestrator opens the release request as first step; release-manager publishes final as last)
 RELEASE_AGENTS="$(grep '^ *agent:' "$ROOT_DIR/workflows/prepare-release.yaml" | awk '{print $2}')"
 FIRST_AGENT="$(echo "$RELEASE_AGENTS" | head -1)"
 LAST_AGENT="$(echo "$RELEASE_AGENTS" | tail -1)"
-if [ "$FIRST_AGENT" = "release-manager" ] && [ "$LAST_AGENT" = "release-manager" ]; then
-  RESULTS+=("PASS  prepare-release.yaml: release-manager is first and last agent in workflow")
+if [ "$FIRST_AGENT" = "orchestrator" ] && [ "$LAST_AGENT" = "release-manager" ]; then
+  RESULTS+=("PASS  prepare-release.yaml: orchestrator opens workflow; release-manager closes it")
   PASS=$(( PASS + 1 ))
 else
-  RESULTS+=("FAIL  prepare-release.yaml: expected release-manager as first/last agent (got first=$FIRST_AGENT last=$LAST_AGENT)")
+  RESULTS+=("FAIL  prepare-release.yaml: expected orchestrator first and release-manager last (got first=$FIRST_AGENT last=$LAST_AGENT)")
   FAIL=$(( FAIL + 1 ))
+fi
+
+# ── post-pr-line-comment rendering ───────────────────────────────────────────
+# These tests verify the line-comment helper renders body content correctly,
+# prepends the attribution header, and never emits a file path as the body.
+
+# 18a. render-agent-comment.py produces attribution header
+LINE_BODY_FILE="$TMPDIR_BASE/line-comment-body.md"
+cat > "$LINE_BODY_FILE" <<'MD'
+This is a security finding on line 42.
+
+The variable `token` is logged in plain text. Remove the log statement.
+MD
+LINE_RENDERED="$TMPDIR_BASE/line-comment-rendered.md"
+python3 "$ROOT_DIR/scripts/render-agent-comment.py" \
+  --archetype Security --input "$LINE_BODY_FILE" > "$LINE_RENDERED"
+if grep -q "_posted by \*\*Security\*\*_" "$LINE_RENDERED"; then
+  RESULTS+=("PASS  render-agent-comment produces Security attribution header")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  render-agent-comment missing attribution header in output")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 18b. rendered output contains the original body text
+if grep -q "security finding on line 42" "$LINE_RENDERED"; then
+  RESULTS+=("PASS  render-agent-comment preserves original body text")
+  PASS=$(( PASS + 1 ))
+else
+  RESULTS+=("FAIL  render-agent-comment lost original body text")
+  FAIL=$(( FAIL + 1 ))
+fi
+
+# 18c. rendered output does not contain the source file path
+if grep -q "$LINE_BODY_FILE" "$LINE_RENDERED"; then
+  RESULTS+=("FAIL  render-agent-comment output contains literal file path (body substitution broken)")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  render-agent-comment output does not contain source file path")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 18d. post-pr-line-comment.sh rejects missing args (new 7-arg interface)
+if "$ROOT_DIR/scripts/post-pr-line-comment.sh" >/dev/null 2>&1; then
+  RESULTS+=("FAIL  post-pr-line-comment.sh should require 7 arguments")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  post-pr-line-comment.sh enforces 7-argument interface")
+  PASS=$(( PASS + 1 ))
+fi
+
+# 18e. post-pr-line-comment.sh rejects missing body file
+if "$ROOT_DIR/scripts/post-pr-line-comment.sh" \
+    owner/repo 42 abc1234 src/app.ts 87 Security /nonexistent/file.md >/dev/null 2>&1; then
+  RESULTS+=("FAIL  post-pr-line-comment.sh should fail when body file does not exist")
+  FAIL=$(( FAIL + 1 ))
+else
+  RESULTS+=("PASS  post-pr-line-comment.sh fails when body file does not exist")
+  PASS=$(( PASS + 1 ))
 fi
 
 # ── summary ───────────────────────────────────────────────────────────────────

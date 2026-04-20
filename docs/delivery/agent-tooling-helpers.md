@@ -229,11 +229,11 @@ scripts/check-framework-version.sh .
 ```
 
 ### `scripts/post-pr-line-comment.sh`
-Post a line-anchored review comment on a pull request.
+Post a line-anchored review comment on a pull request. Renders the body through `render-agent-comment.py`, prepending the standard `> _posted by **<Archetype>**_` header. Body content is submitted as rendered text — never as a file path.
 
 Example:
 ```bash
-scripts/post-pr-line-comment.sh owner/repo 42 abc1234 src/app.tsx 87 review-comment.md
+scripts/post-pr-line-comment.sh owner/repo 42 abc1234 src/app.tsx 87 Security review-comment.md
 ```
 
 ### `scripts/post-bug-report.sh`

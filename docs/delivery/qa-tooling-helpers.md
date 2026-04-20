@@ -11,7 +11,7 @@ Set repo-local git author identity before committing.
 
 ```bash
 scripts/post-agent-comment.sh <owner/repo> pr <pr-number> QA <comment.md>
-scripts/post-pr-line-comment.sh <owner/repo> <pr-number> <commit-sha> <file-path> <line> <comment.md>
+scripts/post-pr-line-comment.sh <owner/repo> <pr-number> <commit-sha> <file-path> <line> QA <comment.md>
 scripts/post-bug-report.sh <owner/repo> pr <pr-number> <bug-report.md> --archetype QA
 ```
 

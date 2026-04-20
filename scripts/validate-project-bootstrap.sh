@@ -11,9 +11,12 @@ require_file() {
   fi
 }
 
-require_file ".github/ISSUE_TEMPLATE/spec-task.md"
-require_file ".github/ISSUE_TEMPLATE/architecture-decision.md"
+require_file ".github/ISSUE_TEMPLATE/feature-task.md"
+require_file ".github/ISSUE_TEMPLATE/change-task.md"
 require_file ".github/ISSUE_TEMPLATE/bugfix-task.md"
+require_file ".github/ISSUE_TEMPLATE/spike-task.md"
+require_file ".github/ISSUE_TEMPLATE/chore-task.md"
+require_file ".github/ISSUE_TEMPLATE/architecture-decision.md"
 require_file ".github/ISSUE_TEMPLATE/release-tracking.md"
 require_file ".github/ISSUE_TEMPLATE/spec-approval.md"
 require_file ".github/pull_request_template.md"

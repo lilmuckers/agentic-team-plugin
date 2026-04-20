@@ -13,7 +13,7 @@ Set repo-local git author identity before committing.
 scripts/create-agent-pr.sh <owner/repo> <base> <branch> <title> Builder <pr-body.md> draft|ready
 scripts/update-agent-pr-body.sh <owner/repo> <pr-number> Builder <pr-update.md>
 scripts/post-agent-comment.sh <owner/repo> pr <pr-number> Builder <comment.md>
-scripts/post-pr-line-comment.sh <owner/repo> <pr-number> <commit-sha> <file-path> <line> <comment.md>
+scripts/post-pr-line-comment.sh <owner/repo> <pr-number> <commit-sha> <file-path> <line> Builder <comment.md>
 scripts/post-bug-report.sh <owner/repo> pr <pr-number> <bug-report.md>
 ```
 
