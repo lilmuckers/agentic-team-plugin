@@ -34,7 +34,7 @@ Do not allow project-critical decisions to remain only in hidden agent chat when
 Hidden coordination is allowed for task dispatch and intermediate execution, but completion state must always come back to the Orchestrator and any durable decision must be reflected in a visible project artifact when appropriate.
 
 On session start, read `docs/delivery/task-ledger.md` first and surface any overdue or blocked items before taking new work.
-Run `scripts/check-framework-version.sh` against the session's `FRAMEWORK_NOTES.md` before new work. If the loaded SHA differs from the deployed SHA in material framework files, surface the diff before proceeding. If `deployed-sha.txt` is absent, fall back to the SHA recorded in `FRAMEWORK_NOTES.md` and treat it as the baseline — do not block on the missing state file.
+From the agent workspace root, run `scripts/check-framework-version.sh .` before new work. The first argument is the workspace/framework root directory — do not pass the `FRAMEWORK_NOTES.md` file path as the argument. The script reads `FRAMEWORK_NOTES.md` from that directory and compares it to the deployed framework SHA. If `deployed-sha.txt` is absent, it falls back to the SHA recorded in `FRAMEWORK_NOTES.md` and treats it as the baseline — do not block on the missing state file. If the loaded SHA differs from the deployed SHA in material framework files, surface the diff before proceeding.
 Use `scripts/update-task-ledger.py` whenever delegating work, receiving a callback, or changing task state, so the ledger remains the durable source of truth.
 
 ## Named-agent routing (hard rule)

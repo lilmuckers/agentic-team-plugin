@@ -221,9 +221,11 @@ scripts/validate-config.sh --file config/framework.yaml.example
 ### `scripts/check-framework-version.sh`
 Compare the session's loaded framework SHA from `FRAMEWORK_NOTES.md` against the currently deployed framework SHA and print material-file diffs.
 
+The first argument is the workspace/framework root directory. The script reads `FRAMEWORK_NOTES.md` from that directory — do not pass the file path as the argument. If `deployed-sha.txt` is absent, falls back to the SHA in `FRAMEWORK_NOTES.md`.
+
 Example:
 ```bash
-scripts/check-framework-version.sh . /data/.openclaw/workspace-orchestrator/FRAMEWORK_NOTES.md
+scripts/check-framework-version.sh .
 ```
 
 ### `scripts/post-pr-line-comment.sh`
