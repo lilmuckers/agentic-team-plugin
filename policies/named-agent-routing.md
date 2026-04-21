@@ -12,6 +12,7 @@ That includes:
 - Release coordination -> `release-manager-<project-slug>`
 - Builder coordination work -> `builder-<project-slug>`
 - QA review ownership -> `qa-<project-slug>`
+- Triage work -> `triage-<project-slug>`
 
 ## Subagent rule
 Generic subagents may support the owning named agent, but they do not replace the owning named agent when it exists.

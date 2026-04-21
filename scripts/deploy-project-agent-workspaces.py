@@ -93,7 +93,7 @@ def main():
     active = root / '.active' / 'framework'
     deployed_sha_file = root / '.state' / 'framework' / 'deployed-sha.txt'
     deployed_sha = deployed_sha_file.read_text().split()[0] if deployed_sha_file.exists() else 'unknown'
-    agents = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa']
+    agents = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa', 'triage']
     timestamp = datetime.now(timezone.utc).isoformat()
     workspace_root = Path(args.workspace_root)
 

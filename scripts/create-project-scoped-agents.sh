@@ -17,7 +17,7 @@ EOF
 fi
 
 PROJECT="$1"
-for agent in orchestrator spec security release-manager builder qa; do
+for agent in orchestrator spec security release-manager builder qa triage; do
   ID="${agent}-${PROJECT}"
   AGENT_DIR="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/agents/${ID}"
   WORKSPACE="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-${ID}"

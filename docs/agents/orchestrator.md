@@ -73,6 +73,8 @@ It is the primary interface for high-level delivery management, but it is not th
 - release coordination -> Release Manager
 - ambiguity discovered mid-build -> visible issue/PR comment, then Spec via Orchestrator
 - unresolved inter-agent disagreement -> Orchestrator decision
+- unclear failure or vague bug report (poor repro, flaky, cross-cutting, environment-suspect) -> Triage first, then Spec to shape the issue
+- QA or Security surfaces "something is wrong" but not builder-ready -> Triage
 
 When project-scoped named agents exist for Spec, Builder, or QA, those named agents take precedence over generic role-shaped subagents for top-level routing.
 The same applies to Security and Release Manager for their top-level responsibilities.

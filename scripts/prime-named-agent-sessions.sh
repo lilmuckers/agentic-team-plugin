@@ -73,7 +73,7 @@ PRIMING_MESSAGE="System: session initialisation for ${PROJECT}. Acknowledge with
 PASS=0
 FAIL=0
 
-for ARCHETYPE in orchestrator spec security release-manager builder qa; do
+for ARCHETYPE in orchestrator spec security release-manager builder qa triage; do
   AGENT_ID="${ARCHETYPE}-${PROJECT}"
 
   if [ "$DRY_RUN" -eq 1 ]; then

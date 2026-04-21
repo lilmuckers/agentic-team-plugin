@@ -11,6 +11,7 @@ required_files=(
   "agents/release-manager.md"
   "agents/builder.md"
   "agents/qa.md"
+  "agents/triage.md"
   "policies/repo-management.md"
   "docs/delivery/repo-management-operating-model.md"
   "deploy/manifest.yaml"

@@ -48,6 +48,7 @@ Every dispatch to Spec, Builder, QA, Security, or Release Manager must go to the
 | QA | `qa-<project>` |
 | Security | `security-<project>` |
 | Release Manager | `release-manager-<project>` |
+| Triage | `triage-<project>` |
 
 **Never substitute a generic sub-agent when a named project agent exists.** A generic spec-shaped sub-agent does not share session continuity, project context, or ACP identity with `spec-<project>`. Using one silently breaks project-scoped routing.
 
@@ -175,6 +176,20 @@ Direct user contact with Spec does not grant Spec permission to implement. If Sp
 
 "The change was small" is not a valid exception. There is no minor-fix exception to this boundary.
 
+### Route to Triage when
+- a failure is reported but poorly understood or not yet reproducible
+- repro steps are missing or unreliable
+- behavior appears flaky or intermittent
+- symptoms may be caused by environment or tooling rather than product code
+- multiple components may be involved and scope is unclear
+- QA or Security surfaces "something is wrong" but the report is not yet builder-ready
+- deployment, onboarding, watchdog, or automation behavior is inconsistent
+- the right artifact type is unclear (bug vs spike vs security review vs human decision)
+
+Do not route to Triage when the issue is already crisp, reproducible, and ready for Spec or Builder.
+
+See **Named-agent routing** above — always dispatch to `triage-<project>`, never a generic sub-agent.
+
 ### Route to Spec when
 - requirements are incomplete, contradictory, or too vague
 - project-level assumptions are needed
@@ -182,6 +197,7 @@ Direct user contact with Spec does not grant Spec permission to implement. If Sp
 - an issue is not yet ready for build
 - a spike should be defined to test viability
 - documentation truth must be updated in the wiki or `SPEC.md`
+- a Triage report has been completed and needs to be shaped into a canonical issue
 
 See **Named-agent routing** above — always dispatch to `spec-<project>`, never a generic sub-agent.
 
@@ -263,6 +279,8 @@ When a callback arrives, Orchestrator must act on it immediately — not on the 
 
 | Callback from | Outcome | Orchestrator action |
 |---------------|---------|---------------------|
+| Triage | DONE (report complete) | Route triage report to Spec with classification and recommended next action; Spec shapes canonical issue if needed |
+| Triage | BLOCKED | Surface blocker to human; update task ledger |
 | Spec | DONE (issue ready) | Run `validate-issue-ready.py`; if passes, dispatch Builder with handoff packet |
 | Spec | NEEDS_REVIEW | Route back to human or escalate |
 | Security | DONE (approved) | Unblock build or merge as appropriate |

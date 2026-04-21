@@ -30,9 +30,12 @@ agent_extra_paths = {
     'release-manager': [
         d / 'release-manager-tooling-helpers.md',
     ],
+    'triage': [
+        d / 'triage-tooling-helpers.md',
+    ],
 }
 
-agent_names = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa']
+agent_names = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa', 'triage']
 
 for agent in agent_names:
     parts = []

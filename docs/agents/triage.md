@@ -2,9 +2,20 @@
 
 ## Status
 
-Proposed top-level archetype. This document is a design brief, not a declaration that Triage is already part of the canonical runtime topology.
+Implemented (Phase 1). The canonical runtime role doc is at `agents/triage.md`.
 
-Until implemented in `agents/`, deployment/bootstrap scripts, runtime bundle generation, and framework validation, Triage remains a proposed addition rather than an active named agent.
+This document is the design brief and remains authoritative for the rationale, phase roadmap, and acceptance criteria. The runtime role doc in `agents/triage.md` is what named agent sessions load.
+
+Triage is now part of the canonical runtime topology:
+- `agents/triage.md` — role doc
+- `docs/delivery/triage-tooling-helpers.md` — tooling helpers
+- `scripts/generate-runtime-bundles.py` — runtime bundle generation
+- `scripts/create-project-scoped-agents.sh` — project agent creation
+- `scripts/deploy-project-agent-workspaces.py` — workspace deployment
+- `scripts/prime-named-agent-sessions.sh` — session priming
+- `scripts/validate-framework.sh` — framework validation
+- `agents/orchestrator.md` — routing rules and callback handling
+- `policies/named-agent-routing.md` — routing policy
 
 ## Purpose
 
