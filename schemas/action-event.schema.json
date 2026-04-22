@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/agentic-team-plugin/schemas/action-event.schema.json",
+  "title": "Agent framework action event",
+  "description": "Canonical event envelope for auditable swarm actions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "timestamp",
+    "project",
+    "agentRole",
+    "agentId",
+    "actionType",
+    "status",
+    "outcome",
+    "target",
+    "metadata",
+    "durationMs",
+    "correlationId"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "project": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agentRole": {
+      "type": "string",
+      "enum": [
+        "orchestrator",
+        "triage",
+        "spec",
+        "builder",
+        "qa",
+        "security",
+        "release-manager",
+        "specialist",
+        "system",
+        "human"
+      ]
+    },
+    "agentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sessionKey": {
+      "type": ["string", "null"]
+    },
+    "actionType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "started",
+        "succeeded",
+        "failed",
+        "blocked",
+        "cancelled",
+        "timed-out"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "artifacts": {
+      "$ref": "#/$defs/artifacts"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Action-specific metadata. Prefer documented keys from the action taxonomy.",
+      "default": true
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "correlationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parentEventId": {
+      "type": ["string", "null"]
+    },
+    "retryCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "named-agent",
+            "ephemeral-agent",
+            "issue",
+            "pull-request",
+            "wiki-page",
+            "release",
+            "callback",
+            "human",
+            "framework",
+            "workspace",
+            "repo",
+            "none"
+          ]
+        },
+        "id": {
+          "type": ["string", "null"]
+        },
+        "url": {
+          "type": ["string", "null"],
+          "format": "uri-reference"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "issueNumber": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "prNumber": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "branch": {
+          "type": ["string", "null"]
+        },
+        "commitSha": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "releaseVersion": {
+          "type": ["string", "null"]
+        },
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri-reference"
+          },
+          "default": []
+        }
+      },
+      "default": {}
+    }
+  }
+}

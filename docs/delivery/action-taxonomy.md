@@ -1,5 +1,14 @@
 # Action Taxonomy and Auditability Model
 
+## Machine-readable proposal artifacts
+
+This document is paired with the following schema/registry proposals:
+- `schemas/action-event.schema.json` — canonical event envelope for auditable actions
+- `schemas/action-types.json` — action type registry with families, implementation strength, target kinds, and recommended metadata keys
+- `schemas/reason-codes.json` — initial registry for reason codes, outcomes, classifications, confidence values, builder-readiness values, and severity values
+
+These files are proposals, not yet enforced runtime contracts.
+
 ## Purpose
 
 This document defines a canonical action taxonomy for the agent framework so swarm behavior can be:
