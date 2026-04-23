@@ -8,6 +8,8 @@ Several findings in this review are now reflected in the active docs and framewo
 - explicit project activation gates in `policies/project-activation.md`
 - seven project-scoped named agents including Triage
 - clearer active-versus-proposal documentation boundaries
+- active Triage reference docs in `docs/agents/triage.md`
+- an active current-state auditability doc in `docs/delivery/action-taxonomy.md`
 
 Use the active docs in `docs/agents/`, `docs/delivery/`, `policies/`, and `agents/` for current framework behavior.
 
