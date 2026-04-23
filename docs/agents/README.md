@@ -10,7 +10,7 @@ This directory contains human-readable reference docs for active agent roles and
 
 ## Current contents
 
-- top-level role reference docs such as `orchestrator.md`, `spec.md`, `security.md`, `release-manager.md`, `builder.md`, `qa.md`, and `triage.md` in `agents/`
+- top-level role reference docs such as `orchestrator.md`, `spec.md`, `security.md`, `release-manager.md`, `builder.md`, `qa.md`, and `triage.md`
 - subordinate-role reference docs such as `spec-architect.md`
 
 ## Important boundary

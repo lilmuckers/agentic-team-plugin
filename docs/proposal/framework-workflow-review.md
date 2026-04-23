@@ -1,5 +1,16 @@
 # Framework workflow review
 
+## Status
+
+This is a review/recommendation document, not canonical behavioral truth.
+
+Several findings in this review are now reflected in the active docs and framework behavior, including:
+- explicit project activation gates in `policies/project-activation.md`
+- seven project-scoped named agents including Triage
+- clearer active-versus-proposal documentation boundaries
+
+Use the active docs in `docs/agents/`, `docs/delivery/`, `policies/`, and `agents/` for current framework behavior.
+
 ## Purpose of this review
 
 This review maps the framework from the human trigger points downward and identifies where the workflows are clear, where guidance is muddy, and where role boundaries still overlap enough to create uncertainty.

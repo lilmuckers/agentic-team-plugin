@@ -160,7 +160,7 @@ See `policies/project-activation.md` for the authoritative checklist. Summary:
 
 **BOOTSTRAPPED** (recorded by Orchestrator after `onboard-project.sh`):
 - [ ] Repository exists and templates installed
-- [ ] Six named agents exist and passed identity smoke test
+- [ ] Seven named agents exist and passed identity smoke test
 - [ ] Each agent workspace has a `repo/` subdirectory clone
 - [ ] `docs/delivery/project-state.md` exists
 
@@ -188,6 +188,10 @@ Validate at any point: `scripts/validate-project-activation.sh <project> <repo-p
 - owns the spec/backlog/doc initialization
 - records assumptions
 - coordinates architecture exploration if required
+
+### Triage
+- investigates unclear failures or messy bug reports before they become canonical implementation work
+- produces structured triage reports for Spec and Orchestrator when diagnosis is the real missing step
 
 ### Architecture sub-agent
 - supports early design decisions where uncertainty is material

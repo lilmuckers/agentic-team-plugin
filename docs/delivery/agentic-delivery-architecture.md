@@ -12,7 +12,8 @@ The goal is to create a delivery system that is:
 - capable of parallel execution without losing end-to-end accountability
 
 See also:
-- `docs/proposal/action-taxonomy.md` for the proposed action vocabulary, implementation-strength model, and auditability roadmap.
+- `docs/delivery/action-taxonomy.md` for the currently implemented action surfaces and auditability model.
+- `docs/proposal/action-taxonomy.md` for the future structured event taxonomy and auditability roadmap.
 
 ## Core principles
 

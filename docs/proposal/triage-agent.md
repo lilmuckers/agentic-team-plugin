@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented (Phase 1). The canonical runtime role doc is at `agents/triage.md`.
+Implemented (Phase 1). The canonical runtime role doc is at `agents/triage.md` and the active human reference doc is `docs/agents/triage.md`.
 
 This document is the historical design brief for the Triage archetype. It is kept under `docs/proposal/` so implemented runtime docs stay separate from proposal/history material. The runtime role doc in `agents/triage.md` is what named agent sessions load.
 

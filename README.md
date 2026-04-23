@@ -307,6 +307,7 @@ Included intentionally:
 - delivery agent role definitions
 - reusable skills and templates
 - delivery architecture and operating-model docs
+- active reference and operating docs under `docs/agents/` and `docs/delivery/`
 - proposal and review docs under `docs/proposal/`
 - repo-management policy and operating model
 - project bootstrap assets for downstream repos

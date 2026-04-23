@@ -9,9 +9,9 @@ Use it for:
 
 ## Current contents
 
-- `triage-agent.md` — historical design brief for Triage. Triage itself is implemented; the live runtime doc is `agents/triage.md`.
-- `action-taxonomy.md` — proposed structured action/auditability model, not yet fully implemented.
-- `schemas/` — proposal-layer schema artifacts for the action taxonomy.
+- `triage-agent.md` — historical design brief for Triage. Triage itself is implemented; the active docs are `agents/triage.md` and `docs/agents/triage.md`.
+- `action-taxonomy.md` — future structured event/auditability model. The currently implemented auditability surface is documented in `docs/delivery/action-taxonomy.md`.
+- `schemas/` — proposal-layer schema artifacts for the future action taxonomy.
 - `framework-workflow-review.md` — review and recommendation document, not canonical behavioral truth.
 
 ## Boundary

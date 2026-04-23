@@ -4,6 +4,8 @@
 
 Proposal only. This material describes a future structured event layer that has not yet been fully implemented in the runtime/tooling.
 
+For the currently implemented helper-backed auditability surface, see `docs/delivery/action-taxonomy.md`.
+
 ## Machine-readable proposal artifacts
 
 This document is paired with the following schema/registry proposals:
