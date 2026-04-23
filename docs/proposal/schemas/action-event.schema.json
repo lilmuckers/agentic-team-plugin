@@ -2,27 +2,29 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/agentic-team-plugin/docs/proposal/schemas/action-event.schema.json",
   "title": "Proposed agent framework action event",
-  "description": "Proposed event envelope for auditable swarm actions.",
+  "description": "Proposed append-only event envelope for task mutations, wrapper actions, and runtime usage telemetry.",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "eventId",
+    "eventType",
+    "eventSource",
     "timestamp",
     "project",
-    "agentRole",
-    "agentId",
-    "actionType",
-    "status",
-    "outcome",
-    "target",
-    "metadata",
-    "durationMs",
-    "correlationId"
+    "status"
   ],
   "properties": {
     "eventId": {
       "type": "string",
       "minLength": 1
+    },
+    "eventType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "eventSource": {
+      "type": "string",
+      "enum": ["task-service", "wrapper", "runtime", "ingester", "system"]
     },
     "timestamp": {
       "type": "string",
@@ -32,8 +34,20 @@
       "type": "string",
       "minLength": 1
     },
-    "agentRole": {
-      "type": "string",
+    "taskId": {
+      "type": ["string", "null"]
+    },
+    "runId": {
+      "type": ["string", "null"]
+    },
+    "correlationId": {
+      "type": ["string", "null"]
+    },
+    "parentEventId": {
+      "type": ["string", "null"]
+    },
+    "agentType": {
+      "type": ["string", "null"],
       "enum": [
         "orchestrator",
         "triage",
@@ -44,19 +58,21 @@
         "release-manager",
         "specialist",
         "system",
-        "human"
+        "human",
+        null
       ]
     },
     "agentId": {
-      "type": "string",
-      "minLength": 1
+      "type": ["string", "null"]
     },
     "sessionKey": {
       "type": ["string", "null"]
     },
-    "actionType": {
-      "type": "string",
-      "minLength": 1
+    "provider": {
+      "type": ["string", "null"]
+    },
+    "model": {
+      "type": ["string", "null"]
     },
     "status": {
       "type": "string",
@@ -66,12 +82,23 @@
         "failed",
         "blocked",
         "cancelled",
-        "timed-out"
+        "timed-out",
+        "invalid"
       ]
     },
     "outcome": {
-      "type": "string",
-      "minLength": 1
+      "type": ["string", "null"]
+    },
+    "durationMs": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "costUsd": {
+      "type": ["number", "null"],
+      "minimum": 0
+    },
+    "usage": {
+      "$ref": "#/$defs/usage"
     },
     "target": {
       "$ref": "#/$defs/target"
@@ -79,36 +106,54 @@
     "artifacts": {
       "$ref": "#/$defs/artifacts"
     },
-    "metadata": {
+    "data": {
       "type": "object",
-      "description": "Action-specific metadata. Prefer documented keys from the action taxonomy.",
-      "default": true
-    },
-    "durationMs": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "correlationId": {
-      "type": "string",
-      "minLength": 1
-    },
-    "parentEventId": {
-      "type": ["string", "null"]
+      "description": "Event-specific metadata payload.",
+      "additionalProperties": true,
+      "default": {}
     },
     "retryCount": {
-      "type": "integer",
+      "type": ["integer", "null"],
       "minimum": 0
     }
   },
   "$defs": {
+    "usage": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "inputTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "outputTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "totalTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "cacheReadTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "cacheWriteTokens": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      },
+      "default": null
+    },
     "target": {
-      "type": "object",
+      "type": ["object", "null"],
       "additionalProperties": false,
       "required": ["kind", "id"],
       "properties": {
         "kind": {
           "type": "string",
           "enum": [
+            "task",
             "named-agent",
             "ephemeral-agent",
             "issue",
@@ -120,6 +165,7 @@
             "framework",
             "workspace",
             "repo",
+            "tool",
             "none"
           ]
         },
@@ -130,10 +176,11 @@
           "type": ["string", "null"],
           "format": "uri-reference"
         }
-      }
+      },
+      "default": null
     },
     "artifacts": {
-      "type": "object",
+      "type": ["object", "null"],
       "additionalProperties": false,
       "properties": {
         "issueNumber": {
@@ -154,6 +201,9 @@
         "releaseVersion": {
           "type": ["string", "null"]
         },
+        "decisionRecord": {
+          "type": ["string", "null"]
+        },
         "urls": {
           "type": "array",
           "items": {
@@ -163,7 +213,7 @@
           "default": []
         }
       },
-      "default": {}
+      "default": null
     }
   }
 }
