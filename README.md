@@ -78,7 +78,7 @@ This confirms all required fields are present and well-formed before any other s
 scripts/validate-framework.sh
 ```
 
-Checks that all expected agent role docs, skills, workflows, policies, schemas, and deploy artifacts are present.
+Checks that all expected agent role docs, skills, workflows, policies, active schemas, and deploy artifacts are present.
 
 ---
 
@@ -292,11 +292,11 @@ skills/         reusable skills the team can invoke
 workflows/      multi-agent workflow definitions
 policies/       governance and safety rules
 templates/      reusable text artifacts (decision records, bug reports)
-schemas/        shared JSON schemas
+schemas/        active shared JSON schemas
 deploy/         sync/deploy rules and scripts
 repo-templates/ downstream project GitHub templates
 scripts/        all helper scripts
-docs/           design notes, agent reference docs, operating models
+docs/           design notes, active reference docs, operating models, and proposals
 tests/          validation fixtures and examples
 config/         framework.yaml.example (live config is gitignored)
 ```
@@ -307,6 +307,7 @@ Included intentionally:
 - delivery agent role definitions
 - reusable skills and templates
 - delivery architecture and operating-model docs
+- proposal and review docs under `docs/proposal/`
 - repo-management policy and operating model
 - project bootstrap assets for downstream repos
 - deployment manifests and sync tooling

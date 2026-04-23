@@ -4,7 +4,7 @@
 
 Implemented (Phase 1). The canonical runtime role doc is at `agents/triage.md`.
 
-This document is the design brief and remains authoritative for the rationale, phase roadmap, and acceptance criteria. The runtime role doc in `agents/triage.md` is what named agent sessions load.
+This document is the historical design brief for the Triage archetype. It is kept under `docs/proposal/` so implemented runtime docs stay separate from proposal/history material. The runtime role doc in `agents/triage.md` is what named agent sessions load.
 
 Triage is now part of the canonical runtime topology:
 - `agents/triage.md` — role doc

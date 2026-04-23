@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "version": 1,
-  "description": "Canonical action type registry for the auditable swarm action taxonomy.",
+  "description": "Proposed action type registry for the auditable swarm action taxonomy.",
   "families": {
     "orchestrator": [
       "orchestrator.intake",

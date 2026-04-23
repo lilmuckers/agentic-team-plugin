@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/agentic-team-plugin/schemas/action-event.schema.json",
-  "title": "Agent framework action event",
-  "description": "Canonical event envelope for auditable swarm actions.",
+  "$id": "https://example.com/agentic-team-plugin/docs/proposal/schemas/action-event.schema.json",
+  "title": "Proposed agent framework action event",
+  "description": "Proposed event envelope for auditable swarm actions.",
   "type": "object",
   "additionalProperties": false,
   "required": [

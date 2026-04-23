@@ -1,11 +1,15 @@
-# Action Taxonomy and Auditability Model
+# Proposed Action Taxonomy and Auditability Model
+
+## Status
+
+Proposal only. This material describes a future structured event layer that has not yet been fully implemented in the runtime/tooling.
 
 ## Machine-readable proposal artifacts
 
 This document is paired with the following schema/registry proposals:
-- `schemas/action-event.schema.json` — canonical event envelope for auditable actions
-- `schemas/action-types.json` — action type registry with families, implementation strength, target kinds, and recommended metadata keys
-- `schemas/reason-codes.json` — initial registry for reason codes, outcomes, classifications, confidence values, builder-readiness values, and severity values
+- `docs/proposal/schemas/action-event.schema.json` — proposed event envelope for auditable actions
+- `docs/proposal/schemas/action-types.json` — proposed action type registry with families, implementation strength, target kinds, and recommended metadata keys
+- `docs/proposal/schemas/reason-codes.json` — proposed registry for reason codes, outcomes, classifications, confidence values, builder-readiness values, and severity values
 
 These files are proposals, not yet enforced runtime contracts.
 

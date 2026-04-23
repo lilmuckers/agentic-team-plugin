@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "version": 1,
-  "description": "Initial reason-code registry for auditable swarm actions.",
+  "description": "Proposed initial reason-code registry for auditable swarm actions.",
   "reasonCodes": [
     "needs-spec",
     "ready-for-build",
