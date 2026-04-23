@@ -11,6 +11,9 @@ The goal is to create a delivery system that is:
 - disciplined about assumptions
 - capable of parallel execution without losing end-to-end accountability
 
+See also:
+- `docs/delivery/action-taxonomy.md` for the canonical action vocabulary, implementation-strength model, and auditability roadmap.
+
 ## Core principles
 
 1. **GitHub is the shared context space**

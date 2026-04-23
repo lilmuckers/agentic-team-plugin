@@ -1,0 +1,461 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": 1,
+  "description": "Canonical action type registry for the auditable swarm action taxonomy.",
+  "families": {
+    "orchestrator": [
+      "orchestrator.intake",
+      "orchestrator.classify",
+      "orchestrator.route",
+      "orchestrator.block",
+      "orchestrator.accept-callback",
+      "orchestrator.escalate-human"
+    ],
+    "triage": [
+      "triage.start",
+      "triage.reproduce",
+      "triage.collect-evidence",
+      "triage.classify",
+      "triage.report.publish",
+      "triage.recommend-route"
+    ],
+    "spec": [
+      "spec.issue.shape",
+      "spec.issue.create",
+      "spec.issue.comment",
+      "spec.assumption.record",
+      "spec.spike.define",
+      "spec.doc.update"
+    ],
+    "builder": [
+      "builder.task.start",
+      "builder.branch.create",
+      "builder.code.write",
+      "builder.commit",
+      "builder.pr.open",
+      "builder.pr.update",
+      "builder.request-clarification",
+      "builder.spawn-specialist"
+    ],
+    "qa": [
+      "qa.review.pr",
+      "qa.comment.summary",
+      "qa.comment.line",
+      "qa.verdict",
+      "qa.report-bug"
+    ],
+    "security": [
+      "security.review.prebuild",
+      "security.review.pr",
+      "security.comment.summary",
+      "security.comment.line",
+      "security.approval",
+      "security.release-test"
+    ],
+    "release": [
+      "release.tracking.open",
+      "release.state.update",
+      "release.beta.cut",
+      "release.rc.cut",
+      "release.publish",
+      "release.notes.generate"
+    ],
+    "github": [
+      "github.issue.create",
+      "github.issue.comment",
+      "github.pr.open",
+      "github.pr.body.update",
+      "github.pr.comment",
+      "github.pr.line-comment",
+      "github.wiki.update",
+      "github.label.apply",
+      "docs.decision-record.write"
+    ],
+    "system": [
+      "agent.dispatch.named",
+      "agent.dispatch.ephemeral",
+      "callback.send",
+      "validate.issue-ready",
+      "validate.callback",
+      "validate.release-request",
+      "watchdog.check-overdue",
+      "framework.deploy",
+      "framework.prime-agent-session"
+    ]
+  },
+  "implementationStrength": {
+    "0": "Prompt-only",
+    "1": "Convention-backed",
+    "2": "Helper-backed",
+    "3": "Discrete runtime action",
+    "4": "Fully auditable action"
+  },
+  "actions": {
+    "orchestrator.intake": {
+      "family": "orchestrator",
+      "implementationStrength": 1,
+      "targetKinds": ["issue", "pull-request", "callback", "human", "none"],
+      "recommendedMetadata": ["sourceKind", "sourceRef", "requestSummary", "projectState"]
+    },
+    "orchestrator.classify": {
+      "family": "orchestrator",
+      "implementationStrength": 1,
+      "targetKinds": ["named-agent", "human", "none"],
+      "recommendedMetadata": ["candidateRoutes", "chosenRoute", "reasonCode", "classificationConfidence"]
+    },
+    "orchestrator.route": {
+      "family": "orchestrator",
+      "implementationStrength": 2,
+      "targetKinds": ["named-agent", "human"],
+      "recommendedMetadata": ["targetRole", "targetAgentId", "reasonCode", "expectedCallbackAt"]
+    },
+    "orchestrator.block": {
+      "family": "orchestrator",
+      "implementationStrength": 1,
+      "targetKinds": ["issue", "pull-request", "human", "none"],
+      "recommendedMetadata": ["blockerCategory", "blockerSummary", "reasonCode"]
+    },
+    "orchestrator.accept-callback": {
+      "family": "orchestrator",
+      "implementationStrength": 2,
+      "targetKinds": ["callback"],
+      "recommendedMetadata": ["callbackStatus", "senderRole", "senderAgentId", "taskRef"]
+    },
+    "orchestrator.escalate-human": {
+      "family": "orchestrator",
+      "implementationStrength": 1,
+      "targetKinds": ["human"],
+      "recommendedMetadata": ["reasonCode", "urgency", "artifactRefs"]
+    },
+    "triage.start": {
+      "family": "triage",
+      "implementationStrength": 1,
+      "targetKinds": ["issue", "pull-request", "repo", "none"],
+      "recommendedMetadata": ["sourceReportType", "sourceRef", "investigationGoal"]
+    },
+    "triage.reproduce": {
+      "family": "triage",
+      "implementationStrength": 0,
+      "targetKinds": ["repo", "workspace", "none"],
+      "recommendedMetadata": ["reproStatus", "commandsRun", "environment"]
+    },
+    "triage.collect-evidence": {
+      "family": "triage",
+      "implementationStrength": 0,
+      "targetKinds": ["issue", "pull-request", "repo", "workspace"],
+      "recommendedMetadata": ["evidenceType", "sourceRef", "commitSha", "environment"]
+    },
+    "triage.classify": {
+      "family": "triage",
+      "implementationStrength": 1,
+      "targetKinds": ["none"],
+      "recommendedMetadata": ["classification", "confidence", "builderReady"]
+    },
+    "triage.report.publish": {
+      "family": "triage",
+      "implementationStrength": 1,
+      "targetKinds": ["issue", "pull-request", "wiki-page", "repo"],
+      "recommendedMetadata": ["publicationTarget", "classification", "builderReady"]
+    },
+    "triage.recommend-route": {
+      "family": "triage",
+      "implementationStrength": 1,
+      "targetKinds": ["named-agent", "human", "none"],
+      "recommendedMetadata": ["recommendedTargetRole", "reasonCode", "builderReady"]
+    },
+    "spec.issue.shape": {
+      "family": "spec",
+      "implementationStrength": 1,
+      "targetKinds": ["issue"],
+      "recommendedMetadata": ["sourceRefs", "issueType", "acceptanceCriteriaCount"]
+    },
+    "spec.issue.create": {
+      "family": "spec",
+      "implementationStrength": 3,
+      "targetKinds": ["issue"],
+      "recommendedMetadata": ["repo", "issueType", "labels", "sourceRefs"]
+    },
+    "spec.issue.comment": {
+      "family": "spec",
+      "implementationStrength": 3,
+      "targetKinds": ["issue"],
+      "recommendedMetadata": ["commentPurpose", "issueNumber", "linkedDocs"]
+    },
+    "spec.assumption.record": {
+      "family": "spec",
+      "implementationStrength": 1,
+      "targetKinds": ["wiki-page", "repo", "issue"],
+      "recommendedMetadata": ["assumptionCategory", "storageLocation", "linkedIssues"]
+    },
+    "spec.spike.define": {
+      "family": "spec",
+      "implementationStrength": 1,
+      "targetKinds": ["issue"],
+      "recommendedMetadata": ["boundedQuestion", "timeBox", "expectedOutput"]
+    },
+    "spec.doc.update": {
+      "family": "spec",
+      "implementationStrength": 2,
+      "targetKinds": ["wiki-page", "repo"],
+      "recommendedMetadata": ["targetDoc", "section", "reasonCode"]
+    },
+    "builder.task.start": {
+      "family": "builder",
+      "implementationStrength": 1,
+      "targetKinds": ["issue", "repo"],
+      "recommendedMetadata": ["issueNumber", "branch", "commitSha"]
+    },
+    "builder.branch.create": {
+      "family": "builder",
+      "implementationStrength": 1,
+      "targetKinds": ["repo"],
+      "recommendedMetadata": ["branch", "baseBranch", "issueNumber"]
+    },
+    "builder.code.write": {
+      "family": "builder",
+      "implementationStrength": 0,
+      "targetKinds": ["repo"],
+      "recommendedMetadata": ["changeCategory", "changedFiles", "issueNumber"]
+    },
+    "builder.commit": {
+      "family": "builder",
+      "implementationStrength": 1,
+      "targetKinds": ["repo"],
+      "recommendedMetadata": ["commitSha", "semanticSubject", "issueNumber"]
+    },
+    "builder.pr.open": {
+      "family": "builder",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["issueNumbers", "branch", "baseBranch"]
+    },
+    "builder.pr.update": {
+      "family": "builder",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["prNumber", "updatePurpose"]
+    },
+    "builder.request-clarification": {
+      "family": "builder",
+      "implementationStrength": 1,
+      "targetKinds": ["issue", "human", "named-agent"],
+      "recommendedMetadata": ["clarificationCategory", "blockingQuestion", "prNumber"]
+    },
+    "builder.spawn-specialist": {
+      "family": "builder",
+      "implementationStrength": 2,
+      "targetKinds": ["ephemeral-agent"],
+      "recommendedMetadata": ["specialistType", "parentIssue", "justification"]
+    },
+    "qa.review.pr": {
+      "family": "qa",
+      "implementationStrength": 1,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["prNumber", "reviewMode", "linkedIssues"]
+    },
+    "qa.comment.summary": {
+      "family": "qa",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["prNumber", "verdict", "findingsCount"]
+    },
+    "qa.comment.line": {
+      "family": "qa",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["prNumber", "filePath", "line", "severity"]
+    },
+    "qa.verdict": {
+      "family": "qa",
+      "implementationStrength": 1,
+      "targetKinds": ["pull-request", "callback"],
+      "recommendedMetadata": ["verdict", "blockersCount", "regressionConcern"]
+    },
+    "qa.report-bug": {
+      "family": "qa",
+      "implementationStrength": 2,
+      "targetKinds": ["issue", "pull-request"],
+      "recommendedMetadata": ["sourcePr", "severity", "reproducibility"]
+    },
+    "security.review.prebuild": {
+      "family": "security",
+      "implementationStrength": 1,
+      "targetKinds": ["issue"],
+      "recommendedMetadata": ["issueNumber", "securityScopeLabels", "requirementsPresent"]
+    },
+    "security.review.pr": {
+      "family": "security",
+      "implementationStrength": 1,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["prNumber", "linkedIssues", "materialFindingsCount"]
+    },
+    "security.comment.summary": {
+      "family": "security",
+      "implementationStrength": 3,
+      "targetKinds": ["issue", "pull-request"],
+      "recommendedMetadata": ["reviewMode", "outcome", "findingsCount"]
+    },
+    "security.comment.line": {
+      "family": "security",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["filePath", "line", "severity", "category"]
+    },
+    "security.approval": {
+      "family": "security",
+      "implementationStrength": 1,
+      "targetKinds": ["issue", "pull-request", "release"],
+      "recommendedMetadata": ["approvalType", "applied", "rationaleSummary"]
+    },
+    "security.release-test": {
+      "family": "security",
+      "implementationStrength": 1,
+      "targetKinds": ["release"],
+      "recommendedMetadata": ["releaseVersion", "testMode", "findingsCount"]
+    },
+    "release.tracking.open": {
+      "family": "release",
+      "implementationStrength": 2,
+      "targetKinds": ["issue", "release"],
+      "recommendedMetadata": ["versionTarget", "releaseType", "trackingIssueNumber"]
+    },
+    "release.state.update": {
+      "family": "release",
+      "implementationStrength": 3,
+      "targetKinds": ["release", "repo"],
+      "recommendedMetadata": ["oldPhase", "newPhase", "blockersSummary"]
+    },
+    "release.beta.cut": {
+      "family": "release",
+      "implementationStrength": 3,
+      "targetKinds": ["release", "repo"],
+      "recommendedMetadata": ["tagName", "commitSha", "releaseIssueRef"]
+    },
+    "release.rc.cut": {
+      "family": "release",
+      "implementationStrength": 3,
+      "targetKinds": ["release", "repo"],
+      "recommendedMetadata": ["tagName", "commitSha", "releaseIssueRef"]
+    },
+    "release.publish": {
+      "family": "release",
+      "implementationStrength": 2,
+      "targetKinds": ["release"],
+      "recommendedMetadata": ["version", "tagName", "publicationUrl"]
+    },
+    "release.notes.generate": {
+      "family": "release",
+      "implementationStrength": 3,
+      "targetKinds": ["release", "repo"],
+      "recommendedMetadata": ["version", "sourceRange", "includedRefs"]
+    },
+    "github.issue.create": {
+      "family": "github",
+      "implementationStrength": 3,
+      "targetKinds": ["issue"],
+      "recommendedMetadata": ["repo", "labels", "sourceRefs"]
+    },
+    "github.issue.comment": {
+      "family": "github",
+      "implementationStrength": 3,
+      "targetKinds": ["issue"],
+      "recommendedMetadata": ["commentPurpose", "issueNumber"]
+    },
+    "github.pr.open": {
+      "family": "github",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["issueNumbers", "branch", "baseBranch"]
+    },
+    "github.pr.body.update": {
+      "family": "github",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["prNumber", "updatePurpose"]
+    },
+    "github.pr.comment": {
+      "family": "github",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["commentPurpose", "prNumber"]
+    },
+    "github.pr.line-comment": {
+      "family": "github",
+      "implementationStrength": 3,
+      "targetKinds": ["pull-request"],
+      "recommendedMetadata": ["prNumber", "filePath", "line", "severity", "category"]
+    },
+    "github.wiki.update": {
+      "family": "github",
+      "implementationStrength": 3,
+      "targetKinds": ["wiki-page"],
+      "recommendedMetadata": ["page", "reasonCode", "linkedRefs"]
+    },
+    "github.label.apply": {
+      "family": "github",
+      "implementationStrength": 1,
+      "targetKinds": ["issue", "pull-request"],
+      "recommendedMetadata": ["label", "appliedByRole", "reasonCode"]
+    },
+    "docs.decision-record.write": {
+      "family": "github",
+      "implementationStrength": 2,
+      "targetKinds": ["repo"],
+      "recommendedMetadata": ["recordId", "reasonCategory", "linkedRefs"]
+    },
+    "agent.dispatch.named": {
+      "family": "system",
+      "implementationStrength": 3,
+      "targetKinds": ["named-agent"],
+      "recommendedMetadata": ["targetAgentId", "targetRole", "expectedCallbackAt"]
+    },
+    "agent.dispatch.ephemeral": {
+      "family": "system",
+      "implementationStrength": 2,
+      "targetKinds": ["ephemeral-agent"],
+      "recommendedMetadata": ["specialistType", "parentTaskRef"]
+    },
+    "callback.send": {
+      "family": "system",
+      "implementationStrength": 3,
+      "targetKinds": ["callback"],
+      "recommendedMetadata": ["toRole", "toAgentId", "callbackStatus", "taskRef"]
+    },
+    "validate.issue-ready": {
+      "family": "system",
+      "implementationStrength": 3,
+      "targetKinds": ["issue"],
+      "recommendedMetadata": ["issueNumber", "validationResult", "failureCategories"]
+    },
+    "validate.callback": {
+      "family": "system",
+      "implementationStrength": 3,
+      "targetKinds": ["callback"],
+      "recommendedMetadata": ["validationResult", "failureCategories"]
+    },
+    "validate.release-request": {
+      "family": "system",
+      "implementationStrength": 3,
+      "targetKinds": ["release"],
+      "recommendedMetadata": ["validationResult", "failureCategories"]
+    },
+    "watchdog.check-overdue": {
+      "family": "system",
+      "implementationStrength": 2,
+      "targetKinds": ["none"],
+      "recommendedMetadata": ["overdueCount", "taskIds", "followupAction"]
+    },
+    "framework.deploy": {
+      "family": "system",
+      "implementationStrength": 2,
+      "targetKinds": ["framework", "workspace"],
+      "recommendedMetadata": ["deployScope", "project", "deployedSha", "recoveryPathUsed"]
+    },
+    "framework.prime-agent-session": {
+      "family": "system",
+      "implementationStrength": 2,
+      "targetKinds": ["named-agent"],
+      "recommendedMetadata": ["targetAgentId", "sessionKey", "primeMode"]
+    }
+  }
+}
