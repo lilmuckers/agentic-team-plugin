@@ -93,7 +93,7 @@ fi
 
 # ── named agents ──────────────────────────────────────────────────────────────
 
-for agent in orchestrator spec security release-manager builder qa; do
+for agent in orchestrator spec security release-manager builder qa triage; do
   AGENT_ID="${agent}-${PROJECT}"
   AGENT_DIR="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/agents/${AGENT_ID}"
 
@@ -124,7 +124,7 @@ fi
 if [ "$DO_CLONE" -eq 1 ]; then
   echo ""
   echo "Cloning project repo into each agent workspace..."
-  for agent in orchestrator spec security release-manager builder qa; do
+  for agent in orchestrator spec security release-manager builder qa triage; do
     if [ "$DRY_RUN" -eq 1 ]; then
       WORKSPACE="$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-${agent}-${PROJECT}"
       echo "[dry-run] would clone $REMOTE into $WORKSPACE/repo/"
@@ -204,7 +204,7 @@ echo "Default repo-local git identity set to $FRAMEWORK_AGENT_PERSONA_ORCHESTRAT
 echo ""
 
 # ── prime named-agent sessions ────────────────────────────────────────────────
-# Establish agent:X-<project>:main sessions for all six named agents so that
+# Establish agent:X-<project>:main sessions for all seven named agents so that
 # internal session tooling can resolve them. Dispatch via dispatch-named-agent.sh
 # always works regardless, but priming removes "No session found" errors if an
 # agent tries to use internal session tools.

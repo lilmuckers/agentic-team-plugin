@@ -82,7 +82,7 @@ SESSION_GEN="$ROOT_DIR/scripts/agent-session-id.py"
 if [ -n "$AGENT_SUBSET" ]; then
   IFS=',' read -ra AGENTS <<< "$AGENT_SUBSET"
 else
-  AGENTS=(orchestrator spec security release-manager builder qa)
+  AGENTS=(orchestrator spec security release-manager builder qa triage)
 fi
 
 PASS=0

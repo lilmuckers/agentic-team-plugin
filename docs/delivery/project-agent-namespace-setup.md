@@ -13,13 +13,14 @@ Define the practical setup flow for project-scoped named agents.
 ## Helpers
 
 ### `scripts/create-project-scoped-agents.sh`
-Create/ensure the six project-scoped named agents:
+Create/ensure the seven project-scoped named agents:
 - `orchestrator-<project>`
 - `spec-<project>`
 - `security-<project>`
 - `release-manager-<project>`
 - `builder-<project>`
 - `qa-<project>`
+- `triage-<project>`
 
 ### `scripts/deploy-project-agent-workspaces.py`
 Write the managed workspace bootstrap files into:
@@ -29,6 +30,7 @@ Write the managed workspace bootstrap files into:
 - `/data/.openclaw/workspace-release-manager-<project>/`
 - `/data/.openclaw/workspace-builder-<project>/`
 - `/data/.openclaw/workspace-qa-<project>/`
+- `/data/.openclaw/workspace-triage-<project>/`
 
 ### `scripts/setup-project-agent-namespace.sh`
 One-shot helper that runs both steps above.

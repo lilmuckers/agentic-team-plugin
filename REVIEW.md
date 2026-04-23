@@ -48,7 +48,7 @@ The intended bootstrap path appears to be:
 
 1. human creates or identifies a project repository
 2. operator runs `scripts/onboard-project.sh <project-slug> <path-to-project-repo>`
-3. onboarding creates six project-scoped named agents, deploys workspace bootstrap, clones the repo into each workspace, installs templates, optionally bootstraps GitHub setup, and installs the watchdog
+3. onboarding creates seven project-scoped named agents, deploys workspace bootstrap, clones the repo into each workspace, installs templates, optionally bootstraps GitHub setup, and installs the watchdog
 4. smoke tests confirm the agents are wired correctly
 5. Spec begins the first project-definition conversation with the human
 6. Spec creates or refines `SPEC.md`, wiki material, and an initial backlog

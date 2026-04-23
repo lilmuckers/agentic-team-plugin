@@ -196,7 +196,7 @@ timestamp=$TS
 active_dir=$ACTIVE_DIR
 runtime_dir=$ACTIVE_DIR/.runtime
 named_agents_root=$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/agents
-managed_workspaces=$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-orchestrator,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-spec,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-security,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-release-manager,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-builder,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-qa
+managed_workspaces=$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-orchestrator,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-spec,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-security,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-release-manager,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-builder,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-qa,$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT/workspace-triage
 reload_boundary=fresh-session
 EOF
 

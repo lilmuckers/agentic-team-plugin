@@ -13,7 +13,7 @@ RUNTIME = ACTIVE / '.runtime'
 CONFIG = load_config()
 AGENTS_ROOT = Path(CONFIG.workspace_root) / 'agents'
 
-agent_names = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa']
+agent_names = ['orchestrator', 'spec', 'security', 'release-manager', 'builder', 'qa', 'triage']
 now = datetime.now(timezone.utc).isoformat()
 
 for agent in agent_names:

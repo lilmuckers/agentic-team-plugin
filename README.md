@@ -98,10 +98,10 @@ This:
 3. Validates the active copy
 4. Generates archetype runtime bundles (`.runtime/`)
 5. Deploys named-agent config under `$openclaw.workspace_root/agents/`
-6. Deploys workspace bootstrap files for all six archetypes
+6. Deploys workspace bootstrap files for all seven archetypes
 7. Records the deployed SHA and timestamp to `.state/framework/`
 
-After this runs, the six archetype workspaces (`workspace-orchestrator`, `workspace-spec`, `workspace-security`, `workspace-release-manager`, `workspace-builder`, `workspace-qa`) are populated under your OpenClaw workspace root.
+After this runs, the seven archetype workspaces (`workspace-orchestrator`, `workspace-spec`, `workspace-security`, `workspace-release-manager`, `workspace-builder`, `workspace-qa`, `workspace-triage`) are populated under your OpenClaw workspace root.
 
 ### 2.2 Watchdog cron
 
@@ -174,7 +174,7 @@ scripts/onboard-project.sh musical-statues ../musical-statues \
 ```
 
 This will:
-- Create six project-scoped named agents in OpenClaw: `orchestrator-musical-statues`, `spec-musical-statues`, etc.
+- Create seven project-scoped named agents in OpenClaw: `orchestrator-musical-statues`, `spec-musical-statues`, `triage-musical-statues`, etc.
 - Deploy project-specific workspace bootstrap files to each agent's workspace
 - Clone the project repo into `repo/` inside each agent's workspace (via `clone-agent-project-repo.sh`)
 - Validate workspace layout — error if any workspace has `.git` at its root
@@ -186,7 +186,7 @@ If the remote is not yet available (repo not pushed), pass `--no-clone` and run 
 ```bash
 scripts/onboard-project.sh musical-statues ../musical-statues --no-clone
 # later, once pushed:
-for agent in orchestrator spec security release-manager builder qa; do
+for agent in orchestrator spec security release-manager builder qa triage; do
   scripts/clone-agent-project-repo.sh \
     --project musical-statues --agent $agent \
     --remote git@github.com:your-org/musical-statues.git
@@ -202,7 +202,7 @@ GITHUB_REPO=your-org/your-project \
 
 Use `--dry-run` to preview what would happen without making changes.
 
-After onboarding completes, the script automatically runs a swarm smoke test. Each of the six agents is sent a startup verification message and asked to report their name, purpose, what they are ready to do, and any gaps in their configuration. Review each response to confirm they are correctly wired before starting work. If any agent fails or reports a missing prerequisite, investigate before proceeding.
+After onboarding completes, the script automatically runs a swarm smoke test. Each of the seven agents is sent a startup verification message and asked to report their name, purpose, what they are ready to do, and any gaps in their configuration. Review each response to confirm they are correctly wired before starting work. If any agent fails or reports a missing prerequisite, investigate before proceeding.
 
 You can re-run the identity test at any time:
 
@@ -287,7 +287,7 @@ Release versions follow SemVer with the flow: `beta1 → betaN → rc1 → rcN �
 ## Layout
 
 ```
-agents/         role definitions for the six archetypes + specialist templates
+agents/         role definitions for the seven archetypes + specialist templates
 skills/         reusable skills the team can invoke
 workflows/      multi-agent workflow definitions
 policies/       governance and safety rules

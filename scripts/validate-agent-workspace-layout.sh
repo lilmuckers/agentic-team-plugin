@@ -68,7 +68,7 @@ WORKSPACE_ROOT="${WORKSPACE_ROOT_OVERRIDE:-$FRAMEWORK_OPENCLAW_WORKSPACE_ROOT}"
 ERRORS=0
 WARNINGS=0
 
-for agent in orchestrator spec security release-manager builder qa; do
+for agent in orchestrator spec security release-manager builder qa triage; do
   WORKSPACE="$WORKSPACE_ROOT/workspace-${agent}-${PROJECT}"
 
   if [ ! -d "$WORKSPACE" ]; then

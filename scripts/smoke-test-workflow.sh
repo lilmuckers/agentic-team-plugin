@@ -461,17 +461,17 @@ else
   PASS=$(( PASS + 1 ))
 fi
 
-# 16b. prime-named-agent-sessions: dry-run exits 0 and mentions all six agent ids
+# 16b. prime-named-agent-sessions: dry-run exits 0 and mentions all seven agent ids
 PRIME_DRY_OUT="$TMPDIR_BASE/prime-dry.txt"
 if "$ROOT_DIR/scripts/prime-named-agent-sessions.sh" smoke --dry-run >"$PRIME_DRY_OUT" 2>&1; then
   MISSING_AGENTS=0
-  for arch in orchestrator spec security release-manager builder qa; do
+  for arch in orchestrator spec security release-manager builder qa triage; do
     if ! grep -q "${arch}-smoke" "$PRIME_DRY_OUT"; then
       MISSING_AGENTS=$(( MISSING_AGENTS + 1 ))
     fi
   done
   if [ "$MISSING_AGENTS" -eq 0 ]; then
-    RESULTS+=("PASS  prime-named-agent-sessions.sh dry-run covers all six agent ids")
+    RESULTS+=("PASS  prime-named-agent-sessions.sh dry-run covers all seven agent ids")
     PASS=$(( PASS + 1 ))
   else
     RESULTS+=("FAIL  prime-named-agent-sessions.sh dry-run missing $MISSING_AGENTS agent id(s)")

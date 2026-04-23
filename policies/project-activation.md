@@ -11,7 +11,7 @@ Skipping a gate is not permitted. Each gate has a concrete artifact that makes t
 
 **Conditions (all required):**
 - [ ] `scripts/onboard-project.sh` completed without error
-- [ ] All six project-scoped named agents exist and responded to the swarm identity smoke test
+- [ ] All seven project-scoped named agents exist and responded to the swarm identity smoke test
 - [ ] Repo templates installed: `SPEC.md`, `docs/delivery/release-state.md`, `docs/delivery/task-ledger.md`, `.github/workflows/merge-gate.yml`, PR template, issue templates
 - [ ] Each agent workspace has a `repo/` subdirectory clone of the project repo
 - [ ] `docs/delivery/project-state.md` exists and records state `BOOTSTRAPPED`

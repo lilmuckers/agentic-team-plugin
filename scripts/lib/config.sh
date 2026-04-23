@@ -28,7 +28,7 @@ print(f"FRAMEWORK_OPERATOR_CALLNAME={shlex.quote(cfg.operator_callname)}")
 print(f"FRAMEWORK_OPERATOR_EMAIL_DOMAIN={shlex.quote(cfg.operator_email_domain)}")
 print(f"FRAMEWORK_OPERATOR_TIMEZONE={shlex.quote(cfg.operator_timezone)}")
 print(f"FRAMEWORK_OPENCLAW_WORKSPACE_ROOT={shlex.quote(cfg.workspace_root)}")
-for archetype in ["orchestrator", "spec", "builder", "qa", "security", "release_manager"]:
+for archetype in ["orchestrator", "spec", "builder", "qa", "security", "release_manager", "triage"]:
     env_key = f"FRAMEWORK_AGENT_PERSONA_{archetype.upper()}"
     print(f"{env_key}={shlex.quote(cfg.persona_for(archetype))}")
 PY
