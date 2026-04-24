@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mcp_ledger
+      POSTGRES_USER: mcp
+      POSTGRES_PASSWORD: mcp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mcp -d mcp_ledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mcp_ledger:
+    build: ./mcp_ledger
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://mcp:mcp@postgres:5432/mcp_ledger
+      HOST: 0.0.0.0
+      PORT: "8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+volumes:
+  pgdata:
