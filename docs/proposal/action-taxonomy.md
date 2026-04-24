@@ -69,7 +69,7 @@ The cleaner split is:
 ## Architecture
 
 ### Layer 1. Task state
-Canonical, mutable, low-volume.
+Canonical, mutable, low-volume, and explicitly project-scoped.
 
 Examples:
 - `task.created`
@@ -142,7 +142,7 @@ That would be brittle and incomplete.
 Use three emitter classes:
 
 ### 1. Task service emitter
-The task MCP emits task mutation events whenever task state changes.
+The task MCP emits task mutation events whenever task state changes. Reads may be open by `project_id` or `project_slug`, but canonical writes should require a valid project-scoped write token so confused agents cannot scribble into the wrong ledger namespace.
 
 ### 2. Wrapper/helper emitters
 Framework wrappers emit side-effect events.
@@ -387,6 +387,7 @@ That is why task state and action telemetry should be separated instead of force
 
 The proposed model is:
 - **Task MCP** for canonical task state
+- **project_id + ledger_namespace + project_token** as the isolation/auth boundary for task writes
 - **Append-only event stream** for action auditability
 - **Runtime usage events** in the same event pipeline for token/cost/duration telemetry
 - **Postgres projections** for UI and analytics

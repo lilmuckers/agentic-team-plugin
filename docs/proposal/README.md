@@ -13,7 +13,7 @@ Use it for:
 |---|---|---|
 | `triage-agent.md` | Implemented and documented | Active docs now live at `agents/triage.md`, `docs/agents/triage.md`, `docs/delivery/triage-tooling-helpers.md`, and `policies/named-agent-routing.md`. Keep this file as historical design context only. |
 | `action-taxonomy.md` | Partially implemented | The future unified task-state plus event-stream model is still proposal-only. The currently implemented helper-backed auditability surface is documented at `docs/delivery/action-taxonomy.md`. |
-| `task-ledger-mcp.md` | Proposal only | New proposal for canonical task-state MCP API and backing relational schema. No runtime/tooling implementation exists yet. |
+| `task-ledger-mcp.md` | Proposal only | Proposal for canonical task-state MCP API and relational backing schema, now revised toward UUID relational ids plus project-scoped write authorization (`project_id`, `ledger_namespace`, `project_token`). |
 | `schemas/` | Proposal only | These schemas describe the future task/event telemetry layer and are not enforced runtime contracts yet. |
 | `framework-workflow-review.md` | Partially implemented | Several recommendations have landed, including explicit project activation gates, seven-agent topology including Triage, and cleaner active-versus-proposal doc boundaries. Remaining content is still review/recommendation material. |
 
@@ -21,7 +21,7 @@ Use it for:
 
 - `triage-agent.md` — historical design brief for Triage. Triage itself is implemented; the active docs are `agents/triage.md` and `docs/agents/triage.md`.
 - `action-taxonomy.md` — future task-state plus event-stream telemetry model. The currently implemented auditability surface is documented in `docs/delivery/action-taxonomy.md`.
-- `task-ledger-mcp.md` — proposed MCP API and relational backing schema for canonical task state.
+- `task-ledger-mcp.md` — proposed MCP API and relational backing schema for canonical task state, including project bootstrap, UUID relational ids, ledger namespace, and rotatable project-scoped write token.
 - `schemas/` — proposal-layer schema artifacts for the future task/event telemetry model.
 - `framework-workflow-review.md` — review and recommendation document, not canonical behavioral truth.
 

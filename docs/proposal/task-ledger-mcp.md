@@ -34,13 +34,43 @@ If a task must be removed from active use, it is **invalidated**, not deleted.
 
 ---
 
-## Canonical task model
+## Canonical project and task model
 
-A task is the durable unit of orchestration.
+A **project** is the isolation boundary.
+A **task** is the durable unit of orchestration within that project boundary.
 
-Minimum fields:
+### Project identity model
+
+Each project should have four distinct identifiers/credentials:
+
+- `project_id` — canonical relational UUID
+- `project_slug` — human-friendly slug used in UI, docs, and agent context
+- `ledger_namespace` — explicit ledger namespace string used to segregate event/task surfaces and prevent accidental overlap
+- `project_token` — large random hexadecimal write secret used only for mutating operations
+
+Important distinctions:
+- `project_id` is the stable internal identity
+- `project_slug` is not an authority boundary
+- `ledger_namespace` is the explicit storage/telemetry isolation surface
+- `project_token` is an authorization secret and must be rotatable
+
+### Task identity model
+
+Task records should use:
+- `task_id` — canonical UUID/ULID primary key
+- `task_key` — optional human-readable per-project display key for UI and operator workflows
+
+Example:
+- canonical id: `550e8400-e29b-41d4-a716-446655440000`
+- display key: `DECKY-SECRETS-7`
+
+The canonical relational key should not be a SQL counter-derived string. Human readability belongs in a separate display field.
+
+### Minimum task fields
+
 - `task_id`
-- `project`
+- `project_id`
+- `task_key` (display key, optional but recommended)
 - `kind`
 - `title`
 - `state`
@@ -87,13 +117,57 @@ These are the canonical coarse states. Projects may add derived UI groupings, bu
 
 The API should stay intentionally small.
 
-### `task.create`
-Create a new task record.
+## Project bootstrap surface
+
+### `project.create`
+Create the canonical project ledger record.
+
+This should normally be called during project bootstrap/onboarding, not ad hoc by normal worker agents.
 
 **Input**
 ```json
 {
-  "project": "decky-secrets",
+  "project_slug": "decky-secrets",
+  "display_name": "Decky Secrets"
+}
+```
+
+**Output**
+```json
+{
+  "project_id": "550e8400-e29b-41d4-a716-446655440001",
+  "project_slug": "decky-secrets",
+  "ledger_namespace": "ledger.decky-secrets.550e8400",
+  "project_token": "9f3a...<large random hex>...7c21",
+  "created_at": "2026-04-23T22:39:00Z"
+}
+```
+
+The `project_token` should be recorded in project config for the operating agents and treated as a write secret.
+
+### `project.get`
+Fetch one project by `project_id` or `project_slug`.
+
+### `project.rotate_token`
+Rotate the current write secret for a project.
+
+This is why the authorization secret should be treated as a token, not as the canonical project identifier.
+
+### `project.list`
+Return known projects and their public metadata. The token itself must never be returned here.
+
+## Task surface
+
+### `task.create`
+Create a new task record.
+
+**Write auth required:** `project_token`
+
+**Input**
+```json
+{
+  "project_id": "550e8400-e29b-41d4-a716-446655440001",
+  "project_token": "9f3a...<large random hex>...7c21",
   "kind": "bug",
   "title": "Clipboard clear timer fails after suspend",
   "state": "new",
@@ -112,19 +186,21 @@ Create a new task record.
 **Output**
 ```json
 {
-  "task_id": "task_decky_secrets_0007",
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
+  "task_key": "DECKY-SECRETS-7",
   "created_at": "2026-04-23T22:39:00Z"
 }
 ```
 
 ### `task.get`
-Fetch one task by id.
+Fetch one task by `task_id`. Read-only, no token required.
 
 ### `task.list`
-Query tasks.
+Query tasks. Read-only, no token required.
 
 **Supported filters**
-- `project`
+- `project_id`
+- `project_slug`
 - `state`
 - `kind`
 - `owner_agent_type`
@@ -135,6 +211,8 @@ Query tasks.
 
 ### `task.update`
 Patch mutable descriptive fields without changing lifecycle state.
+
+**Write auth required:** `project_token`
 
 Typical fields:
 - `title`
@@ -150,10 +228,14 @@ Typical fields:
 ### `task.transition`
 The main lifecycle mutation.
 
+**Write auth required:** `project_token`
+
 **Input**
 ```json
 {
-  "task_id": "task_decky_secrets_0007",
+  "project_id": "550e8400-e29b-41d4-a716-446655440001",
+  "project_token": "9f3a...<large random hex>...7c21",
+  "task_id": "550e8400-e29b-41d4-a716-446655440000",
   "from_state": "triage",
   "to_state": "ready_for_build",
   "reason_code": "builder-ready",
@@ -169,14 +251,7 @@ This should use optimistic concurrency so stale writers do not silently overwrit
 ### `task.invalidate`
 Soft-delete equivalent.
 
-**Input**
-```json
-{
-  "task_id": "task_decky_secrets_0007",
-  "reason_code": "duplicate-report",
-  "summary": "Superseded by task_decky_secrets_0003"
-}
-```
+**Write auth required:** `project_token`
 
 Effect:
 - sets state to `invalid`
@@ -186,8 +261,12 @@ Effect:
 ### `task.add_note`
 Add a human-readable note without changing canonical state.
 
+Default proposal: allow without token only if explicitly intended for limited non-Orchestrator use. Otherwise require token. At minimum, normal orchestration writes must still be token-scoped.
+
 ### `task.link_artifact`
 Attach a durable artifact reference.
+
+Default proposal: same rule as notes. Keep this narrower than full task mutation, but do not let artifact writes become an unbounded cross-project leak path.
 
 Examples:
 - GitHub issue
@@ -199,7 +278,7 @@ Examples:
 - release tracking issue
 
 ### `task.history`
-Return the authoritative task transition and note history.
+Return the authoritative task transition and note history. Read-only, no token required.
 
 This is still task-level history, not the full action-event stream.
 
@@ -210,11 +289,39 @@ This is still task-level history, not the full action-event stream.
 ### No hard delete
 Tasks are never physically removed through the MCP surface.
 
+### UUID/ULID canonical ids
+- `project_id` should be a UUID/ULID, not a slug-derived value
+- `task_id` should be a UUID/ULID, not a SQL counter-derived display string
+- human-readable keys should remain secondary display fields
+
+### Project-scoped write authorization
+- reads may be open by `project_id` or `project_slug`
+- writes must validate a correct `project_token`
+- the project slug alone must never be accepted as write authority
+- task id alone must never be accepted as write authority
+- writes should validate both project membership and token validity
+
+### Rotatable secret model
+The project write secret should:
+- be generated at `project.create`
+- be large random hexadecimal text
+- be stored in one central rotatable location
+- be required for write methods only
+- be rotatable in future without changing `project_id`
+
 ### Optimistic concurrency
 Every mutating write should carry a revision or version number.
 
 ### Idempotency
 `task.create` should optionally accept an external idempotency key so wrappers do not duplicate tasks on retry.
+
+### Orchestrator-first write ownership
+Default operating model:
+- Orchestrator uses the project token for canonical task creation and state transitions
+- other agents may read directly by project slug/id
+- non-Orchestrator mutation methods such as notes/artifacts should remain explicitly limited if enabled
+
+This keeps task truth tight while still allowing broad visibility.
 
 ### State changes emit action events
 Every successful task mutation should also emit a matching action event:
@@ -233,13 +340,29 @@ The task ledger MCP owns canonical state. It should not be the only event emitte
 
 A relational schema is the simplest sane backing store.
 
+### `projects`
+Canonical project isolation and authorization table.
+
+| Column | Type | Notes |
+|---|---|---|
+| `project_id` | uuid pk | canonical project identity |
+| `project_slug` | text unique not null | human-friendly slug |
+| `display_name` | text not null | project display name |
+| `ledger_namespace` | text unique not null | explicit ledger namespace |
+| `project_token_hash` | text not null | hashed write secret |
+| `created_at` | timestamptz not null | creation time |
+| `updated_at` | timestamptz not null | last mutation time |
+| `archived_at` | timestamptz null | soft archive marker |
+| `token_rotated_at` | timestamptz null | last token rotation |
+
 ### `tasks`
 Canonical current-state table.
 
 | Column | Type | Notes |
 |---|---|---|
-| `task_id` | text pk | stable task id |
-| `project` | text not null | project slug |
+| `task_id` | uuid pk | canonical task id |
+| `project_id` | uuid fk | canonical project identity |
+| `task_key` | text unique null | human-readable display key |
 | `kind` | text not null | feature/bug/change/etc |
 | `title` | text not null | human-readable title |
 | `state` | text not null | canonical coarse state |
@@ -259,6 +382,7 @@ Canonical current-state table.
 | `invalidated_at` | timestamptz null | when invalidated |
 | `invalidation_reason` | text null | reason code |
 | `revision` | bigint not null default 1 | optimistic concurrency token |
+| `idempotency_key` | text unique null | optional de-dupe key |
 
 ### `task_history`
 Authoritative task-level mutation history.
@@ -266,7 +390,8 @@ Authoritative task-level mutation history.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | bigserial pk | row id |
-| `task_id` | text fk | parent task |
+| `project_id` | uuid fk | denormalised project scope for easy filtering |
+| `task_id` | uuid fk | parent task |
 | `event_type` | text not null | created/updated/transitioned/invalidated/note_added/artifact_linked |
 | `from_state` | text null | previous state |
 | `to_state` | text null | next state |
@@ -283,7 +408,8 @@ Linked durable artifacts.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | bigserial pk | row id |
-| `task_id` | text fk | parent task |
+| `project_id` | uuid fk | project scope |
+| `task_id` | uuid fk | parent task |
 | `artifact_kind` | text not null | issue/pr/branch/commit/wiki/decision-record/release |
 | `artifact_ref` | text not null | identifier or path |
 | `url` | text null | optional URL |
@@ -296,11 +422,27 @@ Optional user/agent notes.
 | Column | Type | Notes |
 |---|---|---|
 | `id` | bigserial pk | row id |
-| `task_id` | text fk | parent task |
+| `project_id` | uuid fk | project scope |
+| `task_id` | uuid fk | parent task |
 | `note` | text not null | free text |
 | `author_type` | text null | agent/human/system |
 | `author_id` | text null | identifier |
 | `created_at` | timestamptz not null | note time |
+
+## Concrete revision brief against the current first-cut implementation
+
+The current implementation direction is good, but the next proposal revision should change these points:
+
+1. Replace project-slug-centered identity with a first-class `projects` table.
+2. Replace canonical task ids derived from per-project SQL counters with UUID/ULID task ids.
+3. Keep a separate human-readable `task_key` for UI/operator use.
+4. Add `project.create`, `project.get`, `project.list`, and `project.rotate_token`.
+5. Add `ledger_namespace` as a first-class project field.
+6. Require `project_token` for canonical task writes.
+7. Keep reads open by `project_id` or `project_slug`.
+8. Treat `project_token` as rotatable authorization secret, not as identity.
+9. Record the project token in project config for the operating agents.
+10. Ensure writes validate both project membership and token validity so context pollution cannot leak writes across projects.
 
 ---
 
