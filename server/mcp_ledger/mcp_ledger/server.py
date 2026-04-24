@@ -1,10 +1,15 @@
 """
 Task Ledger MCP Server
 
-Implements the canonical task-state surface described in docs/proposal/task-ledger-mcp.md.
-Exposes nine MCP tools over SSE transport backed by PostgreSQL.
+Exposes thirteen MCP tools over SSE transport backed by PostgreSQL.
 
-Tools:
+Project tools:
+  project_create       — bootstrap a new project ledger record
+  project_get          — fetch one project by id or slug (no token returned)
+  project_list         — list all projects (no tokens returned)
+  project_rotate_token — rotate the project write secret
+
+Task tools:
   task_create         — create a new task
   task_get            — fetch one task by id
   task_list           — query tasks with filters
@@ -16,19 +21,23 @@ Tools:
   task_history        — full history for one task
 """
 
+import hashlib
 import json
-import re
+import secrets
+import uuid as _uuid_mod
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any, Optional
 
 from mcp.server.fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
 
 from . import database as db
 from .config import settings
 
 # ---------------------------------------------------------------------------
-# Valid enumeration sets (from docs/proposal/schemas/reason-codes.json)
+# Valid enumeration sets
 # ---------------------------------------------------------------------------
 
 VALID_STATES = {
@@ -49,7 +58,7 @@ VALID_ARTIFACT_KINDS = {
 
 @asynccontextmanager
 async def lifespan(server: FastMCP):
-    await db.get_pool()  # initialises pool and runs schema migrations
+    await db.get_pool()
     yield
     await db.close_pool()
 
@@ -62,13 +71,25 @@ mcp = FastMCP(
 )
 
 # ---------------------------------------------------------------------------
-# Helpers
+# Health endpoint
 # ---------------------------------------------------------------------------
 
 
-def _slug(project: str) -> str:
-    """Convert a project name to a safe task-id slug."""
-    return re.sub(r"[^a-z0-9]+", "_", project.lower().strip()).strip("_")
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(_request: Request) -> Response:
+    """Liveness + database-connectivity probe for Docker healthchecks."""
+    try:
+        pool = await db.get_pool()
+        async with pool.acquire() as conn:
+            await conn.fetchval("SELECT 1")
+        return JSONResponse({"status": "ok", "database": "ok"})
+    except Exception as exc:
+        return JSONResponse({"status": "error", "detail": str(exc)}, status_code=503)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def _safe(val: Any) -> Any:
@@ -77,6 +98,8 @@ def _safe(val: Any) -> Any:
         return None
     if isinstance(val, datetime):
         return val.isoformat()
+    if isinstance(val, _uuid_mod.UUID):
+        return str(val)
     if isinstance(val, dict):
         return {k: _safe(v) for k, v in val.items()}
     if isinstance(val, (list, tuple)):
@@ -84,9 +107,7 @@ def _safe(val: Any) -> Any:
     return val
 
 
-def _row(record) -> dict | None:
-    if record is None:
-        return None
+def _row(record) -> dict:
     return _safe(dict(record))
 
 
@@ -94,32 +115,173 @@ def _rows(records) -> list[dict]:
     return [_safe(dict(r)) for r in records]
 
 
-async def _next_task_id(conn, project: str) -> str:
-    """Atomically allocate the next sequence number for a project."""
-    result = await conn.fetchrow(
-        """
-        WITH updated AS (
-            INSERT INTO task_counters (project, next_seq)
-            VALUES ($1, 2)
-            ON CONFLICT (project) DO UPDATE
-                SET next_seq = task_counters.next_seq + 1
-            RETURNING next_seq
-        )
-        SELECT next_seq - 1 AS seq FROM updated
-        """,
-        project,
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+async def _validate_token(conn, project_id: str, token: str) -> None:
+    """Raise ValueError if project_token does not match the stored hash."""
+    record = await conn.fetchrow(
+        "SELECT project_token_hash FROM projects WHERE project_id = $1",
+        _uuid_mod.UUID(project_id),
     )
-    return f"task_{_slug(project)}_{result['seq']:04d}"
+    if not record:
+        raise ValueError(f"Project not found: {project_id}")
+    if record["project_token_hash"] != _hash_token(token):
+        raise ValueError("Invalid project_token")
+
+
+async def _resolve_project_uuid(
+    conn, project_id: Optional[str], project_slug: Optional[str]
+) -> Optional[_uuid_mod.UUID]:
+    """Resolve a project UUID from either project_id string or project_slug."""
+    if project_id is not None:
+        return _uuid_mod.UUID(project_id)
+    if project_slug is not None:
+        result = await conn.fetchval(
+            "SELECT project_id FROM projects WHERE project_slug = $1", project_slug
+        )
+        if not result:
+            raise ValueError(f"Project not found: {project_slug}")
+        return result
+    return None
 
 
 # ---------------------------------------------------------------------------
-# Tools
+# Project tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+async def project_create(project_slug: str, display_name: str) -> dict:
+    """
+    Create a canonical project ledger record.
+
+    Returns project_id, project_slug, ledger_namespace, and project_token.
+    The project_token is the write secret — store it in project config immediately.
+    It is only shown once; use project_rotate_token to obtain a new one.
+    """
+    token = secrets.token_hex(32)
+    suffix = secrets.token_hex(4)
+    ledger_namespace = f"ledger.{project_slug}.{suffix}"
+
+    pool = await db.get_pool()
+    async with pool.acquire() as conn:
+        existing = await conn.fetchrow(
+            "SELECT project_id FROM projects WHERE project_slug = $1", project_slug
+        )
+        if existing:
+            raise ValueError(f"Project slug already exists: {project_slug}")
+
+        record = await conn.fetchrow(
+            """
+            INSERT INTO projects
+                (project_slug, display_name, ledger_namespace, project_token_hash)
+            VALUES ($1, $2, $3, $4)
+            RETURNING project_id, project_slug, ledger_namespace, created_at
+            """,
+            project_slug, display_name, ledger_namespace, _hash_token(token),
+        )
+
+    return {
+        "project_id": str(record["project_id"]),
+        "project_slug": record["project_slug"],
+        "ledger_namespace": record["ledger_namespace"],
+        "project_token": token,
+        "created_at": record["created_at"].isoformat(),
+    }
+
+
+@mcp.tool()
+async def project_get(
+    project_id: Optional[str] = None,
+    project_slug: Optional[str] = None,
+) -> dict:
+    """
+    Fetch one project by project_id or project_slug. Read-only, no token required.
+    The project_token is never returned.
+    """
+    if not project_id and not project_slug:
+        raise ValueError("Provide project_id or project_slug")
+
+    _PUBLIC_COLS = (
+        "project_id, project_slug, display_name, ledger_namespace, "
+        "created_at, updated_at, archived_at, token_rotated_at"
+    )
+    pool = await db.get_pool()
+    async with pool.acquire() as conn:
+        if project_id:
+            record = await conn.fetchrow(
+                f"SELECT {_PUBLIC_COLS} FROM projects WHERE project_id = $1",
+                _uuid_mod.UUID(project_id),
+            )
+        else:
+            record = await conn.fetchrow(
+                f"SELECT {_PUBLIC_COLS} FROM projects WHERE project_slug = $1",
+                project_slug,
+            )
+
+    if not record:
+        raise ValueError(f"Project not found: {project_id or project_slug}")
+    return _row(record)
+
+
+@mcp.tool()
+async def project_list() -> str:
+    """
+    List all projects and their public metadata. Returns a JSON array string.
+    The project_token is never included.
+    """
+    pool = await db.get_pool()
+    async with pool.acquire() as conn:
+        records = await conn.fetch(
+            "SELECT project_id, project_slug, display_name, ledger_namespace, "
+            "created_at, updated_at, archived_at, token_rotated_at "
+            "FROM projects ORDER BY created_at DESC"
+        )
+    return json.dumps(_rows(records))
+
+
+@mcp.tool()
+async def project_rotate_token(project_id: str, project_token: str) -> dict:
+    """
+    Rotate the write secret for a project. Requires the current project_token.
+    Returns the new token — store it immediately, it is only shown once.
+    """
+    new_token = secrets.token_hex(32)
+    pool = await db.get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            await _validate_token(conn, project_id, project_token)
+            record = await conn.fetchrow(
+                """
+                UPDATE projects
+                SET project_token_hash = $1,
+                    token_rotated_at = NOW(),
+                    updated_at = NOW()
+                WHERE project_id = $2
+                RETURNING project_id, project_slug, token_rotated_at
+                """,
+                _hash_token(new_token), _uuid_mod.UUID(project_id),
+            )
+
+    return {
+        "project_id": str(record["project_id"]),
+        "project_slug": record["project_slug"],
+        "project_token": new_token,
+        "rotated_at": record["token_rotated_at"].isoformat(),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Task tools
 # ---------------------------------------------------------------------------
 
 
 @mcp.tool()
 async def task_create(
-    project: str,
+    project_id: str,
+    project_token: str,
     kind: str,
     title: str,
     state: str = "new",
@@ -136,11 +298,11 @@ async def task_create(
     idempotency_key: Optional[str] = None,
 ) -> dict:
     """
-    Create a new task in the ledger.
+    Create a new task in the ledger. Requires project_token for write auth.
 
-    Returns task_id and created_at. If idempotency_key is provided and a task
-    with that key already exists, the existing task_id is returned with
-    idempotent=true — no duplicate is created.
+    Returns task_id (UUID) and task_key (human-readable display key, e.g. MYPROJECT-7).
+    If idempotency_key is provided and a matching task already exists, returns
+    the existing task with idempotent=true — no duplicate is created.
     """
     if kind not in VALID_KINDS:
         raise ValueError(f"Invalid kind '{kind}'. Must be one of: {sorted(VALID_KINDS)}")
@@ -150,36 +312,52 @@ async def task_create(
         raise ValueError(f"Invalid priority '{priority}'. Must be one of: {sorted(VALID_PRIORITIES)}")
 
     exp_cb = datetime.fromisoformat(expected_callback_at) if expected_callback_at else None
+    pid = _uuid_mod.UUID(project_id)
     pool = await db.get_pool()
 
     async with pool.acquire() as conn:
         async with conn.transaction():
+            await _validate_token(conn, project_id, project_token)
+
             if idempotency_key:
                 existing = await conn.fetchrow(
-                    "SELECT task_id, created_at FROM tasks WHERE idempotency_key = $1",
-                    idempotency_key,
+                    "SELECT task_id, task_key, created_at FROM tasks "
+                    "WHERE idempotency_key = $1 AND project_id = $2",
+                    idempotency_key, pid,
                 )
                 if existing:
                     return {
-                        "task_id": existing["task_id"],
+                        "task_id": str(existing["task_id"]),
+                        "task_key": existing["task_key"],
                         "created_at": existing["created_at"].isoformat(),
                         "idempotent": True,
                     }
 
-            task_id = await _next_task_id(conn, project)
+            # Atomically allocate sequence number for the human-readable task_key
+            proj_rec = await conn.fetchrow(
+                """
+                UPDATE projects
+                SET task_next_seq = task_next_seq + 1
+                WHERE project_id = $1
+                RETURNING project_slug, task_next_seq - 1 AS seq
+                """,
+                pid,
+            )
+            task_key = f"{proj_rec['project_slug'].upper()}-{proj_rec['seq']}"
+            task_id = _uuid_mod.uuid4()
 
             record = await conn.fetchrow(
                 """
                 INSERT INTO tasks (
-                    task_id, project, kind, title, state, priority,
+                    task_id, project_id, task_key, kind, title, state, priority,
                     owner_agent_type, owner_agent_id,
                     source_kind, source_id,
                     issue_number, pr_number, branch,
                     next_action, expected_callback_at, idempotency_key
-                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-                RETURNING task_id, created_at
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+                RETURNING task_id, task_key, created_at
                 """,
-                task_id, project, kind, title, state, priority,
+                task_id, pid, task_key, kind, title, state, priority,
                 owner_agent_type, owner_agent_id,
                 source_kind, source_id,
                 issue_number, pr_number, branch,
@@ -189,25 +367,28 @@ async def task_create(
             await conn.execute(
                 """
                 INSERT INTO task_history
-                    (task_id, event_type, to_state, actor_type, actor_id, payload_json)
-                VALUES ($1, 'task.created', $2, $3, $4, $5)
+                    (project_id, task_id, event_type, to_state, actor_type, actor_id, payload_json)
+                VALUES ($1, $2, 'task.created', $3, $4, $5, $6)
                 """,
-                task_id, state, owner_agent_type, owner_agent_id,
+                pid, task_id, state, owner_agent_type, owner_agent_id,
                 {"kind": kind, "title": title, "priority": priority},
             )
 
     return {
-        "task_id": record["task_id"],
+        "task_id": str(record["task_id"]),
+        "task_key": record["task_key"],
         "created_at": record["created_at"].isoformat(),
     }
 
 
 @mcp.tool()
 async def task_get(task_id: str) -> dict:
-    """Fetch a single task by ID, including all fields."""
+    """Fetch a single task by ID, including all fields. Read-only, no token required."""
     pool = await db.get_pool()
     async with pool.acquire() as conn:
-        record = await conn.fetchrow("SELECT * FROM tasks WHERE task_id = $1", task_id)
+        record = await conn.fetchrow(
+            "SELECT * FROM tasks WHERE task_id = $1", _uuid_mod.UUID(task_id)
+        )
     if not record:
         raise ValueError(f"Task not found: {task_id}")
     return _row(record)
@@ -215,7 +396,8 @@ async def task_get(task_id: str) -> dict:
 
 @mcp.tool()
 async def task_list(
-    project: Optional[str] = None,
+    project_id: Optional[str] = None,
+    project_slug: Optional[str] = None,
     state: Optional[str] = None,
     kind: Optional[str] = None,
     owner_agent_type: Optional[str] = None,
@@ -228,18 +410,19 @@ async def task_list(
     offset: int = 0,
 ) -> str:
     """
-    Query tasks with optional filters. Returns a JSON array string.
+    Query tasks with optional filters. Returns a JSON array string. Read-only, no token required.
 
-    Filters: project, state, kind, owner_agent_type, owner_agent_id, priority,
-    issue_number, overdue (expected_callback_at < now and not terminal).
-    Invalid tasks are excluded by default; set include_invalid=true to include them.
+    Filter by project_id (UUID) or project_slug (human slug). Other filters:
+    state, kind, owner_agent_type, owner_agent_id, priority, issue_number,
+    overdue (expected_callback_at < now and not terminal). Invalid tasks are
+    excluded by default; set include_invalid=true to include them.
     """
     clauses: list[str] = []
     params: list[Any] = []
     i = 1
 
     if not include_invalid:
-        clauses.append("state != 'invalid'")
+        clauses.append("t.state != 'invalid'")
 
     def add_filter(col: str, val: Any) -> None:
         nonlocal i
@@ -247,43 +430,45 @@ async def task_list(
         params.append(val)
         i += 1
 
-    if project is not None:
-        add_filter("project", project)
-    if state is not None:
-        add_filter("state", state)
-    if kind is not None:
-        add_filter("kind", kind)
-    if owner_agent_type is not None:
-        add_filter("owner_agent_type", owner_agent_type)
-    if owner_agent_id is not None:
-        add_filter("owner_agent_id", owner_agent_id)
-    if priority is not None:
-        add_filter("priority", priority)
-    if issue_number is not None:
-        add_filter("issue_number", issue_number)
-    if overdue:
-        clauses.append(
-            "expected_callback_at < NOW() AND state NOT IN ('done', 'invalid', 'blocked')"
-        )
-
-    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-    params.extend([limit, offset])
-    query = (
-        f"SELECT * FROM tasks {where} "
-        f"ORDER BY created_at DESC LIMIT ${i} OFFSET ${i + 1}"
-    )
-
     pool = await db.get_pool()
     async with pool.acquire() as conn:
+        pid = await _resolve_project_uuid(conn, project_id, project_slug)
+        if pid is not None:
+            add_filter("t.project_id", pid)
+        if state is not None:
+            add_filter("t.state", state)
+        if kind is not None:
+            add_filter("t.kind", kind)
+        if owner_agent_type is not None:
+            add_filter("t.owner_agent_type", owner_agent_type)
+        if owner_agent_id is not None:
+            add_filter("t.owner_agent_id", owner_agent_id)
+        if priority is not None:
+            add_filter("t.priority", priority)
+        if issue_number is not None:
+            add_filter("t.issue_number", issue_number)
+        if overdue:
+            clauses.append(
+                "t.expected_callback_at < NOW() "
+                "AND t.state NOT IN ('done', 'invalid', 'blocked')"
+            )
+
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        params.extend([limit, offset])
+        query = (
+            f"SELECT t.* FROM tasks t {where} "
+            f"ORDER BY t.created_at DESC LIMIT ${i} OFFSET ${i + 1}"
+        )
         records = await conn.fetch(query, *params)
-    # Return as a JSON string so FastMCP emits a single TextContent block
-    # (returning list[dict] produces one TextContent per row)
+
     return json.dumps(_rows(records))
 
 
 @mcp.tool()
 async def task_update(
     task_id: str,
+    project_id: str,
+    project_token: str,
     revision: int,
     title: Optional[str] = None,
     priority: Optional[str] = None,
@@ -298,7 +483,7 @@ async def task_update(
     source_id: Optional[str] = None,
 ) -> dict:
     """
-    Patch mutable descriptive fields without changing lifecycle state.
+    Patch mutable descriptive fields without changing lifecycle state. Requires project_token.
 
     Requires the current revision for optimistic concurrency — if revision does
     not match the stored value the update is rejected.
@@ -341,7 +526,8 @@ async def task_update(
     if not changed_fields:
         raise ValueError("No fields to update")
 
-    params.extend([task_id, revision])
+    tid = _uuid_mod.UUID(task_id)
+    params.extend([tid, revision])
     query = (
         f"UPDATE tasks SET {', '.join(sets)} "
         f"WHERE task_id = ${i} AND revision = ${i + 1} RETURNING *"
@@ -350,10 +536,11 @@ async def task_update(
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
+            await _validate_token(conn, project_id, project_token)
             record = await conn.fetchrow(query, *params)
             if not record:
                 existing = await conn.fetchrow(
-                    "SELECT revision FROM tasks WHERE task_id = $1", task_id
+                    "SELECT revision FROM tasks WHERE task_id = $1", tid
                 )
                 if not existing:
                     raise ValueError(f"Task not found: {task_id}")
@@ -364,10 +551,10 @@ async def task_update(
             await conn.execute(
                 """
                 INSERT INTO task_history
-                    (task_id, event_type, actor_type, actor_id, payload_json)
-                VALUES ($1, 'task.updated', $2, $3, $4)
+                    (project_id, task_id, event_type, actor_type, actor_id, payload_json)
+                VALUES ($1, $2, 'task.updated', $3, $4, $5)
                 """,
-                task_id, owner_agent_type, owner_agent_id,
+                record["project_id"], tid, owner_agent_type, owner_agent_id,
                 {"changedFields": changed_fields},
             )
 
@@ -377,6 +564,8 @@ async def task_update(
 @mcp.tool()
 async def task_transition(
     task_id: str,
+    project_id: str,
+    project_token: str,
     from_state: str,
     to_state: str,
     revision: int,
@@ -387,7 +576,7 @@ async def task_transition(
     owner_agent_id: Optional[str] = None,
 ) -> dict:
     """
-    Transition a task to a new lifecycle state.
+    Transition a task to a new lifecycle state. Requires project_token.
 
     Requires from_state (must match current state) and revision for optimistic
     concurrency. Both checks must pass or the transition is rejected.
@@ -414,7 +603,8 @@ async def task_transition(
     if to_state == "done":
         add_set("completed_at", datetime.now(timezone.utc))
 
-    params.extend([task_id, from_state, revision])
+    tid = _uuid_mod.UUID(task_id)
+    params.extend([tid, from_state, revision])
     query = (
         f"UPDATE tasks SET {', '.join(sets)} "
         f"WHERE task_id = ${i} AND state = ${i + 1} AND revision = ${i + 2} "
@@ -424,10 +614,11 @@ async def task_transition(
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
+            await _validate_token(conn, project_id, project_token)
             record = await conn.fetchrow(query, *params)
             if not record:
                 existing = await conn.fetchrow(
-                    "SELECT state, revision FROM tasks WHERE task_id = $1", task_id
+                    "SELECT state, revision FROM tasks WHERE task_id = $1", tid
                 )
                 if not existing:
                     raise ValueError(f"Task not found: {task_id}")
@@ -439,11 +630,11 @@ async def task_transition(
             await conn.execute(
                 """
                 INSERT INTO task_history
-                    (task_id, event_type, from_state, to_state, summary,
+                    (project_id, task_id, event_type, from_state, to_state, summary,
                      reason_code, actor_type, actor_id, payload_json)
-                VALUES ($1, 'task.transitioned', $2, $3, $4, $5, $6, $7, $8)
+                VALUES ($1, $2, 'task.transitioned', $3, $4, $5, $6, $7, $8, $9)
                 """,
-                task_id, from_state, to_state, summary, reason_code,
+                record["project_id"], tid, from_state, to_state, summary, reason_code,
                 owner_agent_type, owner_agent_id,
                 {"nextAction": next_action},
             )
@@ -454,20 +645,24 @@ async def task_transition(
 @mcp.tool()
 async def task_invalidate(
     task_id: str,
+    project_id: str,
+    project_token: str,
     reason_code: str,
     summary: Optional[str] = None,
     actor_type: Optional[str] = None,
     actor_id: Optional[str] = None,
 ) -> dict:
     """
-    Soft-delete a task by marking it invalid.
+    Soft-delete a task by marking it invalid. Requires project_token.
 
     Tasks are never hard-deleted. Invalid tasks are excluded from task_list
     by default but remain visible with include_invalid=true.
     """
+    tid = _uuid_mod.UUID(task_id)
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
+            await _validate_token(conn, project_id, project_token)
             record = await conn.fetchrow(
                 """
                 UPDATE tasks
@@ -479,11 +674,11 @@ async def task_invalidate(
                 WHERE task_id = $1 AND state != 'invalid'
                 RETURNING *
                 """,
-                task_id, reason_code,
+                tid, reason_code,
             )
             if not record:
                 existing = await conn.fetchrow(
-                    "SELECT state FROM tasks WHERE task_id = $1", task_id
+                    "SELECT state FROM tasks WHERE task_id = $1", tid
                 )
                 if not existing:
                     raise ValueError(f"Task not found: {task_id}")
@@ -492,11 +687,11 @@ async def task_invalidate(
             await conn.execute(
                 """
                 INSERT INTO task_history
-                    (task_id, event_type, to_state, summary, reason_code,
+                    (project_id, task_id, event_type, to_state, summary, reason_code,
                      actor_type, actor_id, payload_json)
-                VALUES ($1, 'task.invalidated', 'invalid', $2, $3, $4, $5, '{}')
+                VALUES ($1, $2, 'task.invalidated', 'invalid', $3, $4, $5, $6, '{}')
                 """,
-                task_id, summary, reason_code, actor_type, actor_id,
+                record["project_id"], tid, summary, reason_code, actor_type, actor_id,
             )
 
     return _row(record)
@@ -505,35 +700,40 @@ async def task_invalidate(
 @mcp.tool()
 async def task_add_note(
     task_id: str,
+    project_id: str,
+    project_token: str,
     note: str,
     author_type: Optional[str] = None,
     author_id: Optional[str] = None,
 ) -> dict:
-    """Add a human-readable note to a task without changing its state."""
+    """Add a human-readable note to a task without changing its state. Requires project_token."""
+    tid = _uuid_mod.UUID(task_id)
+    pid = _uuid_mod.UUID(project_id)
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
+            await _validate_token(conn, project_id, project_token)
             exists = await conn.fetchval(
-                "SELECT 1 FROM tasks WHERE task_id = $1", task_id
+                "SELECT 1 FROM tasks WHERE task_id = $1 AND project_id = $2", tid, pid
             )
             if not exists:
                 raise ValueError(f"Task not found: {task_id}")
 
             record = await conn.fetchrow(
                 """
-                INSERT INTO task_notes (task_id, note, author_type, author_id)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO task_notes (project_id, task_id, note, author_type, author_id)
+                VALUES ($1, $2, $3, $4, $5)
                 RETURNING *
                 """,
-                task_id, note, author_type, author_id,
+                pid, tid, note, author_type, author_id,
             )
             await conn.execute(
                 """
                 INSERT INTO task_history
-                    (task_id, event_type, actor_type, actor_id, payload_json)
-                VALUES ($1, 'task.note.added', $2, $3, $4)
+                    (project_id, task_id, event_type, actor_type, actor_id, payload_json)
+                VALUES ($1, $2, 'task.note.added', $3, $4, $5)
                 """,
-                task_id, author_type, author_id, {"noteId": record["id"]},
+                pid, tid, author_type, author_id, {"noteId": record["id"]},
             )
 
     return _row(record)
@@ -542,17 +742,18 @@ async def task_add_note(
 @mcp.tool()
 async def task_link_artifact(
     task_id: str,
+    project_id: str,
+    project_token: str,
     artifact_kind: str,
     artifact_ref: str,
     url: Optional[str] = None,
     metadata_json: Optional[str] = None,
 ) -> dict:
     """
-    Attach a durable artifact reference to a task.
+    Attach a durable artifact reference to a task. Requires project_token.
 
     artifact_kind must be one of: issue, pr, branch, commit, wiki,
     decision-record, release.
-    metadata_json is an optional JSON string for extra fields.
     """
     if artifact_kind not in VALID_ARTIFACT_KINDS:
         raise ValueError(
@@ -560,12 +761,15 @@ async def task_link_artifact(
             f"Must be one of: {sorted(VALID_ARTIFACT_KINDS)}"
         )
     meta = json.loads(metadata_json) if metadata_json else {}
+    tid = _uuid_mod.UUID(task_id)
+    pid = _uuid_mod.UUID(project_id)
 
     pool = await db.get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
+            await _validate_token(conn, project_id, project_token)
             exists = await conn.fetchval(
-                "SELECT 1 FROM tasks WHERE task_id = $1", task_id
+                "SELECT 1 FROM tasks WHERE task_id = $1 AND project_id = $2", tid, pid
             )
             if not exists:
                 raise ValueError(f"Task not found: {task_id}")
@@ -573,19 +777,19 @@ async def task_link_artifact(
             record = await conn.fetchrow(
                 """
                 INSERT INTO task_artifacts
-                    (task_id, artifact_kind, artifact_ref, url, metadata_json)
-                VALUES ($1, $2, $3, $4, $5)
+                    (project_id, task_id, artifact_kind, artifact_ref, url, metadata_json)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
                 """,
-                task_id, artifact_kind, artifact_ref, url, meta,
+                pid, tid, artifact_kind, artifact_ref, url, meta,
             )
             await conn.execute(
                 """
                 INSERT INTO task_history
-                    (task_id, event_type, actor_type, actor_id, payload_json)
-                VALUES ($1, 'task.artifact.linked', 'system', NULL, $2)
+                    (project_id, task_id, event_type, actor_type, actor_id, payload_json)
+                VALUES ($1, $2, 'task.artifact.linked', 'system', NULL, $3)
                 """,
-                task_id,
+                pid, tid,
                 {"artifactKind": artifact_kind, "artifactRef": artifact_ref},
             )
 
@@ -596,25 +800,23 @@ async def task_link_artifact(
 async def task_history(task_id: str) -> str:
     """
     Return the complete history for one task: task record, state transitions,
-    notes, and linked artifacts — all in chronological order.
+    notes, and linked artifacts — all in chronological order. Read-only, no token required.
     """
+    tid = _uuid_mod.UUID(task_id)
     pool = await db.get_pool()
     async with pool.acquire() as conn:
-        task = await conn.fetchrow("SELECT * FROM tasks WHERE task_id = $1", task_id)
+        task = await conn.fetchrow("SELECT * FROM tasks WHERE task_id = $1", tid)
         if not task:
             raise ValueError(f"Task not found: {task_id}")
 
         history = await conn.fetch(
-            "SELECT * FROM task_history WHERE task_id = $1 ORDER BY created_at ASC",
-            task_id,
+            "SELECT * FROM task_history WHERE task_id = $1 ORDER BY created_at ASC", tid
         )
         notes = await conn.fetch(
-            "SELECT * FROM task_notes WHERE task_id = $1 ORDER BY created_at ASC",
-            task_id,
+            "SELECT * FROM task_notes WHERE task_id = $1 ORDER BY created_at ASC", tid
         )
         artifacts = await conn.fetch(
-            "SELECT * FROM task_artifacts WHERE task_id = $1 ORDER BY created_at ASC",
-            task_id,
+            "SELECT * FROM task_artifacts WHERE task_id = $1 ORDER BY created_at ASC", tid
         )
 
     return json.dumps({
