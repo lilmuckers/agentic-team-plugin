@@ -43,7 +43,21 @@ The repository becomes the execution space for:
 - repo docs
 - wiki content
 
-## Phase 2: Install repo templates
+## Phase 2: Create the MCP ledger project record
+
+Before any task state is recorded, create the project record in the MCP ledger:
+
+```
+project_create
+  project_slug=<project-slug>
+  display_name=<Project Display Name>
+```
+
+This returns `project_id`, `project_slug`, `ledger_namespace`, and `project_token`. Store the `project_token` immediately in the Orchestrator's workspace config — it is shown only once. Record the `project_id` alongside it for all future MCP calls.
+
+See `docs/delivery/task-ledger-mcp-access.md` for where and how to store these values.
+
+## Phase 3: Install repo templates
 
 Copy the reusable templates from this workspace into the new project repo:
 
@@ -54,7 +68,7 @@ Copy the reusable templates from this workspace into the new project repo:
 
 Customize only where the project genuinely needs different wording or checks.
 
-## Phase 3: Create GitHub labels
+## Phase 4: Create GitHub labels
 
 Create the standard labels used by the delivery system:
 
@@ -85,7 +99,7 @@ Create the standard labels used by the delivery system:
 
 These labels form the lightweight operational state model for Orchestrator.
 
-## Phase 4: Initialize project documentation
+## Phase 5: Initialize project documentation
 
 Create initial documentation in the repo and/or wiki.
 
@@ -99,7 +113,7 @@ Recommended initial docs:
 Minimum expectation:
 A human reviewer should be able to understand what the project is for and where the current truth lives.
 
-## Phase 5: Create initial specification artifacts
+## Phase 6: Create initial specification artifacts
 
 The Spec agent should produce:
 - an initial project spec
@@ -109,7 +123,7 @@ The Spec agent should produce:
 
 These should be visible through the repo docs, wiki, and issues.
 
-## Phase 6: Human review gate
+## Phase 7: Human review gate
 
 Before backlog activation, Patrick reviews:
 - project spec
@@ -119,7 +133,7 @@ Before backlog activation, Patrick reviews:
 
 Until this review happens, the project should not move into active implementation except for explicitly approved spikes.
 
-## Phase 7: Create initial issues
+## Phase 8: Create initial issues
 
 The first issues should usually include:
 
@@ -132,7 +146,7 @@ The first issues should usually include:
 Do not create a giant pile of vague issues just to feel productive.
 Small, clear, sequenced backlog is better.
 
-## Phase 8: Confirm the first buildable issue
+## Phase 9: Confirm the first buildable issue
 
 Before Builder starts, confirm at least one issue is truly ready for build by checking:
 - problem statement exists
@@ -163,6 +177,7 @@ See `policies/project-activation.md` for the authoritative checklist. Summary:
 - [ ] Seven named agents exist and passed identity smoke test
 - [ ] Each agent workspace has a `repo/` subdirectory clone
 - [ ] `docs/delivery/project-state.md` exists
+- [ ] MCP ledger project record created via `project_create`; `project_token` stored in Orchestrator workspace config
 
 **DEFINED** (recorded by Orchestrator after Spec signals readiness):
 - [ ] `SPEC.md` is non-placeholder

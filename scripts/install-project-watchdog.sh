@@ -146,13 +146,12 @@ Do not create new work, change scope, merge, or release in response to this mess
 
 Steps:
 
-1. Run the overdue detector:
-   python3 scripts/check-task-ledger-overdue.py repo/docs/delivery/task-ledger.md --grace-minutes 15
+1. Query the MCP ledger for overdue and blocked tasks:
+     task_list project_slug=${PROJECT} overdue=true
+     task_list project_slug=${PROJECT} state=blocked
 
-   Interpret the exit code:
-   - 0: no overdue entries — nothing to do, stop here
-   - 1: ledger error — surface to operator immediately
-   - 2: overdue entries found — continue to step 2
+   If both return empty lists, stop — nothing to do.
+   If the MCP server is unreachable, report BLOCKED with reason mcp-unavailable and stop.
 
 2. For each overdue task, apply this classification decision tree in order:
 
@@ -188,17 +187,17 @@ Steps:
 
    D. BLOCKED
       Evidence: explicit blocker reported in a GitHub artifact.
-      Action: surface to operator; update ledger to blocked with specific reason;
-      do not reassign without operator direction.
+      Action: task_transition to_state=blocked + task_add_note with specific reason;
+      surface to operator; do not reassign without operator direction.
 
    E. DONE-BUT-MISSED-CALLBACK
       Evidence: merged PR or closed issue, but no callback received.
-      Action: accept implicit completion; update ledger to done; route next step.
+      Action: accept implicit completion; task_transition to_state=done; route next step.
 
    F. IN-PROGRESS
       Evidence: recent commit, open PR, or issue comment since last watchdog pass.
-      Action: update ledger current_action with what you observed; extend
-      expected_callback_at by 30 minutes; no nudge needed.
+      Action: task_update expected_callback_at=<+30min> + task_add_note with what
+      you observed; no nudge needed.
 
    G. STALLED (the default for overdue owner-assigned tasks)
       Evidence: named owner, overdue, no explicit blocker, no completion artifact.
@@ -206,18 +205,17 @@ Steps:
       but has gone silent. It is NOT a confirmed blocker.
       Action:
         1. Dispatch a nudge to the owning agent via scripts/dispatch-named-agent.sh
-        2. Update ledger state to stalled; record current_action = "Watchdog nudge sent <date>"
-        3. Extend expected_callback_at by 30 minutes
+        2. task_update expected_callback_at=<+30min> + task_add_note recording the stall
+        3. Do not transition to blocked yet
       On the next watchdog pass, if state is still stalled with no visible progress:
-        → escalate to operator and mark ledger blocked
+        → escalate to operator and task_transition to_state=blocked
 
    H. UNKNOWN
-      Evidence: ledger entry is malformed, owner is missing or unresolvable,
-      or the entry is self-contradictory so there is no safe agent to nudge.
-      Action: surface to operator with the raw ledger entry; do not guess.
+      Evidence: task record is missing an owner or is self-contradictory.
+      Action: surface the raw task_get result to the operator; do not guess.
 
-4. After acting on each overdue task, update the ledger using scripts/update-task-ledger.py
-   to reflect your assessment.
+4. After acting on each overdue task, update the MCP task record using task_transition,
+   task_update, or task_add_note to reflect your assessment.
 
 Remember: this is a watchdog, not a controller. Callbacks remain the authoritative completion signal.
 The default response to a silent worker is to nudge, not to block or escalate.

@@ -1,6 +1,12 @@
 # Task Ledger
 
-This ledger is the Orchestrator's durable record of in-flight delegated work.
+> **Deprecated — legacy format reference only.**
+> Canonical task state is now managed through the task-ledger MCP server.
+> This document describes the legacy markdown format retained for export compatibility and optional human-readable snapshots.
+> Do not treat the file `docs/delivery/task-ledger.md` in project repos as the authoritative task record.
+> See `docs/delivery/task-mcp-operating-model.md` and `skills/task-ledger-mcp/SKILL.md`.
+
+This was the Orchestrator's durable record of in-flight delegated work prior to the MCP-first migration.
 
 ## Operating Rules
 

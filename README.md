@@ -128,10 +128,11 @@ The watchdog is a safety net for missed callbacks and stalled sessions — not t
 
 | Archetype | Session type | Lifecycle |
 |-----------|-------------|-----------|
-| `orchestrator-<project>` | Persistent | Lives for the project duration; owns the task ledger |
+| `orchestrator-<project>` | Persistent | Lives for the project duration; owns delivery flow and MCP task state |
 | `spec-<project>` | Persistent | Lives for the project duration; owns SPEC.md |
 | `security-<project>` | Persistent | Lives for the project duration; three touch points |
 | `release-manager-<project>` | Persistent | Lives for the project duration; owns release-state.md |
+| `triage-<project>` | Ephemeral | Spawned per investigation, exits on triage report |
 | `builder-<project>` | Ephemeral | Spawned per task, exits on completion |
 | `qa-<project>` | Ephemeral | Spawned per review, exits on completion |
 

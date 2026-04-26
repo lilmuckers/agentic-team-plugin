@@ -140,7 +140,11 @@ run_check "validate-docker-first-project" \
 run_check "validate-readme-contract" \
   "$ROOT_DIR/scripts/validate-readme-contract.sh" "$REPO"
 
-# 4. task ledger — write an entry then validate
+# 4. legacy task-ledger file scripts — compatibility check only
+# NOTE: these scripts are superseded by MCP task tools (task_create, task_update,
+# task_transition). Canonical task state now lives in the MCP ledger. These tests
+# verify the legacy scripts still execute correctly for projects that keep the
+# markdown file as a human-readable snapshot.
 TASK_JSON='{"task":"smoke-test-task","state":"in_progress","current_action":"running smoke test","next_action":"verify output","history":[]}'
 python3 "$ROOT_DIR/scripts/update-task-ledger.py" \
   --ledger "$REPO/docs/delivery/task-ledger.md" \
@@ -163,7 +167,7 @@ if [ ! -f "$REPO/docs/delivery/task-ledger.md" ]; then
 MD
 fi
 
-run_check "validate-task-ledger" \
+run_check "validate-task-ledger (legacy script — superseded by MCP task tools)" \
   python3 "$ROOT_DIR/scripts/validate-task-ledger.py" "$REPO/docs/delivery/task-ledger.md"
 
 # 5. release state validation
@@ -208,7 +212,7 @@ TO: orchestrator-smoke
 TASK: smoke-test-task
 STATUS: DONE
 REF: https://github.com/example/repo/pull/1
-CHECKS: validate-project-bootstrap passed; validate-task-ledger passed
+CHECKS: validate-project-bootstrap passed; validate-issue-ready passed
 BLOCKERS: none
 NEXT: Orchestrator to assign for QA review
 MD
@@ -581,7 +585,9 @@ else
   FAIL=$(( FAIL + 1 ))
 fi
 
-# 20. check-task-ledger-overdue: no overdue entries exits 0 (use a ledger with no tasks)
+# 20. check-task-ledger-overdue: legacy script compatibility — exits 0 for empty ledger
+# NOTE: superseded by `task_list overdue=true` against the MCP ledger.
+# Canonical overdue detection now uses the MCP server. This tests the legacy script still runs.
 EMPTY_LEDGER="$TMPDIR_BASE/empty-ledger.md"
 printf '# Task Ledger\n\nNo tasks yet.\n' > "$EMPTY_LEDGER"
 if python3 "$ROOT_DIR/scripts/check-task-ledger-overdue.py" "$EMPTY_LEDGER" >/dev/null 2>&1; then
@@ -592,7 +598,7 @@ else
   FAIL=$(( FAIL + 1 ))
 fi
 
-# 21. check-task-ledger-overdue: overdue entry exits 2 with JSON
+# 21. check-task-ledger-overdue: legacy script compatibility — exits 2 with JSON for overdue entry
 OVERDUE_LEDGER="$TMPDIR_BASE/overdue-ledger.md"
 cat > "$OVERDUE_LEDGER" <<'MD'
 # Task Ledger
@@ -665,7 +671,10 @@ else
   FAIL=$(( FAIL + 1 ))
 fi
 
-# 16d. update-task-ledger: write a new task then mark it done (simulates post-approval close step)
+# 16d. update-task-ledger: legacy script compatibility — write and close a task entry
+# NOTE: superseded by MCP task_transition to_state=done. The operational post-approval
+# close step now calls task_transition on the MCP ledger. This tests the legacy script
+# still executes correctly for backward compatibility.
 POSTAPPROVAL_LEDGER="$TMPDIR_BASE/postapproval-ledger.md"
 cp "$ROOT_DIR/docs/delivery/task-ledger.md" "$POSTAPPROVAL_LEDGER"
 # First write: create the task in in_progress state
@@ -678,10 +687,10 @@ if python3 "$ROOT_DIR/scripts/update-task-ledger.py" "$POSTAPPROVAL_LEDGER" \
      "issue-99" "Deliver web shell" done \
      "Merged PR #7" "Dispatch next ready issue" \
      --history-action "Merged and closed" >/dev/null 2>&1; then
-  RESULTS+=("PASS  update-task-ledger marks merged task as done (post-approval close step)")
+  RESULTS+=("PASS  update-task-ledger legacy script executes without error (backward compat)")
   PASS=$(( PASS + 1 ))
 else
-  RESULTS+=("FAIL  update-task-ledger could not mark task done (post-approval close step would fail)")
+  RESULTS+=("FAIL  update-task-ledger legacy script failed to execute")
   FAIL=$(( FAIL + 1 ))
 fi
 

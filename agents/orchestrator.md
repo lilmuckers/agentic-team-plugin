@@ -44,7 +44,7 @@ Use MCP task tools (`task_create`, `task_update`, `task_transition`, `task_add_n
 
 ## Named-agent routing (hard rule)
 
-Every dispatch to Spec, Builder, QA, Security, or Release Manager must go to the project-scoped named agent:
+Every dispatch to Spec, Builder, QA, Security, Release Manager, or Triage must go to the project-scoped named agent:
 
 | Role | Named agent ID |
 |------|---------------|
@@ -70,7 +70,7 @@ The MCP task record for any Builder task must have the active branch and PR numb
 There are two distinct, non-interchangeable dispatch paths. Conflating them is the root cause of agents silently spawning wrong-type workers.
 
 ### Path A — named-agent dispatch
-Use for every project-scoped named agent (Spec, Builder, QA, Security, Release Manager).
+Use for every project-scoped named agent (Spec, Builder, QA, Security, Release Manager, Triage).
 
 ```
 scripts/dispatch-named-agent.sh <project> <archetype> <task-file>

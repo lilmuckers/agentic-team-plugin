@@ -18,7 +18,7 @@ The Orchestrator has two distinct, non-interchangeable dispatch paths. Using the
 
 ### Path A — named-agent dispatch (`scripts/dispatch-named-agent.sh`)
 
-Use this for every project-scoped named agent: `spec-<project>`, `builder-<project>`, `qa-<project>`, `security-<project>`, `release-manager-<project>`.
+Use this for every project-scoped named agent: `spec-<project>`, `builder-<project>`, `qa-<project>`, `security-<project>`, `release-manager-<project>`, `triage-<project>`.
 
 - Sends work directly into the **existing** named-agent session via `openclaw agent --agent <id>`.
 - Routes by **agent name only** — no synthetic `--session-id` unless a `task-suffix` is explicitly provided for task isolation. OpenClaw resolves the agent's live session by agent name internally. Forcing a synthetic session id can miss the real running session.
@@ -57,7 +57,7 @@ Task completion is confirmed only when the named agent sends an explicit callbac
 
 ### Path B — callback receipt (`scripts/send-agent-callback.sh` — used by named agents, not Orchestrator)
 
-Named agents (Spec, Builder, QA, Security, Release Manager) use this to send their completion callback back to Orchestrator. It is the authoritative completion signal.
+Named agents (Spec, Builder, QA, Security, Release Manager, Triage) use this to send their completion callback back to Orchestrator. It is the authoritative completion signal.
 
 ```bash
 # Run by the named agent (e.g. spec-lapwing) after completing work:
