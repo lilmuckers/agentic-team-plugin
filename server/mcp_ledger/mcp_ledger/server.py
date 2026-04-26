@@ -37,6 +37,29 @@ from . import database as db
 from .config import settings
 
 # ---------------------------------------------------------------------------
+# Structured error type
+# ---------------------------------------------------------------------------
+
+
+class ToolError(Exception):
+    """
+    Raise from any tool to produce a structured JSON error payload.
+
+    FastMCP catches this and sets isError=true on the CallToolResult; the
+    str() of this exception becomes the text content — a JSON object with
+    error_code and message fields that clients can parse without string matching.
+
+    Canonical codes: invalid_token, project_not_found, task_not_found,
+    revision_mismatch, already_invalid, validation_error, duplicate_slug.
+    """
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+        super().__init__(json.dumps({"error_code": code, "message": message}))
+
+
+# ---------------------------------------------------------------------------
 # Valid enumeration sets
 # ---------------------------------------------------------------------------
 
@@ -120,15 +143,15 @@ def _hash_token(token: str) -> str:
 
 
 async def _validate_token(conn, project_id: str, token: str) -> None:
-    """Raise ValueError if project_token does not match the stored hash."""
+    """Raise ToolError if project_token does not match the stored hash."""
     record = await conn.fetchrow(
         "SELECT project_token_hash FROM projects WHERE project_id = $1",
         _uuid_mod.UUID(project_id),
     )
     if not record:
-        raise ValueError(f"Project not found: {project_id}")
+        raise ToolError("project_not_found", f"Project not found: {project_id}")
     if record["project_token_hash"] != _hash_token(token):
-        raise ValueError("Invalid project_token")
+        raise ToolError("invalid_token", "Invalid project_token")
 
 
 async def _resolve_project_uuid(
@@ -142,7 +165,7 @@ async def _resolve_project_uuid(
             "SELECT project_id FROM projects WHERE project_slug = $1", project_slug
         )
         if not result:
-            raise ValueError(f"Project not found: {project_slug}")
+            raise ToolError("project_not_found", f"Project not found: {project_slug}")
         return result
     return None
 
@@ -171,7 +194,7 @@ async def project_create(project_slug: str, display_name: str) -> dict:
             "SELECT project_id FROM projects WHERE project_slug = $1", project_slug
         )
         if existing:
-            raise ValueError(f"Project slug already exists: {project_slug}")
+            raise ToolError("duplicate_slug", f"Project slug already exists: {project_slug}")
 
         record = await conn.fetchrow(
             """
@@ -202,7 +225,7 @@ async def project_get(
     The project_token is never returned.
     """
     if not project_id and not project_slug:
-        raise ValueError("Provide project_id or project_slug")
+        raise ToolError("validation_error", "Provide project_id or project_slug")
 
     _PUBLIC_COLS = (
         "project_id, project_slug, display_name, ledger_namespace, "
@@ -222,7 +245,7 @@ async def project_get(
             )
 
     if not record:
-        raise ValueError(f"Project not found: {project_id or project_slug}")
+        raise ToolError("project_not_found", f"Project not found: {project_id or project_slug}")
     return _row(record)
 
 
@@ -305,11 +328,11 @@ async def task_create(
     the existing task with idempotent=true — no duplicate is created.
     """
     if kind not in VALID_KINDS:
-        raise ValueError(f"Invalid kind '{kind}'. Must be one of: {sorted(VALID_KINDS)}")
+        raise ToolError("validation_error", f"Invalid kind '{kind}'. Must be one of: {sorted(VALID_KINDS)}")
     if state not in VALID_STATES:
-        raise ValueError(f"Invalid state '{state}'. Must be one of: {sorted(VALID_STATES)}")
+        raise ToolError("validation_error", f"Invalid state '{state}'. Must be one of: {sorted(VALID_STATES)}")
     if priority and priority not in VALID_PRIORITIES:
-        raise ValueError(f"Invalid priority '{priority}'. Must be one of: {sorted(VALID_PRIORITIES)}")
+        raise ToolError("validation_error", f"Invalid priority '{priority}'. Must be one of: {sorted(VALID_PRIORITIES)}")
 
     exp_cb = datetime.fromisoformat(expected_callback_at) if expected_callback_at else None
     pid = _uuid_mod.UUID(project_id)
@@ -390,7 +413,7 @@ async def task_get(task_id: str) -> dict:
             "SELECT * FROM tasks WHERE task_id = $1", _uuid_mod.UUID(task_id)
         )
     if not record:
-        raise ValueError(f"Task not found: {task_id}")
+        raise ToolError("task_not_found", f"Task not found: {task_id}")
     return _row(record)
 
 
@@ -524,7 +547,7 @@ async def task_update(
         add_set("source_id", source_id)
 
     if not changed_fields:
-        raise ValueError("No fields to update")
+        raise ToolError("validation_error", "No fields to update")
 
     tid = _uuid_mod.UUID(task_id)
     params.extend([tid, revision])
@@ -543,10 +566,11 @@ async def task_update(
                     "SELECT revision FROM tasks WHERE task_id = $1", tid
                 )
                 if not existing:
-                    raise ValueError(f"Task not found: {task_id}")
-                raise ValueError(
+                    raise ToolError("task_not_found", f"Task not found: {task_id}")
+                raise ToolError(
+                    "revision_mismatch",
                     f"Revision mismatch for {task_id}: "
-                    f"expected {revision}, current is {existing['revision']}"
+                    f"expected {revision}, current is {existing['revision']}",
                 )
             await conn.execute(
                 """
@@ -582,7 +606,7 @@ async def task_transition(
     concurrency. Both checks must pass or the transition is rejected.
     """
     if to_state not in VALID_STATES:
-        raise ValueError(f"Invalid to_state '{to_state}'. Must be one of: {sorted(VALID_STATES)}")
+        raise ToolError("validation_error", f"Invalid to_state '{to_state}'. Must be one of: {sorted(VALID_STATES)}")
 
     sets = ["state = $1", "updated_at = NOW()", "revision = revision + 1"]
     params: list[Any] = [to_state]
@@ -621,11 +645,12 @@ async def task_transition(
                     "SELECT state, revision FROM tasks WHERE task_id = $1", tid
                 )
                 if not existing:
-                    raise ValueError(f"Task not found: {task_id}")
-                raise ValueError(
+                    raise ToolError("task_not_found", f"Task not found: {task_id}")
+                raise ToolError(
+                    "revision_mismatch",
                     f"Transition rejected for {task_id}: "
                     f"expected state={from_state!r} revision={revision}, "
-                    f"got state={existing['state']!r} revision={existing['revision']}"
+                    f"got state={existing['state']!r} revision={existing['revision']}",
                 )
             await conn.execute(
                 """
@@ -681,8 +706,8 @@ async def task_invalidate(
                     "SELECT state FROM tasks WHERE task_id = $1", tid
                 )
                 if not existing:
-                    raise ValueError(f"Task not found: {task_id}")
-                raise ValueError(f"Task {task_id} is already invalid")
+                    raise ToolError("task_not_found", f"Task not found: {task_id}")
+                raise ToolError("already_invalid", f"Task {task_id} is already invalid")
 
             await conn.execute(
                 """
@@ -717,7 +742,7 @@ async def task_add_note(
                 "SELECT 1 FROM tasks WHERE task_id = $1 AND project_id = $2", tid, pid
             )
             if not exists:
-                raise ValueError(f"Task not found: {task_id}")
+                raise ToolError("task_not_found", f"Task not found: {task_id}")
 
             record = await conn.fetchrow(
                 """
@@ -756,9 +781,10 @@ async def task_link_artifact(
     decision-record, release.
     """
     if artifact_kind not in VALID_ARTIFACT_KINDS:
-        raise ValueError(
+        raise ToolError(
+            "validation_error",
             f"Invalid artifact_kind '{artifact_kind}'. "
-            f"Must be one of: {sorted(VALID_ARTIFACT_KINDS)}"
+            f"Must be one of: {sorted(VALID_ARTIFACT_KINDS)}",
         )
     meta = json.loads(metadata_json) if metadata_json else {}
     tid = _uuid_mod.UUID(task_id)
@@ -772,7 +798,7 @@ async def task_link_artifact(
                 "SELECT 1 FROM tasks WHERE task_id = $1 AND project_id = $2", tid, pid
             )
             if not exists:
-                raise ValueError(f"Task not found: {task_id}")
+                raise ToolError("task_not_found", f"Task not found: {task_id}")
 
             record = await conn.fetchrow(
                 """
@@ -807,7 +833,7 @@ async def task_history(task_id: str) -> str:
     async with pool.acquire() as conn:
         task = await conn.fetchrow("SELECT * FROM tasks WHERE task_id = $1", tid)
         if not task:
-            raise ValueError(f"Task not found: {task_id}")
+            raise ToolError("task_not_found", f"Task not found: {task_id}")
 
         history = await conn.fetch(
             "SELECT * FROM task_history WHERE task_id = $1 ORDER BY created_at ASC", tid
