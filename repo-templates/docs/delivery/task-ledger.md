@@ -1,7 +1,11 @@
 # Task Ledger
 
-This ledger is the Orchestrator's durable record of in-flight delegated work.
-It is the sole persistence mechanism for task state across agent sessions.
+> **Deprecated — legacy snapshot only.**
+> Canonical task state is now managed through the task-ledger MCP server.
+> This file is an optional human-readable export. Do not treat it as authoritative.
+> See `docs/delivery/task-mcp-operating-model.md` and `skills/task-ledger-mcp/SKILL.md`.
+
+This file was previously the Orchestrator's durable record of in-flight delegated work. It is retained as a deployment template for projects that use it as a human-readable snapshot.
 
 ## Operating Rules
 

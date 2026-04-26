@@ -14,12 +14,18 @@ The MCP ledger is canonical for mutable task state. Do not invent, fork, or main
 | Orchestrator | Full write: `task_create`, `task_update`, `task_transition`, `task_invalidate`, `task_add_note`, `task_link_artifact` |
 | Spec | Read freely. May call `task_add_note` and `task_link_artifact` to attach spec-owned references. |
 | Triage | Read freely. May call `task_add_note` and `task_link_artifact` to attach diagnostic evidence. |
-| Builder | Read freely. No canonical state ownership. May call `task_link_artifact` to attach branch/PR/commit refs if explicitly permitted by Orchestrator. |
+| Builder | Read freely. No canonical task-state ownership. May call `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission. |
 | QA | Read freely. May call `task_add_note` and `task_link_artifact` to attach QA findings. |
 | Security | Read freely. May call `task_add_note` and `task_link_artifact` to attach security findings. |
 | Release Manager | Read freely. May call `task_link_artifact` for release artifact references. |
 
-Only Orchestrator holds the `project_token`. Other agents query task state via `task_get` and `task_list` without a token.
+Only Orchestrator holds the `project_token`. Other agents query task state using the read-only surface — no token required:
+
+- `task_get` — fetch a single task by UUID
+- `task_list` — query tasks with filters (project, state, kind, owner, overdue, etc.)
+- `task_history` — full event, note, and artifact history for a task
+- `project_get` — fetch project metadata by `project_id` or `project_slug`
+- `project_list` — list all known projects (tokens never returned)
 
 ## Rules
 

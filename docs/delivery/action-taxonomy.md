@@ -24,23 +24,28 @@ That means the framework is already partly auditable, but through wrappers and a
 
 ## Implemented durable artifacts
 
-### Task ledger
-`docs/delivery/task-ledger.md` is the Orchestrator's durable record of delegated work.
+### Task ledger (MCP — canonical)
+The task-ledger MCP server is the Orchestrator's canonical durable record of delegated work.
 
-What it captures today:
-- task id
-- state
-- current action
-- next action
-- owner
-- branch / PR when relevant
+What it captures:
+- task UUID and human-readable display key
+- project identity and write-auth token
+- state, kind, priority
+- owner agent type and id
+- branch / PR / issue number
 - expected callback deadline
-- transition history
+- full transition history, notes, and artifact links
 
-Primary helpers:
-- `scripts/update-task-ledger.py`
-- `scripts/validate-task-ledger.py`
-- `scripts/check-task-ledger-overdue.py`
+Primary interface: MCP tools (`task_create`, `task_update`, `task_transition`, `task_add_note`, `task_link_artifact`, `task_history`).
+See `docs/delivery/task-mcp-operating-model.md` and `skills/task-ledger-mcp/SKILL.md`.
+
+### Task ledger file (legacy — derived snapshot only)
+`docs/delivery/task-ledger.md` is a legacy format retained as an optional human-readable snapshot. It is **not** the authoritative task record.
+
+Legacy helpers (superseded by MCP tool calls):
+- `scripts/update-task-ledger.py` → use `task_create` / `task_update` / `task_transition`
+- `scripts/validate-task-ledger.py` → use `task_list` / `task_get`
+- `scripts/check-task-ledger-overdue.py` → use `task_list overdue=true`
 
 ### Release state
 `docs/delivery/release-state.md` is the durable release coordination surface.

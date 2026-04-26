@@ -69,3 +69,30 @@ tracking issue before final publication. Called automatically by
 ```bash
 scripts/guard-final-release.sh <issue-number> <owner/repo>
 ```
+
+## Task Ledger MCP
+
+Release Manager reads task state from the MCP ledger. Release Manager may attach release artifact references when Orchestrator has included the `project_token` in the task packet.
+
+### Read task state (no token required)
+
+```
+task_get task_id=<uuid>
+task_list project_slug=<slug> state=release_pending
+task_list project_slug=<slug> kind=release
+task_history task_id=<uuid>
+```
+
+### Attach a release artifact link (token required)
+
+```
+task_link_artifact
+  task_id=<uuid>
+  project_id=<uuid>
+  project_token=<token>
+  artifact_kind=release      # issue | pr | branch | commit | wiki | decision-record | release
+  artifact_ref=v0.2.0
+  url=https://github.com/<owner>/<repo>/releases/tag/v0.2.0
+```
+
+Release Manager does **not** call `task_transition`, `task_update`, or `task_invalidate`. Lifecycle transitions belong to Orchestrator.

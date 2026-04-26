@@ -37,3 +37,37 @@ scripts/lint-agent-markdown.py <file.md>
 # Merge base template + task refinement into spawn payload
 scripts/prepare-specialist-spawn.py agents/specialists/<template>.md <refinement.md> --output specialist-prompt.md
 ```
+
+## Task Ledger MCP
+
+QA reads task state from the MCP ledger for context. QA may attach QA findings and artifact references when Orchestrator has included the `project_token` in the task packet.
+
+### Read task state (no token required)
+
+```
+task_get task_id=<uuid>
+task_list project_slug=<slug> state=qa_review
+task_history task_id=<uuid>
+```
+
+### Attach a QA finding note or artifact link (token required)
+
+```
+task_add_note
+  task_id=<uuid>
+  project_id=<uuid>
+  project_token=<token>
+  note="QA: 3 failing assertions in auth flow. See PR comment #42."
+  author_type=qa
+  author_id=qa-<project>
+
+task_link_artifact
+  task_id=<uuid>
+  project_id=<uuid>
+  project_token=<token>
+  artifact_kind=pr           # issue | pr | branch | commit | wiki | decision-record | release
+  artifact_ref=<pr-number>
+  url=https://github.com/<owner>/<repo>/pull/<n>
+```
+
+QA does **not** call `task_transition`, `task_update`, or `task_invalidate`. Lifecycle transitions belong to Orchestrator.

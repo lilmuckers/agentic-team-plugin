@@ -135,7 +135,7 @@ The watchdog is a safety net for missed callbacks and stalled sessions — not t
 | `builder-<project>` | Ephemeral | Spawned per task, exits on completion |
 | `qa-<project>` | Ephemeral | Spawned per review, exits on completion |
 
-Persistent agents are invoked with a stable session ID to give them routing identity. The task ledger (`docs/delivery/task-ledger.md` in the project repo) is the sole persistence mechanism — not session memory.
+Persistent agents are invoked with a stable session ID to give them routing identity. Canonical task state lives in the MCP ledger (see `docs/delivery/task-mcp-operating-model.md`); `docs/delivery/task-ledger.md` in the project repo is a legacy format and optional human snapshot.
 
 ---
 
@@ -259,7 +259,9 @@ scripts/invoke-named-agent.sh musical-statues builder issue-2.md issue-2 low on
 
 ### Task ledger
 
-The Orchestrator maintains `docs/delivery/task-ledger.md` in the project repo. Each task entry is a markdown section with an embedded JSON payload covering: `task`, `state`, `current_action`, `next_action`, and a `history` array. All state transitions are committed to git so the full delivery history is auditable.
+Canonical task state is managed through the task-ledger MCP server. The Orchestrator uses MCP tools (`task_create`, `task_transition`, `task_add_note`, etc.) to record delegated work, state changes, and artifact links. See `docs/delivery/task-mcp-operating-model.md` for the full operating model.
+
+`docs/delivery/task-ledger.md` in the project repo is a legacy format retained as an optional human-readable snapshot. It is not the authoritative task record.
 
 ### Merge gate
 

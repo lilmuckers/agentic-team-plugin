@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SUPERSEDED: use MCP task tools instead.
+# task_list / task_get replace this script.
+# See docs/delivery/orchestrator-tooling-helpers.md and skills/task-ledger-mcp/SKILL.md.
+# This script is retained for legacy compatibility only.
 import argparse
 import json
 import re

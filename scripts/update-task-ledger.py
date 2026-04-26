@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# SUPERSEDED: use MCP task tools instead.
+# task_create / task_update / task_transition replace this script.
+# See docs/delivery/orchestrator-tooling-helpers.md and skills/task-ledger-mcp/SKILL.md.
+# This script is retained for legacy compatibility only.
 import argparse
 import json
 from datetime import datetime, timezone

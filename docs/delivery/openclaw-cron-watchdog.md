@@ -6,11 +6,11 @@ One watchdog cron job is installed per project at onboarding time, targeting onl
 
 The watchdog delivers a periodic nudge to `orchestrator-<project>` instructing it to:
 
-1. Run `scripts/check-task-ledger-overdue.py` to find in-flight tasks with overdue callbacks
+1. Query the MCP ledger for overdue and blocked tasks (`task_list overdue=true`, `task_list state=blocked`)
 2. Check visible GitHub artifact state for each overdue task
 3. Classify the worker state (done-but-missed-callback / in-progress / stalled / blocked / unknown)
 4. Take the appropriate action (accept implicit callback / extend window / nudge worker / escalate)
-5. Update the task ledger to reflect the assessment
+5. Update the MCP task record to reflect the assessment (`task_transition`, `task_update`, `task_add_note`)
 
 The watchdog is **not** the primary completion mechanism. Explicit callbacks from workers via `scripts/send-agent-callback.sh` remain authoritative. The cron exists only to catch missed callbacks, stalled sessions, and overdue in-flight work.
 
@@ -48,25 +48,23 @@ The cron name is project-scoped so multiple projects can coexist in the same Ope
 
 `install-project-watchdog.sh` removes any existing cron with the same name before recreating it. Re-running onboarding or changing the cadence does not accumulate duplicate jobs.
 
-## Task ledger integration
+## MCP ledger integration
 
-When Orchestrator delegates work that expects a callback, it should record:
+When Orchestrator delegates work that expects a callback, it records the deadline in the MCP task record:
 
-- `owner` — the accountable named agent
-- `expected_callback_at` — the latest acceptable callback timestamp in UTC
-
-Example:
-```bash
-scripts/update-task-ledger.py repo/docs/delivery/task-ledger.md \
-  ISSUE-42 "Implement login" in_progress \
-  "Builder implementing login flow" \
-  "QA review after PR is opened" \
-  --owner builder-<project> \
-  --expected-callback-at 2026-04-14T14:30:00Z \
-  --history-action "Delegated to Builder"
+```
+task_update
+  task_id=<uuid>
+  project_id=<uuid>
+  project_token=<token>
+  revision=<n>
+  owner_agent_type=builder
+  owner_agent_id=builder-<project>
+  expected_callback_at=2026-04-14T14:30:00Z
+  next_action="QA review after PR is opened"
 ```
 
-Without `expected_callback_at`, the overdue detector skips that task. Tasks without a callback deadline are not watchdogged.
+Without `expected_callback_at`, the overdue detector (`task_list overdue=true`) skips that task. Tasks without a callback deadline are not watchdogged.
 
 ## Overdue detector exit codes
 

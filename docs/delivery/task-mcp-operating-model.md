@@ -71,7 +71,7 @@ Permitted writes (token required, Orchestrator must explicitly grant):
 
 Builder reads task state for context. Builder does not own canonical task state.
 
-Builder may call `task_link_artifact` to attach branch/PR/commit refs if Orchestrator has explicitly permitted it for the current project.
+Builder may call `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission.
 
 ### Release Manager — reader with narrow artifact writes
 

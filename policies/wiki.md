@@ -74,7 +74,7 @@ The bar for "material" is: would a future agent or operator need to know this to
 
 - Writing a PR summary that happens to explain the architecture
 - Leaving a comment on a closed issue
-- Updating `docs/delivery/task-ledger.md` or `docs/delivery/release-state.md` — these are delivery trackers, not the wiki
+- Updating MCP task state or `docs/delivery/release-state.md` — these are delivery trackers, not the wiki
 
 ## Ownership is not sharing
 
