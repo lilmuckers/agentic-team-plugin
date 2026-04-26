@@ -9,49 +9,51 @@ task_list project_slug=<slug> overdue=true
 task_transition task_id=<uuid> to_state=building ...
 ```
 
-These are **MCP tool invocations** — not shell commands, not Python calls, not API requests. When an agent calls `task_list`, it is invoking the `task_list` tool registered on the configured MCP server. Claude Code handles the SSE protocol and JSON-RPC framing automatically. The agent simply calls the tool by name with its arguments.
+These are **MCP tool invocations** — not shell commands and not API calls the agent constructs manually. When an agent calls `task_list`, it is invoking the `task_list` tool registered on the MCP server that has been configured for its session. The agent calls the tool by name with its arguments; the runtime handles the transport.
 
-This document explains the concrete path from "configured workspace" to "working tool call."
+This document explains the framework-side contract for making that work.
 
 ---
 
-## How named agents connect to the MCP server
+## Runtime context
 
-The task-ledger MCP server uses SSE transport. It must be declared as an MCP server in the agent's Claude Code configuration before tool calls will work.
+Named agents in this framework run under **OpenClaw**. OpenClaw manages agent sessions, named-agent identity, dispatch, and the tool surface each agent session has access to. MCP server registration for a named-agent session is an OpenClaw configuration concern — consult the OpenClaw documentation for the exact mechanism to provision a named agent with access to an SSE MCP server.
 
-### Configuration location
+The framework's responsibility is:
 
-Each named-agent workspace has a `.claude/settings.json` file managed by the framework deployment. Add the `mcpServers` entry there:
+1. Running the MCP server so it is reachable from the agent host
+2. Recording the server URL in the agent workspace bootstrap files so agents know where to reach it
+3. Storing the `project_token` in the Orchestrator workspace
+4. Defining the per-task token-delegation model for narrow writes
 
-```json
-{
-  "mcpServers": {
-    "task-ledger": {
-      "type": "sse",
-      "url": "http://<host>:8000/sse"
-    }
-  }
-}
-```
+---
 
-Replace `<host>` with the hostname or IP where the MCP server is running. In the standard Docker Compose deployment this is the host running `server/docker-compose.yml`. The port is `8000` by default (set via the `PORT` environment variable on the `mcp_ledger` service).
+## The MCP server
 
-### Where the URL comes from
+The task-ledger MCP server uses SSE transport:
 
-The server URL should be stored in the agent workspace bootstrap config (e.g. as a line in `AGENTS.md` or a dedicated `MCP_CONFIG.md` loaded at session start) so the agent can reference it without relying on session memory.
+- **SSE endpoint:** `http://<host>:8000/sse`
+- **Health check:** `GET http://<host>:8000/health` → `{"status":"ok","database":"ok"}`
+- **Source:** `server/mcp_ledger/`
+- **Docker Compose:** `server/docker-compose.yml`
 
-The framework deployment scripts (`scripts/deploy-project-agent-workspaces.py`, `scripts/deploy-named-agents.py`) are the appropriate place to write this configuration when generating managed workspace files. See `docs/delivery/managed-workspace-files.md`.
+The server is deployed alongside Postgres via Docker Compose. The `HOST` and `PORT` environment variables control the bind address (defaults: `0.0.0.0`, `8000`).
 
-### Verifying the server is reachable
-
-Before expecting tool calls to succeed, confirm the server is up:
+Confirm the server is reachable before expecting tool calls to succeed:
 
 ```bash
 curl http://<host>:8000/health
-# {"status":"ok","database":"ok"}
 ```
 
-A `200` response with `"database":"ok"` means the server is up and Postgres is reachable. Any other response means the server is not ready — tool calls will fail.
+A `200` response with `"database":"ok"` means the server and Postgres are both healthy.
+
+---
+
+## Recording the server URL in agent workspaces
+
+The server URL should be written into the agent workspace bootstrap files so each named agent can read it at session start without relying on session memory. The framework deployment scripts (`scripts/deploy-project-agent-workspaces.py`, `scripts/deploy-named-agents.py`) are the appropriate place to write this configuration when generating managed workspace files.
+
+See `docs/delivery/managed-workspace-files.md` for the list of bootstrap files managed per workspace and `docs/delivery/workspace-bootstrap-deployment.md` for the reload model.
 
 ---
 
@@ -59,20 +61,20 @@ A `200` response with `"database":"ok"` means the server is up and Postgres is r
 
 The `project_token` is generated once at `project_create` and is the write secret for a project.
 
-**Orchestrator workspace only.** Store it in a file in the Orchestrator's named-agent workspace — for example `workspace-orchestrator/.env` or a dedicated `PROJECT_CONFIG.md` that the agent reads at session start. It must never be committed to the project repo or passed to other agents as a standing configuration.
+**Orchestrator workspace only.** Store it in the Orchestrator's named-agent workspace bootstrap config — for example as a dedicated entry in a project config file that the agent reads at session start. It must never be committed to the project repo or propagated to other agents as standing configuration.
 
-Other agents only receive the `project_token` when Orchestrator explicitly includes it in a task packet for a specific write operation. This is a per-task grant. See `skills/task-ledger-mcp/SKILL.md` for the authority model.
+Other agents only receive the `project_token` when Orchestrator explicitly includes it in a task packet for a specific write operation. This is a per-task grant. See `skills/task-ledger-mcp/SKILL.md` for the full authority model.
 
 ---
 
 ## What happens when the server is unreachable
 
-If a tool call fails because the MCP server is not configured or not reachable:
+If a tool call fails because the MCP server is not reachable:
 
-1. **Do not attempt to continue the task** as if the write succeeded.
+1. **Do not continue the task** as if the write succeeded.
 2. **Do not fall back to writing state into markdown files.**
 3. Report `BLOCKED` with reason `mcp-unavailable` to whoever dispatched the work.
-4. When the server is confirmed reachable again, re-read current task state with `task_get` before resuming — do not assume the state you last observed is still current.
+4. When the server is confirmed reachable again, call `task_get` to re-read current state before resuming — do not assume the state last observed is still current.
 
 ---
 
@@ -80,7 +82,7 @@ If a tool call fails because the MCP server is not configured or not reachable:
 
 On each session start, before taking new work:
 
-1. Confirm the MCP server is reachable: `GET /health`
+1. Confirm the MCP server is reachable via the health check.
 2. Query open tasks: `task_list project_slug=<slug>`
 3. Query overdue tasks: `task_list project_slug=<slug> overdue=true`
 4. Query blocked tasks: `task_list project_slug=<slug> state=blocked`
@@ -92,7 +94,7 @@ If step 1 fails, report the outage and halt until the server is available.
 
 ## Read-only access for non-Orchestrator agents
 
-Non-Orchestrator agents do not need the `project_token` to read task state. With the MCP server configured in their workspace `.claude/settings.json`, they can call the read-only tools directly:
+Non-Orchestrator agents do not need the `project_token` to read task state. With the MCP server accessible in their session, they call the read-only tools directly:
 
 | Tool | What it returns |
 |---|---|
@@ -102,14 +104,11 @@ Non-Orchestrator agents do not need the `project_token` to read task state. With
 | `project_get project_slug=<slug>` | Project metadata (no token returned) |
 | `project_list` | All known projects (no tokens returned) |
 
-The MCP server URL must be the same for all agents in a project. Typically this is a shared service address in the deployment environment.
-
 ---
 
 ## Reference
 
-- MCP server source: `server/mcp_ledger/`
-- Full tool reference with all parameters: `server/mcp_ledger/README.md`
 - Operating model: `docs/delivery/task-mcp-operating-model.md`
 - Skill (authority and error handling): `skills/task-ledger-mcp/SKILL.md`
-- Docker Compose: `server/docker-compose.yml`
+- Full tool reference: `server/mcp_ledger/README.md`
+- Managed workspace files: `docs/delivery/managed-workspace-files.md`
