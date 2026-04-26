@@ -63,7 +63,7 @@ Permitted operations (no token required):
 - `task_list` — query tasks by project, state, owner, etc.
 - `task_history` — read full task history
 
-Permitted writes (token required, Orchestrator must explicitly grant):
+Permitted writes — only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission:
 - `task_add_note` — attach diagnostic, spec, QA, or security findings
 - `task_link_artifact` — attach relevant artifact references
 
@@ -75,7 +75,7 @@ Builder may call `task_link_artifact` only when Orchestrator has included the `p
 
 ### Release Manager — reader with narrow artifact writes
 
-Release Manager reads task state and may attach release artifact references via `task_link_artifact`.
+Release Manager reads task state and may attach release artifact references. Release Manager may call `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission.
 
 ---
 
@@ -207,3 +207,4 @@ The file format is documented in `docs/delivery/task-ledger.md` for reference an
 - Source: `server/mcp_ledger/`
 - Full tool reference: `server/mcp_ledger/README.md`
 - Docker Compose: `server/docker-compose.yml`
+- Practical access guide (workspace config, tool invocation path): `docs/delivery/task-ledger-mcp-access.md`

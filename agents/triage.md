@@ -38,7 +38,7 @@ task_get task_id=<uuid>
 task_list project_slug=<slug> state=triage
 ```
 
-**Narrow writes (requires `project_token` supplied by Orchestrator in the task packet):**
+**Narrow writes — only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission:**
 ```
 # Attach a diagnostic note
 task_add_note task_id=<uuid> project_id=<uuid> project_token=<token>

@@ -37,7 +37,7 @@ scripts/lint-agent-markdown.py <file.md>
 
 ## Task Ledger MCP
 
-Triage reads task state from the MCP ledger and may attach diagnostic notes and artifact links. Orchestrator supplies `project_id` and `project_token` in the task packet when narrow writes are permitted.
+Triage reads task state from the MCP ledger. Triage may attach diagnostic notes and artifact links only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission.
 
 ### Read current task state (no token required)
 

@@ -12,12 +12,12 @@ The MCP ledger is canonical for mutable task state. Do not invent, fork, or main
 | Agent | Write authority |
 |---|---|
 | Orchestrator | Full write: `task_create`, `task_update`, `task_transition`, `task_invalidate`, `task_add_note`, `task_link_artifact` |
-| Spec | Read freely. May call `task_add_note` and `task_link_artifact` to attach spec-owned references. |
-| Triage | Read freely. May call `task_add_note` and `task_link_artifact` to attach diagnostic evidence. |
+| Spec | Read freely. May call `task_add_note` and `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission. |
+| Triage | Read freely. May call `task_add_note` and `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission. |
 | Builder | Read freely. No canonical task-state ownership. May call `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission. |
-| QA | Read freely. May call `task_add_note` and `task_link_artifact` to attach QA findings. |
-| Security | Read freely. May call `task_add_note` and `task_link_artifact` to attach security findings. |
-| Release Manager | Read freely. May call `task_link_artifact` for release artifact references. |
+| QA | Read freely. May call `task_add_note` and `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission. |
+| Security | Read freely. May call `task_add_note` and `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission. |
+| Release Manager | Read freely. May call `task_link_artifact` only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission. |
 
 Only Orchestrator holds the `project_token`. Other agents query task state using the read-only surface — no token required:
 

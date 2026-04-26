@@ -40,7 +40,7 @@ scripts/prepare-specialist-spawn.py agents/specialists/<template>.md <refinement
 
 ## Task Ledger MCP
 
-QA reads task state from the MCP ledger for context. QA may attach QA findings and artifact references when Orchestrator has included the `project_token` in the task packet.
+QA reads task state from the MCP ledger for context. QA may attach QA findings and artifact references only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission.
 
 ### Read task state (no token required)
 

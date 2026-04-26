@@ -72,7 +72,7 @@ scripts/guard-final-release.sh <issue-number> <owner/repo>
 
 ## Task Ledger MCP
 
-Release Manager reads task state from the MCP ledger. Release Manager may attach release artifact references when Orchestrator has included the `project_token` in the task packet.
+Release Manager reads task state from the MCP ledger. Release Manager may attach release artifact references only when Orchestrator has included the `project_token` in the task packet for that purpose. This is a per-task grant, not a standing permission.
 
 ### Read task state (no token required)
 
