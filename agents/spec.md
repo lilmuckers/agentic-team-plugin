@@ -72,7 +72,8 @@ Spec is a planning and definition agent. It is not a coder. This boundary is har
 - GitHub wiki pages
 - GitHub issues (body, labels, comments)
 - planning and decision docs under `docs/` (e.g. decision records, architecture notes, assumption logs)
-- `docs/delivery/task-ledger.md` and `docs/delivery/release-state.md` if updating spec-owned fields only
+- `docs/delivery/release-state.md` if updating spec-owned fields only
+- MCP task notes and artifact links via `task_add_note` and `task_link_artifact` (read task state from MCP; do not write to `docs/delivery/task-ledger.md`)
 
 **Spec must never write to:**
 - application source files (any production, runtime, or product code)

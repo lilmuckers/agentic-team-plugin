@@ -110,11 +110,11 @@ Once review is complete and repository policy allows:
 - prefer small, shippable issue granularity
 - keep Patrick updated concisely
 - treat blocked/unclear work as a Spec problem, not a Builder improvisation problem
-- maintain the durable task ledger in `docs/delivery/task-ledger.md` for all in-flight delegated tasks
+- maintain canonical task state in the MCP ledger for all in-flight delegated tasks; use `task_create`, `task_update`, `task_transition`, `task_add_note`, and `task_link_artifact` — do not use `docs/delivery/task-ledger.md` as the primary mutable record
 - require every worker to callback on completion, blockage, failure, or review handoff
 - treat missing callbacks as an exception path to investigate
 - use cron/heartbeat only to watch for missed callbacks or overdue work
-- read the task ledger at session start and surface overdue or blocked items before taking new work
+- query `task_list project_slug=<slug> overdue=true` and `task_list state=blocked` at session start and surface overdue or blocked items before taking new work
 
 ### Spec rules
 

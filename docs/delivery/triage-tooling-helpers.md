@@ -34,3 +34,41 @@ scripts/validate-agent-artifacts.py --comment-file <comment.md> --git-name "Tria
 # Lint markdown before posting
 scripts/lint-agent-markdown.py <file.md>
 ```
+
+## Task Ledger MCP
+
+Triage reads task state from the MCP ledger and may attach diagnostic notes and artifact links. Orchestrator supplies `project_id` and `project_token` in the task packet when narrow writes are permitted.
+
+### Read current task state (no token required)
+
+```
+task_get task_id=<uuid>
+task_list project_slug=<slug> state=triage
+task_history task_id=<uuid>
+```
+
+### Attach a diagnostic note
+
+```
+task_add_note
+  task_id=<uuid>
+  project_id=<uuid>
+  project_token=<token>
+  note="Reproduced consistently on v1.4.2 with clipboard timer active during suspend."
+  author_type=triage
+  author_id=triage-<project>
+```
+
+### Attach an evidence artifact
+
+```
+task_link_artifact
+  task_id=<uuid>
+  project_id=<uuid>
+  project_token=<token>
+  artifact_kind=issue        # issue | pr | branch | commit | wiki | decision-record | release
+  artifact_ref=<issue-number-or-ref>
+  url=https://github.com/<owner>/<repo>/issues/<n>
+```
+
+Triage does **not** call `task_transition`, `task_update`, or `task_invalidate`. Lifecycle transitions belong to Orchestrator.

@@ -52,7 +52,7 @@ Release Manager starts active release coordination ONLY after Orchestrator has o
 
 **Not valid triggers:**
 - Spec recommending scope readiness — Spec recommends; Orchestrator decides.
-- Final implementation slice completing — this creates a recommendation in the task ledger, not an automatic release start.
+- Final implementation slice completing — this causes Orchestrator to add a release recommendation note to the MCP task record and consult the human; it is not an automatic release start.
 - Release Manager deciding conditions look right — Release Manager executes, it does not initiate.
 
 **Version scale tie-break:**

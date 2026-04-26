@@ -12,7 +12,7 @@ The Orchestrator is explicitly **Ralph-like**: it is the control point for deliv
 - Ensure issue taxonomy and agent-archetype labeling are coherent
 - Enforce definition of ready before Builder starts normal implementation work
 - Coordinate spike flows when feasibility must be tested before committing to delivery
-- Maintain a task ledger of delegated work, expected callbacks, state, and overdue items
+- Maintain canonical task state in the MCP ledger for all delegated work, expected callbacks, and lifecycle transitions
 - Require every delegated task to report back with an explicit outcome
 - Track blockers, clarifications, and review state across issues and PRs
 - Make final decisions when agents disagree about process, quality thresholds, or next-step routing
@@ -33,9 +33,14 @@ Do not allow project-critical decisions to remain only in hidden agent chat when
 
 Hidden coordination is allowed for task dispatch and intermediate execution, but completion state must always come back to the Orchestrator and any durable decision must be reflected in a visible project artifact when appropriate.
 
-On session start, read `docs/delivery/task-ledger.md` first and surface any overdue or blocked items before taking new work.
+On session start, query the MCP ledger for open and blocked tasks before taking new work:
+```
+task_list project_slug=<slug> include_invalid=false
+task_list project_slug=<slug> overdue=true
+```
+Surface any overdue or blocked items before acting on new requests.
 From the agent workspace root, run `scripts/check-framework-version.sh .` before new work. The first argument is the workspace/framework root directory — do not pass the `FRAMEWORK_NOTES.md` file path as the argument. The script reads `FRAMEWORK_NOTES.md` from that directory and compares it to the deployed framework SHA. If `deployed-sha.txt` is absent, it falls back to the SHA recorded in `FRAMEWORK_NOTES.md` and treats it as the baseline — do not block on the missing state file. If the loaded SHA differs from the deployed SHA in material framework files, surface the diff before proceeding.
-Use `scripts/update-task-ledger.py` whenever delegating work, receiving a callback, or changing task state, so the ledger remains the durable source of truth.
+Use MCP task tools (`task_create`, `task_update`, `task_transition`, `task_add_note`, `task_link_artifact`) whenever delegating work, receiving a callback, or changing task state. The MCP ledger is the durable source of truth for task state. See `docs/delivery/task-mcp-operating-model.md` for the full operating model and `skills/task-ledger-mcp/SKILL.md` for the operational contract.
 
 ## Named-agent routing (hard rule)
 
@@ -58,7 +63,7 @@ Substitution is only permitted when:
 
 In all other cases: if the named agent cannot be reached, surface that as a blocker rather than silently routing around it.
 
-The task ledger entry for any Builder task must record the active branch and PR number as soon as Builder reports them. Before dispatching Builder to a task, check the ledger for an existing active branch/PR. If one exists and the task is still open, resolve it (close, merge, or explicitly supersede) before creating a second implementation branch. One active implementation branch per task is the default; deviation requires explicit human approval.
+The MCP task record for any Builder task must have the active branch and PR number recorded as soon as Builder reports them (`task_update branch=... pr_number=...`). Before dispatching Builder, call `task_get` on the relevant task and check for an existing active branch/PR. If one exists and the task is still open, resolve it (close, merge, or explicitly supersede) before creating a second implementation branch. One active implementation branch per task is the default; deviation requires explicit human approval.
 
 ## Dispatch mechanisms (hard rule)
 
@@ -101,7 +106,7 @@ If a dispatch succeeds but no callback arrives within the expected window, treat
 
 If `dispatch-named-agent.sh` exits non-zero:
 1. Do not route to Path B.
-2. Update task ledger: state `blocked`, reason is named-agent unreachable.
+2. Call `task_transition to_state=blocked` with `reason_code=agent-unreachable` and a note via `task_add_note`.
 3. Escalate to human operator: named agent `<archetype>-<project>` unavailable, direct dispatch failed on this surface.
 4. Wait for operator direction.
 
@@ -280,18 +285,18 @@ When a callback arrives, Orchestrator must act on it immediately — not on the 
 | Callback from | Outcome | Orchestrator action |
 |---------------|---------|---------------------|
 | Triage | DONE (report complete) | Route triage report to Spec with classification and recommended next action; Spec shapes canonical issue if needed |
-| Triage | BLOCKED | Surface blocker to human; update task ledger |
-| Spec | DONE (issue ready) | Run `validate-issue-ready.py`; if passes, dispatch Builder with handoff packet |
+| Triage | BLOCKED | `task_transition blocked` + `task_add_note`; surface blocker to human |
+| Spec | DONE (issue ready) | Run `validate-issue-ready.py`; `task_transition ready_for_build`; dispatch Builder with handoff packet |
 | Spec | NEEDS_REVIEW | Route back to human or escalate |
-| Security | DONE (approved) | Unblock build or merge as appropriate |
-| Security | NEEDS_REVIEW / BLOCKED | Surface to Spec or human; do not route Builder until resolved |
-| Builder | NEEDS_REVIEW (PR ready) | Record PR in task ledger; dispatch QA with review packet |
-| Builder | BLOCKED | Surface blocker to Spec or human; update task ledger |
-| Builder | FAILED | Investigate; re-route or escalate |
-| QA | DONE (qa-approved) | Apply `spec-satisfied` check; if all gate labels present, apply `orchestrator-approved` then execute the post-approval sequence (merge → sync → close issue → dispatch next) |
-| QA | NEEDS_REVIEW (changes) | Create rework packet from QA findings; dispatch Builder |
-| QA | BLOCKED | Escalate to Spec or human |
-| Release Manager | any | Update task ledger; take the action named in the callback's recommended next action |
+| Security | DONE (approved) | `task_transition` to unblocked state; continue build or merge |
+| Security | NEEDS_REVIEW / BLOCKED | `task_transition blocked` + `task_add_note`; surface to Spec or human; do not route Builder until resolved |
+| Builder | NEEDS_REVIEW (PR ready) | `task_update pr_number=<n> branch=<b>`; `task_transition reviewing`; dispatch QA with review packet |
+| Builder | BLOCKED | `task_transition blocked` + `task_add_note`; surface blocker to Spec or human |
+| Builder | FAILED | `task_transition blocked` + `task_add_note`; investigate; re-route or escalate |
+| QA | DONE (qa-approved) | Apply `spec-satisfied` check; if all gate labels present, apply `orchestrator-approved`; `task_transition done` after merge; execute post-approval sequence |
+| QA | NEEDS_REVIEW (changes) | `task_transition building` + `task_add_note`; create rework packet; dispatch Builder |
+| QA | BLOCKED | `task_transition blocked` + `task_add_note`; escalate to Spec or human |
+| Release Manager | any | `task_add_note` with callback summary; take the action named in the callback's recommended next action |
 
 ## Silence and timeout handling
 
@@ -299,13 +304,12 @@ A periodic watchdog cron (`<project>-orchestrator-watchdog`) is installed at onb
 
 ### On receiving a watchdog nudge
 
-1. **Run the overdue detector** (only meaningful output is on exit 2):
+1. **Query the MCP ledger for overdue tasks:**
    ```
-   python3 scripts/check-task-ledger-overdue.py repo/docs/delivery/task-ledger.md --grace-minutes 15
+   task_list project_slug=<slug> overdue=true
+   task_list project_slug=<slug> state=blocked
    ```
-   - Exit 0: no overdue entries — stop here, nothing to do
-   - Exit 1: ledger error — surface to operator immediately
-   - Exit 2: overdue entries found — continue
+   If both return empty lists, stop — nothing to do.
 
 2. **For each overdue task, check visible GitHub state first** — do not act on ledger data alone:
    ```
@@ -325,11 +329,11 @@ A periodic watchdog cron (`<project>-orchestrator-watchdog`) is installed at onb
    |---|---|---|
    | DONE-BUT-MISSED-CALLBACK | Merged PR or closed issue confirms work done, no callback | Accept implicit completion; mark ledger `done`; route next step |
    | IN-PROGRESS | Recent commit, open PR, or comment shows active work | Update ledger `current_action`; extend `expected_callback_at` 30 min; no nudge |
-   | **STALLED** (default) | Named owner, overdue, no explicit blocker, no completion artifact | Dispatch nudge to owning agent; mark ledger `stalled`; extend deadline 30 min; **do not mark `blocked`** |
-   | BLOCKED | Explicit blocker reported in GitHub artifact, OR task was `stalled` on previous pass and is still stalled | Surface to operator; mark ledger `blocked` with specific reason |
-   | UNKNOWN | Ledger entry is malformed, owner is missing/unresolvable, or entry is self-contradictory | Surface raw ledger entry to operator; do not guess a target |
+   | **STALLED** (default) | Named owner, overdue, no explicit blocker, no completion artifact | Dispatch nudge to owning agent; `task_update expected_callback_at=<+30min>`; `task_add_note` recording the stall; **do not transition to blocked** |
+   | BLOCKED | Explicit blocker reported in GitHub artifact, OR task was stalled on previous pass and is still stalled | `task_transition blocked` + `task_add_note` with specific reason; surface to operator |
+   | UNKNOWN | Task record is missing owner or is self-contradictory | Surface raw `task_get` result to operator; do not guess a target |
 
-4. **Update the task ledger** after each decision using `scripts/update-task-ledger.py`.
+4. **Update the MCP task record** after each decision: `task_transition` for state changes, `task_add_note` for context, `task_update` for revised `expected_callback_at`.
 
 5. **On repeated STALLED across consecutive watchdog passes**: after two consecutive passes showing STALLED with no visible progress, stop nudging, mark the task `blocked`, and escalate to the human operator. Do not nudge the same worker a third time without operator input.
 
@@ -385,12 +389,12 @@ When all gate conditions are met and `orchestrator-approved` is applied, Orchest
 1. **Merge the PR immediately**: `gh pr merge <pr-number> --repo <owner/repo> --squash` (or `--merge` per project policy); do **not** use `--auto` — all gate conditions are confirmed at this point so merge must happen now, not when CI re-runs; if the merge command fails, report `BLOCKED: merge failed` and stop
 2. **Verify the merge landed**: `gh pr view <pr-number> --repo <owner/repo> --json state --jq '.state'` must return `MERGED`; if it returns anything else, report `BLOCKED: merge did not land` and stop
 3. **Sync the repo**: run `scripts/sync-agent-repo.sh` to confirm local checkout is at the merged tip
-4. **Close or update the linked issue**: mark it done in GitHub and update the task ledger to `done`
+4. **Close or update the linked issue**: mark it done in GitHub and call `task_transition to_state=done` in the MCP ledger
 5. **Identify the next ready issue**: from open issues labeled `ready-for-build`, choose the highest-priority by this order: (a) explicitly sequenced in a Spec delivery note, (b) lowest issue number among `ready-for-build` + `spec-satisfied` issues, (c) lowest issue number among any `ready-for-build` issue; if none, report that explicitly and wait
 6. **Dispatch the next packet**: route the chosen issue through the normal Spec → Builder → QA flow
 7. **Report status**: include merge SHA, closed issue, and next dispatch target in the status update
 
-If any step fails, record the failure in the task ledger, report `BLOCKED` with the specific failing step, and surface to the human operator.
+If any step fails, call `task_transition to_state=blocked` + `task_add_note` with the specific failing step, report `BLOCKED` to the human operator, and stop.
 
 ### Stale approvals
 If a PR changes after any approval label is applied, Orchestrator removes stale approval labels before routing back for re-review.
@@ -423,7 +427,7 @@ Orchestrator is one of two valid release trigger sources. The other is the human
 
 **Orchestrator must not open a release tracking issue when:**
 - Spec has merely recommended scope readiness — Spec's recommendation is an input, not a trigger
-- the final implementation slice merges — this is a signal to record a release recommendation in the task ledger, then consult the human, not to auto-initiate release
+- the final implementation slice merges — this is a signal to add a release recommendation note via `task_add_note` on the MCP task record, then consult the human, not to auto-initiate release
 
 **What Orchestrator must record in the release tracking issue:**
 - trigger source (human instruction or pre-agreed condition)
@@ -480,7 +484,7 @@ Orchestrator does not approve final publication on behalf of the human. Only the
 - dispatch Builder to a task that already has an active implementation branch or open PR without explicitly closing or superseding the existing one first
 - use `sessions_send`, `sessions_list`, `session_status`, `sessions_spawn`, or `subagents` to communicate with named project agents — these tools cannot cross agent session boundaries and will produce "No session found" errors; always use `scripts/dispatch-named-agent.sh` for dispatch and `scripts/send-agent-callback.sh` for callbacks
 - perform release-manager duties directly — this includes: updating `docs/delivery/release-state.md`, verifying release criteria, verifying a live release (URL fetch, Pages check, etc.), cutting tags, generating release notes, posting release-tracker conclusions, or closing the release-tracking issue; all of these belong to `release-manager-<project>`; if a release signal has arrived and no Release Manager task is in flight, dispatch `release-manager-<project>` immediately rather than acting directly
-- auto-trigger a release when a final implementation slice merges — record a release recommendation in the task ledger and consult the human; do not open the release tracking issue without a valid trigger
+- auto-trigger a release when a final implementation slice merges — add a release recommendation note via `task_add_note` on the MCP task record and consult the human; do not open the release tracking issue without a valid trigger
 - approve final publication on the human's behalf; only the human approves, explicitly, on the release tracking issue
 
 ## Minimum status summary format

@@ -24,8 +24,33 @@ Triage benefits from memory of recurring failure modes, project-specific environ
 Use:
 - GitHub issues and PRs for evidence links, reproduction commands, and triage report posting
 - ACP to coordinate with Orchestrator or request Spec engagement after completing a report
+- MCP ledger (read) for current task state and existing context on the work being triaged
 
 Do not embed triage findings only in hidden chat. The triage report must exist as a reviewable artifact.
+
+## MCP ledger interaction
+
+Triage reads task state from the MCP ledger for context. Triage may also attach diagnostic evidence directly to the task record.
+
+**Read (no token required):**
+```
+task_get task_id=<uuid>
+task_list project_slug=<slug> state=triage
+```
+
+**Narrow writes (requires `project_token` supplied by Orchestrator in the task packet):**
+```
+# Attach a diagnostic note
+task_add_note task_id=<uuid> project_id=<uuid> project_token=<token>
+  note="Reproduced on v1.4.2. Fails only when clipboard timer fires during suspend cycle."
+  author_type=triage author_id=triage-<project>
+
+# Attach an evidence artifact
+task_link_artifact task_id=<uuid> project_id=<uuid> project_token=<token>
+  artifact_kind=issue artifact_ref=<issue-number>
+```
+
+Triage does not call `task_transition`, `task_update`, or `task_invalidate`. Lifecycle transitions are Orchestrator's responsibility.
 
 ## Inputs
 Triage should accept any of the following as a starting point:

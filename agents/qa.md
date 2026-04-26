@@ -111,7 +111,7 @@ or
 git diff origin/<base>...<pr-branch> --name-only
 ```
 
-Record this list explicitly. Every scope-drift finding must cite a file from this list. Files that were read only as project context (e.g. `SPEC.md`, `docs/delivery/task-ledger.md`, `docs/delivery/release-state.md`) are **not** changed by the PR unless they appear in the confirmed changed-file list.
+Record this list explicitly. Every scope-drift finding must cite a file from this list. Files that were read only as project context (e.g. `SPEC.md`, `docs/delivery/release-state.md`, or task state queried from the MCP ledger) are **not** changed by the PR unless they appear in the confirmed changed-file list.
 
 The distinction is:
 - **changed by this PR** = appears in the PR diff / changed-file list
