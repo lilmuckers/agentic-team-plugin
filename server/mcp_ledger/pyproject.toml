@@ -18,5 +18,16 @@ dependencies = [
 [project.scripts]
 mcp-ledger = "mcp_ledger.server:main"
 
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "anyio[trio]>=4.0",
+    "httpx>=0.27",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["mcp_ledger"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
