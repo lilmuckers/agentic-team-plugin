@@ -252,8 +252,8 @@ run_check "validate-qa-scope (clean review — only PR files cited)" \
   --pr-files $QA_PR_FILES
 
 # 9c. QA scope grounding — review citing context files as PR changes is rejected
-# This replicates the exact lapwing failure: QA read SPEC.md, task-ledger.md,
-# and release-state.md as context but then cited them as changed by the PR.
+# This replicates the exact lapwing failure: QA read SPEC.md and release-state.md
+# as context but then cited them as changed by the PR.
 QA_BAD_REVIEW="$TMPDIR_BASE/qa-review-scope-drift.md"
 cat > "$QA_BAD_REVIEW" <<'MD'
 ## Changed files reviewed
@@ -263,7 +263,6 @@ cat > "$QA_BAD_REVIEW" <<'MD'
 - index.html
 - styles.css
 - SPEC.md
-- docs/delivery/task-ledger.md
 - docs/delivery/release-state.md
 
 ## Outcome
@@ -273,8 +272,8 @@ NEEDS_REVIEW
 ## Findings
 
 This PR appears to have scope drift. In addition to the web shell files, it
-also rewrites `SPEC.md`, `docs/delivery/task-ledger.md`, and
-`docs/delivery/release-state.md`. These are unrelated to the stated PR intent.
+also rewrites `SPEC.md` and `docs/delivery/release-state.md`. These are
+unrelated to the stated PR intent.
 
 Builder should limit the PR to the web shell changes only.
 MD
